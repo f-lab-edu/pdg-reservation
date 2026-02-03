@@ -1,0 +1,54 @@
+# application-prod.yml (운영 환경 설정)
+
+# 1. 로깅 설정
+logging:
+  level:
+    root: INFO
+
+# 2. 스프링 옵션 세팅
+spring:
+  # 2-1. 데이터베이스(MySQL) 연결 설정
+  datasource:
+    # [운영] 실제 운영 DB 주소 (localhost가 아닐 확률이 높음, AWS RDS 등)
+    url: jdbc:mysql://your-prod-db-server-ip:3306/reserv?serverTimezone=Asia/Seoul
+
+    # [보안] 운영 DB 아이디/비번은 코드에 적지 말고, 서버의 '환경 변수'로 주입받는 것을 강력 추천
+    # (예: 실행 시 -Dspring.datasource.username=admin 옵션 사용)
+    username: ${PROD_DB_USERNAME}
+    password: ${PROD_DB_PASSWORD}
+
+  # 2-2. JPA (ORM) 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate                            # [매우 중요] 절대 'create'나 'update' 금지!
+        # validate: 엔티티와 실제 테이블 스펙이 맞는지 검사만 함 (다르면 실행 안 됨)
+      # none: 아예 아무것도 안 함 (가장 안전)
+    properties:
+      hibernate:
+        format_sql: false                           # [성능] 로그 용량을 줄이기 위해 줄바꿈 없이 한 줄로 출력 (혹은 아예 끔)
+        use_sql_comments: false                     # 주석 제거
+
+    defer-datasource-initialization: false          # 운영에서는 초기 데이터를 넣을 일이 거의 없으므로 끔
+
+  # 2-3. 초기 데이터(SQL) 실행 설정
+  sql:
+    init:
+      mode: never                                   # [중요] 운영 DB에 data.sql(테스트 데이터)이 들어가면 대형 사고! 절대 실행 안 함.
+
+  # 2-4. Redis 연결 설정
+  data:
+    redis:
+      host: localhost                               # 운영 Redis가 별도 서버라면 IP 변경 필요
+      port: 6379
+
+# 3. JWT (토큰) 및 커스텀 설정
+accessToken:
+  expired:
+    value: 1800                                     # [보안] 엑세스 토큰: 30분 (짧게 가져가는 것이 보안상 안전)
+refreshToken:
+  expired:
+    value: 604800                                   # 리프레시 토큰: 7일 (사용자 편의성)
+
+jwt:
+  # [보안] 시크릿 키도 깃허브에 올라가지 않도록 환경변수로 빼는 것이 정석
+  secret: ${JWT_SECRET_KEY}

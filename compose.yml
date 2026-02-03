@@ -1,0 +1,17 @@
+services:
+  my-db-server:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: qkreorhkd1!      # root 비번 (관리자용)
+      MYSQL_DATABASE: reserv                # 생성할 DB 이름
+      MYSQL_USER: pdg                       # <--- 추가: 스프링이 사용할 ID
+      MYSQL_PASSWORD: qkreorhkd1!           # <--- 추가: 스프링이 사용할 비번
+    volumes:
+      - ..//mysql_data:/var/lib/mysql
+    ports:
+      - 3306:3306
+  my-redis:
+    image: redis
+    ports:
+      - 6379:6379
+

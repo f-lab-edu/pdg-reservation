@@ -1,0 +1,55 @@
+# application-dev.yml (개발 환경 설정)
+
+# 1. 로깅 설정
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG                        # [JPA] 실제 실행되는 SQL 쿼리를 로그로 출력 (show-sql 대체)
+    org.hibernate.orm.jdbc.bind: TRACE              # [JPA] SQL의 물음표(?) 파라미터에 들어가는 값을 표시 (Boot 3.x 기준)
+    # (참고: Boot 2.x라면 org.hibernate.type.descriptor.sql.BasicBinder: TRACE 사용)
+
+#2. 스프링 옵션 세팅
+spring:
+  # 2-1. 데이터베이스(MySQL) 연결 설정
+  datasource:
+    url: jdbc:mysql://localhost:3306/reserv?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    # 상세 해석:
+    # - serverTimezone : 한국 시간 기준
+    # - useSSL : 보안 접속 끔 (개발용)
+    # - allowPublicKeyRetrieval : DBeaver 등 클라이언트 접속 오류 방지 옵션
+    username: pdg
+    password: qkreorhkd1!
+
+  # 2-2. JPA (ORM) 설정
+  jpa:
+    hibernate:
+      ddl-auto: create                              # [주의] 서버 시작 시 기존 테이블을 모두 삭제(Drop)하고 새로 생성(Create)
+    properties:
+      hibernate:
+        format_sql: true                            # 로그에 찍히는 SQL을 한 줄이 아니라 보기 좋게 줄바꿈(Formatting)해서 출력
+        use_sql_comments: true                      # 쿼리 로그 옆에 "이 쿼리가 왜 실행됐는지" 힌트(주석) 추가
+
+    defer-datasource-initialization: true           # [중요] Hibernate가 테이블을 다 만든 '후'에 data.sql을 실행하도록 지연시킴
+
+  # 2-3. 초기 데이터(SQL) 실행 설정
+  #sql:
+  #  init:
+  #    mode: always                                  # 내장 DB가 아니더라도(MySQL) 항상 초기화 SQL을 실행
+  #    data-locations: classpath:/initSql/data.sql   # 실행할 SQL 파일 경로 (resources/initSql/data.sql)
+
+  # 2-4. Redis 연결 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# 3. JWT (토큰) 및 커스텀 설정
+accessToken:
+  expired:
+    value: 86400                                    # 엑세스 토큰 만료 시간: 1일 (초 단위)
+refreshToken:
+  expired:
+    value: 604800                                   # 리프레시 토큰 만료 시간: 7일 (초 단위)
+
+jwt:
+  secret: a239e7dcb3048bb748293c2c6480491d7dea129c4a985c1e01b67404c876adfc

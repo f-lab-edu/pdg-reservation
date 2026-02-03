@@ -1,0 +1,17 @@
+# application.yml  (공통 환경 설정)
+
+spring:
+  profiles:
+    active: dev # 기본 프로파일을 dev로 설정
+
+  web:
+    resources:
+      add-mappings: false # Spring Boot의 기본 리소스 매핑(예: /webjars) 비활성화
+
+  jpa:
+    open-in-view: false  # [실무 권장] OSIV 종료 (기본값은 true)
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+

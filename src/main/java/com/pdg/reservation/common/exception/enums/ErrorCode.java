@@ -1,0 +1,45 @@
+package com.pdg.reservation.common.exception.enums;
+
+import com.pdg.reservation.common.dto.ApiResponse;
+import org.springframework.http.HttpStatus;
+
+public enum ErrorCode {
+
+    COMMON_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON-001", "서버 내부 오류가 발생했습니다."),
+    COMMON_BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON-002", "요청 값이 올바르지 않습니다."),
+    COMMON_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON-003", "요청하신 경로를 찾을 수 없습니다."),
+    COMMON_METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON-004", "요청 메서드가 허용되지 않습니다."),
+    COMMON_INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON-005", "입력값이 올바르지 않습니다."),
+
+    REQUEST_MESSAGE_NOT_READABLE(HttpStatus.BAD_REQUEST, "REQUEST-001", "입력 값 오류 발생, JSON 규격을 확인해주세요."),
+
+    AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH-001", "인증 정보가 유효하지 않습니다."),
+    AUTH_FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH-002", "접근 권한이 없습니다."),
+    AUTH_USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "AUTH-003", "아이디 또는 비밀번호가 일치하지 않습니다."),
+
+    JWT_ERROR(HttpStatus.UNAUTHORIZED, "JWT-001", "JWT 오류 발생"),
+    JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "JWT-002", "유효 기간이 만료된 토큰입니다."),
+    ;
+
+    private final HttpStatus httpStatus;
+    private final String message;
+    private final String errorCode;
+
+    ErrorCode(HttpStatus httpStatus, String message, String errorCode){
+        this.httpStatus = httpStatus;
+        this.message = message;
+        this.errorCode = errorCode;
+    }
+
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+}
