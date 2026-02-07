@@ -38,6 +38,11 @@ public class ApiResponse<T> {
         return ResponseEntity.ok(new ApiResponse<>(true, data, null, null));
     }
 
+    // 메시지만 줄 때 (로그아웃, 회원가입 성공 등)
+    public static <T> ResponseEntity<ApiResponse<T>> message(String message) {
+        return ResponseEntity.ok(new ApiResponse<>(true, null, message, null));
+    }
+
     // 생성 성공 (201 Created)
     public static <T> ResponseEntity<ApiResponse<T>> created(T data) {
         return ResponseEntity

@@ -32,10 +32,10 @@ spring:
     defer-datasource-initialization: true           # [중요] Hibernate가 테이블을 다 만든 '후'에 data.sql을 실행하도록 지연시킴
 
   # 2-3. 초기 데이터(SQL) 실행 설정
-  #sql:
-  #  init:
-  #    mode: always                                  # 내장 DB가 아니더라도(MySQL) 항상 초기화 SQL을 실행
-  #    data-locations: classpath:/initSql/data.sql   # 실행할 SQL 파일 경로 (resources/initSql/data.sql)
+  sql:
+    init:
+      mode: always                                  # 내장 DB가 아니더라도(MySQL) 항상 초기화 SQL을 실행
+      data-locations: classpath:/initSql/data.sql   # 실행할 SQL 파일 경로 (resources/initSql/data.sql)
 
   # 2-4. Redis 연결 설정
   data:

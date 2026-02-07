@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ApiResponse<Object>> handleJwtException(JwtException ex) {
         log.info("[JWT ERROR] JWT 오류 발생 : {}", ex.getMessage());
-        return ApiResponse.fail(ErrorCode.JWT_ERROR);
+        return ApiResponse.fail(ErrorCode.JWT_INVALID_TOKEN);
 
     }
 
@@ -99,6 +99,12 @@ public class GlobalExceptionHandler {
                 fieldError.getField()  + ", " + fieldError.getDefaultMessage() :
                 "입력 값이 올바르지 않습니다.";
         return ApiResponse.fail(ErrorCode.COMMON_INVALID_INPUT, detailMessage);
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCustomException(CustomException ex) {
+        log.info("[CUSTOM_ERROR] {} : {}", ex.getErrorCode().name(), ex.getErrorCode().getMessage(), ex);
+        return ApiResponse.fail(ex.getErrorCode());
     }
 
 
