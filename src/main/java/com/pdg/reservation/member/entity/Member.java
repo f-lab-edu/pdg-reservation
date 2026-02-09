@@ -41,15 +41,18 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'BRONZE'")
+    @Builder.Default
     private Grade grade = Grade.BRONZE;
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'NORMAL'")
+    @Builder.Default
     private Role role = Role.NORMAL;
 
     @Column(nullable = false)
     @ColumnDefault("false")
+    @Builder.Default
     private boolean isActive = false;
 
     private LocalDateTime deletedAt;
