@@ -1,5 +1,5 @@
 -- 유저 테이블 테스트 데이터
-INSERT INTO reserv.user(created_at, updated_at, phone_number, name, nickname, email, password, grade) VALUES
+INSERT INTO reserv.member(created_at, updated_at, phone_number, name, nickname, email, password, grade) VALUES
 (NOW(), NOW(), '01000000001', '박대광', '초록모자', 'iieorhkd1@surem.com', '$2a$10$3LQH76t0vJvH9xAonla3VuLb4YMvObO2HnxUdNC0urNvM/N2Cupym', 'BRONZE'),
 (NOW(), NOW(), '01000000002', '박대일', '푸른모자', 'iieorhkd2@surem.com', '$2a$10$3LQH76t0vJvH9xAonla3VuLb4YMvObO2HnxUdNC0urNvM/N2Cupym', 'SILVER'),
 (NOW(), NOW(), '01000000003', '박대이', '붉은모자', 'iieorhkd3@surem.com', '$2a$10$3LQH76t0vJvH9xAonla3VuLb4YMvObO2HnxUdNC0urNvM/N2Cupym', 'GOLD'),
@@ -33,6 +33,7 @@ INSERT INTO reserv.user(created_at, updated_at, phone_number, name, nickname, em
 
 
 -- 숙소 테이블 테스트 데이터
+/*
 insert into reserv.accommodation (check_in_time, check_out_time, is_operational, rating_average, created_at, updated_at, name, city, zipcode, street, amenities, description, `type`) values ('13:00:00','10:00:00',1,1,Now(),Now(),'일루와 모텔', '서울특별시','04520','종로구 세종대로 123','["대형 TV", "무료 Wi-Fi", "넷플릭스/OTT", "개별 에어컨", "2인용 욕조", "주차장"]','객실 내 50인치 이상의 대형 TV가 비치되어 있으며, 유료 OTT 서비스(넷플릭스, 디즈니 플러스 등) 계정이 기본으로 제공되어 다양한 콘텐츠를 시청할 수 있습니다.','MOTEL'),
 ('13:00:00','11:00:00',1,1,Now(),Now(),'일루와 호텔', '부산광역시','48058','해운대구 마린시티2로 38','["무료 Wi-Fi", "피트니스 센터", "비즈니스 센터", "뷔페식 조식", "컨시어지 서비스", "미니바"]','중앙 냉난방이 아닌 개별적으로 온도를 조절할 수 있는 에어컨이 설치되어 있으며, 대부분의 객실에 2인이 함께 사용 가능한 월풀 또는 스파 기능의 대형 욕조가 마련되어 있습니다.','HOTEL'),
 ('16:00:00','10:00:00',1,1,Now(),Now(),'일루와 게스트 하우스', '경기도 성남시','13579','분당구 판교역로 235','["공용 주방", "무료 Wi-Fi", "세탁 시설", "개인 사물함", "공용 휴게실", "조식(토스트)"]','객실마다 독립적인 무선 인터넷(Wi-Fi)이 제공되어 끊김 없이 빠른 속도로 이용 가능하며, 객실 수만큼 혹은 그 이상의 넉넉한 주차 공간을 제공하여 차량 이용이 편리합니다.','GUESTHOUSE');
@@ -590,3 +591,4 @@ insert into reserv.review(rating,user_id,accommodation_id,created_at,updated_at,
 (3, 28, 3, now(), now(), '수건은 유료 대여였지만, 저렴한 가격이라 부담이 없었습니다.', '수박모자'),
 (5, 29, 3, now(), now(), '조용하고 아늑한 분위기였습니다. 시끄러운 파티보다 휴식을 원하는 분께 추천합니다.', '메론모자'),
 (4, 30, 3, now(), now(), '다음에 이 지역에 오게 된다면 무조건 다시 묵고 싶은 게스트하우스입니다. 추천!', '딸기모자');
+ */

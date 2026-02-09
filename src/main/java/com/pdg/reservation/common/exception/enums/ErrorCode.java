@@ -17,8 +17,10 @@ public enum ErrorCode {
     AUTH_FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH-002", "접근 권한이 없습니다."),
     AUTH_USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "AUTH-003", "아이디 또는 비밀번호가 일치하지 않습니다."),
 
-    JWT_ERROR(HttpStatus.UNAUTHORIZED, "JWT-001", "JWT 오류 발생"),
+    JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT-001", "유효하지 않은 토큰입니다."),
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "JWT-002", "유효 기간이 만료된 토큰입니다."),
+    JWT_REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED,"JWT-003", "리프레시 토큰이 존재하지 않습니다."),
+    JWT_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "JWT-004", "유효하지 않은 리프레시 토큰입니다."),
     ;
 
     private final HttpStatus httpStatus;

@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider {
@@ -66,6 +68,11 @@ public class JwtTokenProvider {
         return accessToken;
     }
 
+    //엑세스 토큰 사용 시간
+    public long getAccessTokenExpiredValue() {
+        return this.accessTokenTokenExpiredValue;
+    }
+
     // Refresh Token 생성
     public String generateRefreshToken(String email) {
         String refreshToken;
@@ -105,12 +112,16 @@ public class JwtTokenProvider {
     }
 
     // Validate Token 생성
-    public boolean validateToken(String token) throws JwtException {
-        Jwts.parser()
-                .verifyWith(jwtSecretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(jwtSecretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
         return true;
     }
     // RefreshToken Cookie 발급
@@ -123,18 +134,6 @@ public class JwtTokenProvider {
         cookie.setMaxAge(60 * refreshTokenExpiredValue);
         response.addCookie(cookie);
     }
-    //RefreshToken 쿠키 추출
-    public String getRefreshTokenFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("refreshToken".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
 
     //RefreshToken 쿠키 삭제
     public void deleteCookie(HttpServletResponse response) {
@@ -145,7 +144,7 @@ public class JwtTokenProvider {
     }
 
     //Access Token의 남은 만료 시간 (TTL)을 밀리초 단위로 반환
-    public Long getExpiration(String token) {
+    public Long getTokenTTL(String token) {
         try {
             Date expiration = Jwts.parser()
                     .verifyWith(jwtSecretKey)

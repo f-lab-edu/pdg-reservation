@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             responseWriter(response, ErrorCode.JWT_EXPIRED);
         } catch (JwtException e) {
             log.info("JWT Err : {}", e.getMessage());
-            responseWriter(response, ErrorCode.JWT_ERROR);
+            responseWriter(response, ErrorCode.JWT_INVALID_TOKEN);
         } catch (BadCredentialsException e) {
             log.info("JWT BL : {}", e.getMessage());
             responseWriter(response, ErrorCode.AUTH_UNAUTHORIZED);
