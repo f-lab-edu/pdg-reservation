@@ -51,8 +51,6 @@ public class MemberController {
         String accessToken = jwtTokenProvider.extractToken(request);
         memberService.logout(accessToken);
         jwtTokenProvider.deleteCookie(response);
-
-
         return  ApiResponse.message("logout success");
     }
 

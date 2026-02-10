@@ -33,7 +33,7 @@ public class Member extends BaseEntity {
     private String name;
 
     @Column(nullable = false, length = 20)
-    private String nickname;
+    private String nickName;
 
     @Column(nullable = false, length = 13)
     private String phoneNumber;

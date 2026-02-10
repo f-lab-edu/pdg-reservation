@@ -45,7 +45,7 @@ public class MemberService {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
             String email = userDetails.getEmail();
-            String nickName = userDetails.getNickname();
+            String nickName = userDetails.getNickName();
 
             String accessToken = jwtTokenProvider.generateAccessToken(email);
             String refreshToken = jwtTokenProvider.generateRefreshToken(email);
@@ -76,6 +76,8 @@ public class MemberService {
                 .orElseThrow(() -> new CustomException(ErrorCode.JWT_REFRESH_TOKEN_NOT_FOUND));
 
         if(!refreshToken.equals(oldRefreshToken)) {
+            jwtRedisRepository.deleteRefreshTokenByEmail(email);
+            log.warn("Refresh Token 불일치 감지 - 계정 보호를 위해 토큰을 삭제합니다. Email: {}", email);
             throw new CustomException(ErrorCode.JWT_INVALID_TOKEN);
         }
 

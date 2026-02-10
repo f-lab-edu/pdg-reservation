@@ -1,8 +1,12 @@
 package com.pdg.reservation.common.exception.enums;
 
 import com.pdg.reservation.common.dto.ApiResponse;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+@Getter
+@RequiredArgsConstructor
 public enum ErrorCode {
 
     COMMON_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON-001", "서버 내부 오류가 발생했습니다."),
@@ -27,21 +31,4 @@ public enum ErrorCode {
     private final String message;
     private final String errorCode;
 
-    ErrorCode(HttpStatus httpStatus, String message, String errorCode){
-        this.httpStatus = httpStatus;
-        this.message = message;
-        this.errorCode = errorCode;
-    }
-
-    public HttpStatus getHttpStatus() {
-        return httpStatus;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
 }

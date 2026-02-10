@@ -1,7 +1,7 @@
 package com.pdg.reservation.accommodation.entity;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
-import com.pdg.reservation.accommodation.enums.Type;
+import com.pdg.reservation.accommodation.enums.AccommodationType;
+import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,8 +9,9 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "accommodation")
@@ -25,13 +26,14 @@ public class Accommodation extends BaseEntity {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50, nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(length = 50, nullable = false)
+    @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'HOTEL'")
-    private Type type = Type.HOTEL;
+    @Builder.Default
+    private AccommodationType type = AccommodationType.HOTEL;
 
     @Column
     private String description;
@@ -45,7 +47,7 @@ public class Accommodation extends BaseEntity {
     @Column(nullable = false)
     private LocalTime checkOutTime;
 
-    @Column(precision = 3, scale = 1, nullable = false)
+    @Column(nullable = false, precision = 3, scale = 1)
     @ColumnDefault("0.0")
     @Builder.Default
     private BigDecimal ratingAverage = BigDecimal.ZERO;
@@ -57,6 +59,7 @@ public class Accommodation extends BaseEntity {
 
     @Embedded
     private Address address;
+
 
 
 
