@@ -9,7 +9,9 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
 @Entity
-@Table(name = "room")
+@Table(name = "room", indexes = {
+        @Index(name = "idx_accommodation_id", columnList = "accommodation_id")
+})
 @Getter
 @Builder
 @DynamicInsert

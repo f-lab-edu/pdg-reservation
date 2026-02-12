@@ -13,7 +13,7 @@ public enum ErrorCode {
     COMMON_BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON-002", "요청 값이 올바르지 않습니다."),
     COMMON_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON-003", "요청하신 경로를 찾을 수 없습니다."),
     COMMON_METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON-004", "요청 메서드가 허용되지 않습니다."),
-    COMMON_INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON-005", "입력값이 올바르지 않습니다."),
+    COMMON_INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON-005", "입력 값이 올바르지 않습니다."),
 
     REQUEST_MESSAGE_NOT_READABLE(HttpStatus.BAD_REQUEST, "REQUEST-001", "입력 값 오류 발생, JSON 규격을 확인해주세요."),
 

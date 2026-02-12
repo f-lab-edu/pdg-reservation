@@ -1,20 +1,24 @@
 package com.pdg.reservation.accommodation.entity;
 
 import com.pdg.reservation.accommodation.enums.AccommodationType;
-import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Entity
-@Table(name = "accommodation")
+@Table(name = "accommodation", indexes = {
+        @Index(name = "idx_city_type", columnList = "city, type")
+})
 @Getter
 @Builder
 @DynamicInsert // null인 필드는 insert 쿼리에서 제외시킴 -> DB Default값 발동
@@ -38,8 +42,10 @@ public class Accommodation extends BaseEntity {
     @Column
     private String description;
 
-    @Column
-    private String amenities;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "json")
+    @Builder.Default
+    private List<String> amenities = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalTime checkInTime;

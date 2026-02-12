@@ -9,7 +9,9 @@ import org.hibernate.annotations.DynamicInsert;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "room_inventory")
+@Table(name = "room_inventory", indexes = {
+    @Index(name = "idx_room_inventory_date", columnList = "room_id, inventory_date")
+})
 @Getter
 @Builder
 @DynamicInsert

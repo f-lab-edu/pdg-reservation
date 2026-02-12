@@ -14,4 +14,10 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 100 #페이징 아무리 크게 보내도 100개로 제한
+
 

@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -94,10 +96,37 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         log.info("[INVALID_INPUT] 올바르지 않은 요청 값 : {}", ex.getMessage());
+
         FieldError fieldError = ex.getBindingResult().getFieldError();
-        String detailMessage = fieldError != null ?
-                fieldError.getField()  + ", " + fieldError.getDefaultMessage() :
-                "입력 값이 올바르지 않습니다.";
+
+        if (fieldError == null) {
+            return ApiResponse.fail(ErrorCode.COMMON_INVALID_INPUT, "입력 값이 올바르지 않습니다.");
+        }
+
+        String detailMessage;
+
+        // 1. 타입 불일치 에러인지 확인 (typeMismatch 코드 체크)
+        if ("typeMismatch".equals(fieldError.getCode())) {
+            // 💡 핵심: BindingResult를 통해 해당 필드의 실제 타입을 가져옵니다.
+            Class<?> fieldType = ex.getBindingResult().getFieldType(fieldError.getField());
+
+            // Enum 타입일 경우 상수를 동적으로 추출
+            if (fieldType != null && fieldType.isEnum()) {
+                String enumValues = Arrays.stream(fieldType.getEnumConstants())
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", "));
+
+                detailMessage = String.format("%s 필드의 값이 올바르지 않습니다. 지원하는 유형: [%s]",
+                        fieldError.getField(), enumValues);
+            } else {
+                detailMessage = fieldError.getField() + "의 형식이 올바르지 않습니다.";
+            }
+        }
+        // 2. @NotBlank 등 일반 검증 실패인 경우
+        else {
+            detailMessage = fieldError.getField() + ", " + fieldError.getDefaultMessage();
+        }
+
         return ApiResponse.fail(ErrorCode.COMMON_INVALID_INPUT, detailMessage);
     }
 
