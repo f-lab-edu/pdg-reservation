@@ -5,6 +5,7 @@ import com.pdg.reservation.common.exception.enums.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -90,7 +91,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleJwtException(JwtException ex) {
         log.info("[JWT ERROR] JWT 오류 발생 : {}", ex.getMessage());
         return ApiResponse.fail(ErrorCode.JWT_INVALID_TOKEN);
-
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -103,31 +103,7 @@ public class GlobalExceptionHandler {
             return ApiResponse.fail(ErrorCode.COMMON_INVALID_INPUT, "입력 값이 올바르지 않습니다.");
         }
 
-        String detailMessage;
-
-        // 1. 타입 불일치 에러인지 확인 (typeMismatch 코드 체크)
-        if ("typeMismatch".equals(fieldError.getCode())) {
-            // 💡 핵심: BindingResult를 통해 해당 필드의 실제 타입을 가져옵니다.
-            Class<?> fieldType = ex.getBindingResult().getFieldType(fieldError.getField());
-
-            // Enum 타입일 경우 상수를 동적으로 추출
-            if (fieldType != null && fieldType.isEnum()) {
-                String enumValues = Arrays.stream(fieldType.getEnumConstants())
-                        .map(Object::toString)
-                        .collect(Collectors.joining(", "));
-
-                detailMessage = String.format("%s 필드의 값이 올바르지 않습니다. 지원하는 유형: [%s]",
-                        fieldError.getField(), enumValues);
-            } else {
-                detailMessage = fieldError.getField() + "의 형식이 올바르지 않습니다.";
-            }
-        }
-        // 2. @NotBlank 등 일반 검증 실패인 경우
-        else {
-            detailMessage = fieldError.getField() + ", " + fieldError.getDefaultMessage();
-        }
-
-        return ApiResponse.fail(ErrorCode.COMMON_INVALID_INPUT, detailMessage);
+        return ApiResponse.fail(ErrorCode.COMMON_INVALID_INPUT, createDetailMessage(ex, fieldError));
     }
 
     @ExceptionHandler(CustomException.class)
@@ -135,6 +111,39 @@ public class GlobalExceptionHandler {
         log.info("[CUSTOM_ERROR] {} : {}", ex.getErrorCode().name(), ex.getErrorCode().getMessage(), ex);
         return ApiResponse.fail(ex.getErrorCode());
     }
+
+
+    private String createDetailMessage(MethodArgumentNotValidException ex, FieldError fieldError) {
+        // 1. 타입 자체가 안맞는 경우
+        if (TypeMismatchException.ERROR_CODE.equals(fieldError.getCode())) {
+            return createTypeMismatchMessage(ex, fieldError);
+
+        }
+
+        // 2. @NotBlank 등 일반 검증 실패인 경우
+        return fieldError.getField() + ", " + fieldError.getDefaultMessage();
+    }
+
+    private String createTypeMismatchMessage(MethodArgumentNotValidException ex, FieldError fieldError) {
+        Class<?> fieldType = ex.getBindingResult().getFieldType(fieldError.getField());
+
+        if (fieldType != null && fieldType.isEnum()) {
+            return createEnumMessage(fieldError.getField(), fieldType);
+        }
+
+        return fieldError.getField() + "의 형식이 올바르지 않습니다.";
+    }
+
+    private String createEnumMessage(String field, Class<?> enumType) {
+        String enumValues = Arrays.stream(enumType.getEnumConstants())
+                .map(Enum.class::cast)
+                .map(Enum::name)
+                .collect(Collectors.joining(", "));
+
+        return String.format("%s 필드의 값이 올바르지 않습니다. 지원하는 유형: [%s]", field, enumValues);
+    }
+
+
 
 
 

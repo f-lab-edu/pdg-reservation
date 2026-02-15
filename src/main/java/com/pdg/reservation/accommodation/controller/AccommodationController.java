@@ -28,9 +28,9 @@ public class AccommodationController {
                 @Valid AccommodationSearchCondition condition,
                 @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        log.info("{}", condition);
         return ApiResponse.ok(accommodationService.search(condition, pageable));
     }
+
 
 
 }
