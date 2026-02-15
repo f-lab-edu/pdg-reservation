@@ -6,10 +6,13 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "room_inventory")
+@Table(name = "room_inventory", indexes = {
+    @Index(name = "idx_room_inventory_date", columnList = "room_id, inventory_date")
+})
 @Getter
 @Builder
 @DynamicInsert
@@ -24,8 +27,8 @@ public class RoomInventory extends BaseEntity {
     @Column(nullable = false)
     private LocalDate inventoryDate;
 
-    @Column
-    private int price;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
 
     @Column(nullable = false)
     @ColumnDefault("false")

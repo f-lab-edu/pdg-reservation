@@ -4,8 +4,8 @@
 logging:
   level:
     root: INFO
-    org.hibernate.SQL: DEBUG                        # [JPA] 실제 실행되는 SQL 쿼리를 로그로 출력 (show-sql 대체)
-    org.hibernate.orm.jdbc.bind: TRACE              # [JPA] SQL의 물음표(?) 파라미터에 들어가는 값을 표시 (Boot 3.x 기준)
+    org.hibernate.SQL: OFF                        # [JPA] 실제 실행되는 SQL 쿼리를 로그로 출력 (show-sql 대체)
+    org.hibernate.orm.jdbc.bind: OFF              # [JPA] SQL의 물음표(?) 파라미터에 들어가는 값을 표시 (Boot 3.x 기준)
     # (참고: Boot 2.x라면 org.hibernate.type.descriptor.sql.BasicBinder: TRACE 사용)
 
 #2. 스프링 옵션 세팅
@@ -27,7 +27,7 @@ spring:
     properties:
       hibernate:
         format_sql: true                            # 로그에 찍히는 SQL을 한 줄이 아니라 보기 좋게 줄바꿈(Formatting)해서 출력
-        use_sql_comments: true                      # 쿼리 로그 옆에 "이 쿼리가 왜 실행됐는지" 힌트(주석) 추가
+        use_sql_comments: false                      # 쿼리 로그 옆에 "이 쿼리가 왜 실행됐는지" 힌트(주석) 추가
 
     defer-datasource-initialization: true           # [중요] Hibernate가 테이블을 다 만든 '후'에 data.sql을 실행하도록 지연시킴
 

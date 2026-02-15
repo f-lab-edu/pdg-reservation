@@ -1,5 +1,6 @@
 package com.pdg.reservation.accommodation.entity;
 
+import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,8 +18,10 @@ public class AccommodationImage extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
-    private String target;
+    @Column
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private ImageType imageType = ImageType.ACCOMMODATION;
 
     @Column(nullable = false, length = 1000)
     private String url;

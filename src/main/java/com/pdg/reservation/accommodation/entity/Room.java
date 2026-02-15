@@ -1,6 +1,5 @@
 package com.pdg.reservation.accommodation.entity;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -8,8 +7,12 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
+import java.math.BigDecimal;
+
 @Entity
-@Table(name = "room")
+@Table(name = "room", indexes = {
+        @Index(name = "idx_accommodation_id", columnList = "accommodation_id")
+})
 @Getter
 @Builder
 @DynamicInsert
@@ -24,8 +27,8 @@ public class Room extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private int basePrice;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal basePrice;
 
     @Column(nullable = false)
     private int maxCapacity;
