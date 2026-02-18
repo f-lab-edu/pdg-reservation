@@ -2,6 +2,7 @@ package com.pdg.reservation.accommodation.entity;
 
 import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.common.entity.BaseEntity;
+import com.pdg.reservation.room.entity.Room;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -43,5 +44,10 @@ public class AccommodationImage extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accommodation_id")
     private Accommodation accommodation;
+
+    //FK 변경 담당 메서드
+    void changeAccommodation(Accommodation accommodation) {
+        this.accommodation = accommodation;
+    }
 
 }

@@ -10,6 +10,11 @@ spring:
 
   jpa:
     open-in-view: false  # [실무 권장] OSIV 종료 (기본값은 true)
+    properties:
+      hibernate:
+        # 1:N 관계를 IN 절로 묶어서 조회하는 설정
+        # 100~500 사이가 성능과 메모리 효율 면에서 가장 적절합니다.
+        default_batch_fetch_size: 100
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

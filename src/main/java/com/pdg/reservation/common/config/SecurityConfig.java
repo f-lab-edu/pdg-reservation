@@ -1,6 +1,5 @@
 package com.pdg.reservation.common.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pdg.reservation.common.auth.repository.JwtRedisRepository;
 import com.pdg.reservation.common.exception.filterException.CustomAccessDeniedHandler;
 import com.pdg.reservation.common.exception.filterException.CustomAuthenticationEntryPoint;
@@ -35,7 +34,8 @@ public class SecurityConfig {
                 "/",
                 "/api/v1/members/login",
                 "/api/v1/members/reissue",
-                "/api/v1/accommodations"
+                "/api/v1/accommodations",
+                "/api/v1/accommodations/**"
         };
 
         //어드민 접근 가능 URL
