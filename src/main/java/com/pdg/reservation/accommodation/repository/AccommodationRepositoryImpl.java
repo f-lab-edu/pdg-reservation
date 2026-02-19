@@ -1,20 +1,19 @@
 package com.pdg.reservation.accommodation.repository;
 
-import com.pdg.reservation.accommodation.dto.AccommodationResponse;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
-import com.pdg.reservation.accommodation.dto.QAccommodationResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
+import com.pdg.reservation.accommodation.dto.QAccommodationSearchResponse;
 import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.accommodation.enums.ImageType;
+import com.pdg.reservation.room.repository.RoomExpressions;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -22,24 +21,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.pdg.reservation.accommodation.entity.QAccommodation.*;
+import static com.pdg.reservation.accommodation.entity.QAccommodation.accommodation;
 import static com.pdg.reservation.accommodation.entity.QAccommodationImage.*;
-import static com.pdg.reservation.accommodation.entity.QRoom.*;
-import static com.pdg.reservation.accommodation.entity.QRoomInventory.*;
+import static com.pdg.reservation.room.entity.QRoom.room;
+import static com.pdg.reservation.room.entity.QRoomInventory.roomInventory;
+
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class AccommodationRepositoryImpl implements AccommodationCustom {
+public class AccommodationRepositoryImpl implements AccommodationRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
+    //숙소 검색
     @Override
-    public Page<AccommodationResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
+    public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
         String city = condition.getCity();
         AccommodationType type = condition.getType();
 
-        List<AccommodationResponse> content = jpaQueryFactory
-                .select(new QAccommodationResponse(
+        List<AccommodationSearchResponse> content = jpaQueryFactory
+                .select(new QAccommodationSearchResponse(
                         accommodation.id,
                         accommodation.name,
                         accommodation.type,
@@ -56,25 +56,22 @@ public class AccommodationRepositoryImpl implements AccommodationCustom {
                 .where(
                         cityEq(city),
                         typeEq(type),
-                        isAvailable(condition)
+                        RoomExpressions.isAccAvailable(
+                                condition.getCheckInDate(),
+                                condition.getCheckOutDate(),
+                                condition.getCapacity()
+                        )
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(accommodation.id.desc())
                 .fetch();
 
-        JPAQuery<Long> countQuery = jpaQueryFactory
-                .select(accommodation.count())
-                .from(accommodation)
-                .where(
-                        cityEq(city),
-                        typeEq(type),
-                        isAvailable(condition)
-                );
+        JPAQuery<Long> countQuery = getCountQuery(condition, city, type);
 
         // * 최저가를 구하기 위한 단계(QueryDsl은 서브쿼리에 limit 지원하지 않아 별도 과정 진행)
         // 1. 검색된 숙소 ID 리스트 추출
-        List<Long> accIds = content.stream().map(AccommodationResponse::getId).toList();
+        List<Long> accIds = content.stream().map(AccommodationSearchResponse::getId).toList();
 
         // 2. 최저가 데이터 조회 및 매핑
         if (!accIds.isEmpty()) {
@@ -85,35 +82,27 @@ public class AccommodationRepositoryImpl implements AccommodationCustom {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
+    private JPAQuery<Long> getCountQuery(AccommodationSearchCondition condition, String city, AccommodationType type) {
+        return jpaQueryFactory
+                .select(accommodation.count())
+                .from(accommodation)
+                .where(
+                        cityEq(city),
+                        typeEq(type),
+                        RoomExpressions.isAccAvailable(
+                                condition.getCheckInDate(),
+                                condition.getCheckOutDate(),
+                                condition.getCapacity()
+                        )
+                );
+    }
+
     public BooleanExpression cityEq(String city) {
         return StringUtils.hasText(city) ? accommodation.address.city.eq(city): null;
     }
 
     public BooleanExpression typeEq(AccommodationType type) {
         return type != null ?  accommodation.type.eq(type) : null;
-    }
-
-    public BooleanExpression isAvailable(AccommodationSearchCondition condition) {
-
-        // 투숙 박수 계산 (예: 24일~26일 = 2박)
-        long stayDays = ChronoUnit.DAYS.between(condition.getCheckInDate(), condition.getCheckOutDate());
-
-        // 가용 객실 존재 여부 체크 서브쿼리
-        return JPAExpressions
-                .selectOne()
-                .from(room)
-                .join(roomInventory)
-                .on(roomInventory.room.eq(room))
-                .where(
-                        room.accommodation.eq(accommodation),
-                        room.maxCapacity.goe(condition.getCapacity()),
-                        roomInventory.isStocked.isTrue(),
-                        roomInventory.inventoryDate.goe(condition.getCheckInDate()),    // 체크인부터
-                        roomInventory.inventoryDate.lt(condition.getCheckOutDate())     // 체크아웃 전날까지
-                )
-                .groupBy(room.id) // 방별로 그룹화하여
-                .having(roomInventory.count().eq(stayDays)) // 투숙 기간 '모든 날짜'에 재고가 있는지 확인
-                .exists(); // 조건을 만족하는 방이 하나라도 있다면 TRUE
     }
 
     private Map<Long, Long> getMinPriceMap(List<Long> accIds, AccommodationSearchCondition cond) {

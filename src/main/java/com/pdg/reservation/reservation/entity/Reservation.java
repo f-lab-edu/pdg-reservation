@@ -1,7 +1,7 @@
 package com.pdg.reservation.reservation.entity;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
-import com.pdg.reservation.accommodation.entity.Room;
+import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.common.entity.BaseEntity;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.enums.ReservationStatus;

@@ -4,7 +4,7 @@ import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 @Getter
-public class AccommodationResponse {
+public class AccommodationSearchResponse {
 
     private final long id;
     private final String name;
@@ -16,7 +16,7 @@ public class AccommodationResponse {
     private Long minPrice;
 
     @QueryProjection
-    public AccommodationResponse(long id, String name, AccommodationType type, String city, String mainImage) {
+    public AccommodationSearchResponse(long id, String name, AccommodationType type, String city, String mainImage) {
         this.id = id;
         this.name = name;
         this.type = type;

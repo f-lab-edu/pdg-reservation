@@ -1,4 +1,4 @@
-package com.pdg.reservation.accommodation.entity;
+package com.pdg.reservation.room.entity;
 
 import com.pdg.reservation.common.entity.BaseEntity;
 import jakarta.persistence.*;
