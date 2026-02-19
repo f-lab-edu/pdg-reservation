@@ -9,20 +9,30 @@ import java.util.Locale;
 public class CustomP6spySqlFormat implements MessageFormattingStrategy {
     @Override
     public String formatMessage(int connectionId, String now, long elapsed, String category, String prepared, String sql, String url) {
-        if (sql == null || sql.trim().isEmpty()) return "";
-
-        if (Category.STATEMENT.getName().equals(category)) {
-            String tmpsql = sql.trim().toLowerCase(Locale.ROOT);
-            if (tmpsql.startsWith("create") || tmpsql.startsWith("alter") || tmpsql.startsWith("comment")) {
-                sql = FormatStyle.DDL.getFormatter().format(sql);
-            } else {
-                sql = FormatStyle.BASIC.getFormatter().format(sql);
-            }
-            sql = simplifyDateTime(sql);
-            // [P6Spy] 문구를 추가해서 적용 여부를 한눈에 확인하게 함
-            return String.format("\n[P6Spy SQL Log] | Execution Time: %d ms%s", elapsed, sql);
+        // 1. 방어 로직 (Guard Clause): 처리할 필요가 없는 경우 빠르게 종료
+        if (sql == null || sql.trim().isEmpty() || !Category.STATEMENT.getName().equals(category)) {
+            return "";
         }
-        return ""; // commit, rollback 등은 무시
+
+        // 2. 포맷 스타일 결정
+        FormatStyle style = isDdlStatement(sql) ? FormatStyle.DDL : FormatStyle.BASIC;
+
+        // 3. SQL 포맷팅 및 시간 후처리
+        String formattedSql = style.getFormatter().format(sql);
+        formattedSql = simplifyDateTime(formattedSql);
+
+        // 4. 최종 로그 반환
+        return String.format("\n[P6Spy SQL Log] | Execution Time: %d ms%s", elapsed, formattedSql);
+    }
+
+    /**
+     * DDL 문(CREATE, ALTER, COMMENT) 여부를 확인합니다.
+     */
+    private boolean isDdlStatement(String sql) {
+        String lowerSql = sql.trim().toLowerCase(Locale.ROOT);
+        return lowerSql.startsWith("create")
+                || lowerSql.startsWith("alter")
+                || lowerSql.startsWith("comment");
     }
 
     private String simplifyDateTime(String sql) {
