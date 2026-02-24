@@ -70,6 +70,7 @@ public class Accommodation extends BaseEntity {
 
     @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @OrderBy("sortOrder ASC")
     private List<AccommodationImage> images = new ArrayList<>();
 
     /*연관 관계 생성 편의 메서드*/

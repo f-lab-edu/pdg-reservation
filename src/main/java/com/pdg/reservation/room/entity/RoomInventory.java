@@ -40,5 +40,9 @@ public class RoomInventory extends BaseEntity {
     private Room room;
 
 
+    public void updateStockStatus(boolean isStocked) {
+        this.isStocked = isStocked;
+    }
+
 
 }

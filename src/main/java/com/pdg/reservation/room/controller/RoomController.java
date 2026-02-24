@@ -1,6 +1,7 @@
 package com.pdg.reservation.room.controller;
 
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.room.dto.RoomDetailResponse;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
 import com.pdg.reservation.room.dto.RoomSearchResponse;
 import com.pdg.reservation.room.service.RoomService;
@@ -19,18 +20,23 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/accommodations/{accommodationId}/rooms")
+@RequestMapping("/api/v1")
 public class RoomController {
 
     private final RoomService roomService;
 
-    @GetMapping
+    @GetMapping("/accommodations/{accommodationId}/rooms")
     public ResponseEntity<ApiResponse<Page<RoomSearchResponse>>> getRooms(
             @PathVariable Long accommodationId,
             @Valid RoomSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
         return ApiResponse.ok(roomService.getRooms(accommodationId, condition, pageable));
+    }
+
+    @GetMapping("/rooms/{roomId}")
+    public ResponseEntity<ApiResponse<RoomDetailResponse>> getRoom(@PathVariable Long roomId) {
+        return ApiResponse.ok(roomService.getRoom(roomId));
     }
 
 }

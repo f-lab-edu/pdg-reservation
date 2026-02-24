@@ -35,7 +35,8 @@ public class SecurityConfig {
                 "/api/v1/members/login",
                 "/api/v1/members/reissue",
                 "/api/v1/accommodations",
-                "/api/v1/accommodations/**"
+                "/api/v1/accommodations/**",
+                "/api/v1/rooms/**",
         };
 
         //어드민 접근 가능 URL
