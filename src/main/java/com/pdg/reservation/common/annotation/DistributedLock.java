@@ -24,8 +24,8 @@ public @interface DistributedLock {
     long waitTime() default 5L;
 
     /**
-     * 락 임대 시간 (기본: 3초)
-     * 락을 획득한 후 보유하는 최대 시간 (데드락 방지용)
+     * 락 임대 시간. -1L 설정 시 워치독 활성화:
+     * 로직 완료 시까지 자동 연장하며, 서버 장애 시 자동 해제로 데드락 방지.
      */
-    long leaseTime() default 3L;
+    long leaseTime() default -1L;
 }

@@ -8,14 +8,17 @@ import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
+import com.pdg.reservation.reservation.event.ReservationRollbackEvent;
 import com.pdg.reservation.reservation.repository.ReservationRedisRepository;
 import com.pdg.reservation.reservation.repository.ReservationRepository;
+import com.pdg.reservation.reservation.validator.ReservationValidator;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 import com.pdg.reservation.room.repository.RoomInventoryRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,8 @@ public class ReservationService {
     private final RoomInventoryRepository roomInventoryRepository; // 💡 재고 조회를 위해 필요
     private final RoomRepository roomRepository;
     private final ReservationRedisRepository reservationRedisRepository;
+    private final ReservationValidator reservationValidator;
+    private final ApplicationEventPublisher eventPublisher;
 
     @DistributedLock(key = "'room:' + #roomId")
     @Transactional
@@ -47,7 +52,7 @@ public class ReservationService {
                 reserveRequest.getCheckOutDate()
         );
 
-        validateInventoryAndPrice(member, reserveRequest, room, inventories);
+        reservationValidator.validate(member, reserveRequest, room, inventories);
 
         Reservation reservation = reserveRequest.toEntity(member, room);
         reservationRepository.save(reservation);
@@ -80,42 +85,7 @@ public class ReservationService {
         );
 
         inventories.forEach(inventory -> inventory.updateStockStatus(true)); // 재고 복구!
-        log.info("예약 롤백 성공: ReservationId={}", reservationId);
-    }
-
-    private void validateInventoryAndPrice(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories) {
-        BigDecimal basePrice = room.getBasePrice();
-
-        // [검증] 숙박 인원 수 검증
-        if (request.getGuestCount() > room.getMaxCapacity()) {
-            log.warn("수용 인원 초과: roomId={}, maxCapacity={}, requestGuestCount={}", room.getId(), room.getMaxCapacity(), request.getGuestCount());
-            throw new CustomException(ErrorCode.RESERVE_EXCEED_MAX_CAPACITY);
-        }
-
-        // [검증] 숙박 일수와 DB 데이터 개수 대조
-        long nights = ChronoUnit.DAYS.between(request.getCheckInDate(), request.getCheckOutDate());
-        if (inventories.size() != nights) {
-            log.warn("날짜 불일치 발생 : roomId={} , checkInDate={} , checkOutDate={}", room.getId(), request.getCheckInDate(), request.getCheckOutDate());
-            throw new CustomException(ErrorCode.RESERVE_INVALID_PERIOD);
-        }
-
-        // [검증] 품절 및 가격 합산
-        BigDecimal calculatedTotal = BigDecimal.ZERO;
-        for (RoomInventory inv : inventories) {
-            if (!inv.isStocked()) {
-                log.warn("이미 예약된 객실 존재 : roomId={}, inventoryDate={}", room.getId(), inv.getInventoryDate());
-                throw new CustomException(ErrorCode.RESERVE_ALREADY_BOOKED);
-            }
-            calculatedTotal = calculatedTotal.add(Optional.ofNullable(inv.getPrice()).orElse(basePrice));
-        }
-
-        BigDecimal finalCalculatedTotal = member.getGrade().calculateDiscountRate(calculatedTotal);
-
-        // [검증] 요청 가격과 서버 계산 가격 대조
-        if (finalCalculatedTotal.compareTo(request.getTotalPrice()) != 0) {
-            log.warn("결제 금액 불일치 발생 : roomId={}, ClientTotalPrice={}, ServerTotalPrice={}", room.getId(), request.getTotalPrice(), finalCalculatedTotal);
-            throw new CustomException(ErrorCode.RESERVE_PRICE_MISMATCH);
-        }
+        eventPublisher.publishEvent(new ReservationRollbackEvent(reservationId));
     }
 
 
