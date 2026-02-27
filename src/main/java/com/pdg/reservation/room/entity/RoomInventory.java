@@ -10,9 +10,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "room_inventory", indexes = {
-    @Index(name = "idx_room_inventory_date", columnList = "room_id, inventory_date")
-})
+@Table(name = "room_inventory",
+    indexes = {
+        @Index(name = "idx_room_inventory_date", columnList = "room_id, inventory_date")
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_room_id_inventory_date", columnNames = {"room_id", "inventory_date"})
+    }
+)
 @Getter
 @Builder
 @DynamicInsert
@@ -39,6 +44,14 @@ public class RoomInventory extends BaseEntity {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
+    @Version
+    @ColumnDefault("0")
+    @Builder.Default
+    private Long version = 0L;
+
+    public void updateStockStatus(boolean isStocked) {
+        this.isStocked = isStocked;
+    }
 
 
 }

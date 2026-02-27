@@ -46,8 +46,12 @@ public class AccommodationImage extends BaseEntity {
     private Accommodation accommodation;
 
     //FK 변경 담당 메서드
-    void changeAccommodation(Accommodation accommodation) {
+    public void changeAccommodation(Accommodation accommodation) {
         this.accommodation = accommodation;
     }
 
+    //FK 변경 담당 메서드
+    public void changeRoom(Room room) {
+        this.room = room;
+    }
 }

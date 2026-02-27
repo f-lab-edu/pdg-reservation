@@ -29,4 +29,10 @@ public class AccommodationService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ACC_NOT_FOUND));
         return AccommodationDetailResponse.from(accommodation);
     }
+
+    public void validateExists(Long accommodationId){
+        if (!accommodationRepository.existsById(accommodationId)) {
+            throw new CustomException(ErrorCode.ACC_NOT_FOUND);
+        }
+    }
 }
