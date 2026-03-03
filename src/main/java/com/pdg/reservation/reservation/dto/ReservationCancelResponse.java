@@ -1,4 +1,4 @@
-package com.pdg.reservation.payment.dto;
+package com.pdg.reservation.reservation.dto;
 
 import com.pdg.reservation.payment.entity.Payment;
 import com.pdg.reservation.payment.enums.PaymentMethod;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class PaymentCancelResponse {
+public class ReservationCancelResponse {
 
     private Long paymentId;             // 결제 고유 ID
     private Long reservationId;         // 예약 ID
@@ -21,8 +21,8 @@ public class PaymentCancelResponse {
     private PaymentStatus status;       // 결제 상태
     private LocalDateTime canceledAt;   // 결제 완료 시간
 
-    public static PaymentCancelResponse from(Payment payment) {
-        return PaymentCancelResponse.builder()
+    public static ReservationCancelResponse from(Payment payment) {
+        return ReservationCancelResponse.builder()
                 .paymentId(payment.getId())
                 .reservationId(payment.getReservation().getId())
                 .amount(payment.getAmount())

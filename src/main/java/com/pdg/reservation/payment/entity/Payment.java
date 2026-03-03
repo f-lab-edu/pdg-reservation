@@ -65,7 +65,7 @@ public class Payment {
     @JoinColumn(name = "reservation_id", nullable = false, unique = true )
     private Reservation reservation;
 
-    public void canceled() {
+    public void updateStatusCanceled() {
         if (this.status != PaymentStatus.PAID) {
             throw new CustomException(ErrorCode.PAYMENT_INVALID_STATUS);
         }

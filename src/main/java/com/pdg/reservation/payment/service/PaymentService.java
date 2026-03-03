@@ -4,21 +4,20 @@ import com.pdg.reservation.common.annotation.DistributedLock;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.payment.client.PgClient;
-import com.pdg.reservation.payment.dto.PaymentCancelRequest;
-import com.pdg.reservation.payment.dto.PaymentCancelResponse;
 import com.pdg.reservation.payment.dto.PaymentRequest;
 import com.pdg.reservation.payment.dto.PaymentResponse;
 import com.pdg.reservation.payment.entity.Payment;
+import com.pdg.reservation.payment.entity.PaymentCancelHistory;
 import com.pdg.reservation.payment.enums.CancelType;
+import com.pdg.reservation.payment.repository.PaymentCancelHistoryRepository;
 import com.pdg.reservation.payment.repository.PaymentRepository;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.repository.ReservationRedisRepository;
 import com.pdg.reservation.reservation.repository.ReservationRepository;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -26,9 +25,10 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
 
     private final PgClient pgClient;
-    private final ReservationRepository reservationRepository ;
-    private final PaymentCommandService paymentCommandService;
+    private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
+    private final PaymentCommandService paymentCommandService;
+    private final PaymentCancelHistoryRepository paymentCancelHistoryRepository;
     private final ReservationRedisRepository reservationRedisRepository;
 
     @DistributedLock(key = "'payment:reservationId:' + #reservationId")
@@ -55,23 +55,21 @@ public class PaymentService {
         return response;
     }
 
-    @DistributedLock(key = "'paymentCancel:reservationId:' + #reservationId")
-    public PaymentCancelResponse processCancel(Long memberId, Long reservationId, PaymentCancelRequest cancelRequest) {
-        Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_INVALID_REQUEST));
-
-        reservation.validateCancelable();
-        Payment payment = reservation.getPayment();
-        if(payment == null){
-            log.error("결제 데이터 누락 발생. 예약ID: {}", reservation.getId());
-            throw new CustomException(ErrorCode.PAYMENT_NOT_FOUND);
-        }
+    @Transactional
+    public void cancelPayment(Payment payment, String cancelReason) {
 
         pgClient.cancel(payment.getPgTransactionNumber(), CancelType.USER_REQUEST);
-        return paymentCommandService.cancel(reservationId, cancelRequest);
+
+        payment.updateStatusCanceled();
+        paymentRepository.save(payment);
+
+        paymentCancelHistoryRepository.save(PaymentCancelHistory.builder()
+                .cancelReason(cancelReason)
+                .cancelAmount(payment.getAmount())
+                .payment(payment)
+                .build()
+        );
     }
-
-
 
 
     //PG사 성공 후, DB 예외 시 실행

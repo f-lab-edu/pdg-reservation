@@ -81,14 +81,14 @@ public class Reservation extends BaseEntity {
     @Version
     private Long version;
 
-    public void expired() {
+    public void updateStatusExpired() {
         if (this.status != ReservationStatus.PENDING_PAYMENT) {
             throw new CustomException(ErrorCode.RESERVE_INVALID_STATUS);
         }
         this.status = ReservationStatus.EXPIRED;
     }
 
-    public void confirmed() {
+    public void updateStatusConfirmed() {
         if (this.status != ReservationStatus.PENDING_PAYMENT) {
             throw new CustomException(ErrorCode.RESERVE_INVALID_STATUS);
         }
@@ -96,7 +96,7 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.CONFIRMED;
     }
 
-    public void canceled() {
+    public void updateStatusCanceled() {
         if (this.status != ReservationStatus.CONFIRMED) {
             throw new CustomException(ErrorCode.RESERVE_INVALID_STATUS);
         }
