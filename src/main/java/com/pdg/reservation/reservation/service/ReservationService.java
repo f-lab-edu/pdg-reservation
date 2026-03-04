@@ -6,6 +6,8 @@ import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
+import com.pdg.reservation.reservation.dto.ReservationSearchCondition;
+import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.reservation.event.ReservationRollbackEvent;
@@ -14,19 +16,17 @@ import com.pdg.reservation.reservation.repository.ReservationRepository;
 import com.pdg.reservation.reservation.validator.ReservationValidator;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
-import com.pdg.reservation.room.repository.RoomInventoryRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
 import com.pdg.reservation.room.service.RoomInventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -35,7 +35,6 @@ import java.util.Optional;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final RoomInventoryRepository roomInventoryRepository;
     private final RoomRepository roomRepository;
     private final ReservationRedisRepository reservationRedisRepository;
     private final ReservationValidator reservationValidator;
@@ -105,6 +104,11 @@ public class ReservationService {
 
         eventPublisher.publishEvent(new ReservationRollbackEvent(reservationId));
     }
+
+    public Page<ReservationSearchResponse> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
+        return reservationRepository.search(memberId, condition, pageable);
+    }
+
 
 
 

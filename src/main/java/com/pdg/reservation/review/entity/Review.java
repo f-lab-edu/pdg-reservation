@@ -51,8 +51,8 @@ public class Review {
     @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
 
-//    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
-//    private Reservation reservation;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
+    private Reservation reservation;
 
 }

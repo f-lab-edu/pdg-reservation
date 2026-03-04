@@ -669,6 +669,7 @@ INSERT INTO reserv.room_inventory (room_id, inventory_date, is_stocked, price, c
 INSERT INTO reserv.room_inventory (room_id, inventory_date, is_stocked, price, created_at, updated_at) VALUES (282, '2026-03-01', 1, 70000, NOW(), NOW()),(282, '2026-03-02', 1, 50000, NOW(), NOW()),(282, '2026-03-03', 1, 50000, NOW(), NOW()),(282, '2026-03-04', 1, 50000, NOW(), NOW()),(282, '2026-03-05', 1, 50000, NOW(), NOW()),(282, '2026-03-06', 1, 70000, NOW(), NOW()),(282, '2026-03-07', 1, 70000, NOW(), NOW()),(282, '2026-03-08', 1, 70000, NOW(), NOW()),(282, '2026-03-09', 1, 50000, NOW(), NOW()),(282, '2026-03-10', 1, 50000, NOW(), NOW()),(282, '2026-03-11', 1, 50000, NOW(), NOW()),(282, '2026-03-12', 1, 50000, NOW(), NOW()),(282, '2026-03-13', 1, 70000, NOW(), NOW()),(282, '2026-03-14', 1, 70000, NOW(), NOW()),(282, '2026-03-15', 1, 70000, NOW(), NOW()),(282, '2026-03-16', 1, 50000, NOW(), NOW()),(282, '2026-03-17', 1, 50000, NOW(), NOW()),(282, '2026-03-18', 1, 50000, NOW(), NOW()),(282, '2026-03-19', 1, 50000, NOW(), NOW()),(282, '2026-03-20', 1, 70000, NOW(), NOW()),(282, '2026-03-21', 1, 70000, NOW(), NOW()),(282, '2026-03-22', 1, 70000, NOW(), NOW()),(282, '2026-03-23', 1, 50000, NOW(), NOW()),(282, '2026-03-24', 1, 50000, NOW(), NOW()),(282, '2026-03-25', 1, 50000, NOW(), NOW()),(282, '2026-03-26', 1, 50000, NOW(), NOW()),(282, '2026-03-27', 1, 70000, NOW(), NOW()),(282, '2026-03-28', 1, 70000, NOW(), NOW()),(282, '2026-03-29', 1, 70000, NOW(), NOW()),(282, '2026-03-30', 1, 50000, NOW(), NOW());
 
 -- 4. Review Data
+/*
 INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 4, NOW(), '접근성 좋음.', '보라모자');
 INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 4, 4, NOW(), 'PC 사양 좋음.', '황금모자');
 INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 2, 4, NOW(), '토스트 조식 제공됨.', '분홍모자');
@@ -939,7 +940,7 @@ INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, cont
 INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 25, 93, NOW(), '무인텔이라 편리함.', '붉은모자');
 INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 13, 93, NOW(), '수압 셈.', '하늘모자');
 INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 26, 93, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-
+*/
 
 
 
