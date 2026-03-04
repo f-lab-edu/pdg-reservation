@@ -1,4 +1,4 @@
-package com.pdg.reservation.payment.entity;
+package com.pdg.reservation.payment.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

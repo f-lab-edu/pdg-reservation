@@ -16,6 +16,7 @@ import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 import com.pdg.reservation.room.repository.RoomInventoryRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
+import com.pdg.reservation.room.service.RoomInventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,11 +35,12 @@ import java.util.Optional;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final RoomInventoryRepository roomInventoryRepository; // 💡 재고 조회를 위해 필요
+    private final RoomInventoryRepository roomInventoryRepository;
     private final RoomRepository roomRepository;
     private final ReservationRedisRepository reservationRedisRepository;
     private final ReservationValidator reservationValidator;
     private final ApplicationEventPublisher eventPublisher;
+    private final RoomInventoryService roomInventoryService;
 
     @DistributedLock(key = "'room:' + #roomId")
     @Transactional
@@ -46,21 +48,42 @@ public class ReservationService {
         Room room = roomRepository.findById(reserveRequest.getRoomId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ROOM_NOT_FOUND));
 
-        List<RoomInventory> inventories = roomInventoryRepository.findAllByRoomAndDateRange(
+        List<RoomInventory> inventories = roomInventoryService.getStayPeriodInventories(
+                roomId,
+                reserveRequest.getCheckInDate(),
+                reserveRequest.getCheckOutDate()
+        );
+        reservationValidator.validate(member, reserveRequest, room, inventories);
+
+        roomInventoryService.reduceStock(
                 reserveRequest.getRoomId(),
                 reserveRequest.getCheckInDate(),
                 reserveRequest.getCheckOutDate()
         );
 
-        reservationValidator.validate(member, reserveRequest, room, inventories);
-
         Reservation reservation = reserveRequest.toEntity(member, room);
         reservationRepository.save(reservation);
 
-        inventories.forEach(inventory -> inventory.updateStockStatus(false));
-
         reservationRedisRepository.savePaymentTimeout(reservation.getId(), 1);
         return ReservationResponse.from(reservation);
+    }
+
+    @Transactional
+    public void updateConfirmStatus(Reservation reservation) {
+        reservation.updateStatusConfirmed();
+        reservationRepository.save(reservation);
+    }
+
+    @Transactional
+    public void updateCancelStatus(Reservation reservation) {
+        reservation.updateStatusCanceled();
+        reservationRepository.save(reservation);
+    }
+
+    @Transactional
+    public void updateExpiredStatus(Reservation reservation) {
+        reservation.updateStatusExpired();
+        reservationRepository.save(reservation);
     }
 
     @Transactional
@@ -75,18 +98,14 @@ public class ReservationService {
         }
 
         // 1. 결제 만료로 인한 취소, 상태 변경
-        reservation.expired();
+        updateExpiredStatus(reservation);
 
         // 2. 재고 복구
-        List<RoomInventory> inventories = roomInventoryRepository.findAllByRoomAndDateRange(
-                reservation.getRoom().getId(),
-                reservation.getCheckInDate(),
-                reservation.getCheckOutDate()
-        );
+        roomInventoryService.restoreStock(reservation.getRoom().getId(), reservation.getCheckInDate(), reservation.getCheckOutDate());
 
-        inventories.forEach(inventory -> inventory.updateStockStatus(true)); // 재고 복구!
         eventPublisher.publishEvent(new ReservationRollbackEvent(reservationId));
     }
+
 
 
 

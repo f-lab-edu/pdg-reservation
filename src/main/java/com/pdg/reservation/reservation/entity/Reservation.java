@@ -3,6 +3,7 @@ package com.pdg.reservation.reservation.entity;
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
+import com.pdg.reservation.payment.entity.Payment;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.common.entity.BaseEntity;
 import com.pdg.reservation.member.entity.Member;
@@ -74,11 +75,53 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    public void expired() {
+    @OneToOne(mappedBy = "reservation", fetch = FetchType.LAZY)
+    private Payment payment;
+
+    @Version
+    private Long version;
+
+    public void updateStatusExpired() {
         if (this.status != ReservationStatus.PENDING_PAYMENT) {
             throw new CustomException(ErrorCode.RESERVE_INVALID_STATUS);
         }
         this.status = ReservationStatus.EXPIRED;
+    }
+
+    public void updateStatusConfirmed() {
+        if (this.status != ReservationStatus.PENDING_PAYMENT) {
+            throw new CustomException(ErrorCode.RESERVE_INVALID_STATUS);
+        }
+        this.confirmedAt = LocalDateTime.now();
+        this.status = ReservationStatus.CONFIRMED;
+    }
+
+    public void updateStatusCanceled() {
+        if (this.status != ReservationStatus.CONFIRMED) {
+            throw new CustomException(ErrorCode.RESERVE_INVALID_STATUS);
+        }
+        this.canceledAt = LocalDateTime.now();
+        this.status = ReservationStatus.CANCELED;
+    }
+
+    public void validatePayable(BigDecimal amount) {
+        //1. 결제 가능 상태 검증
+        if (this.status != ReservationStatus.PENDING_PAYMENT) {
+            throw new CustomException(ErrorCode.PAYMENT_INVALID_RESERVE_STATUS);
+        }
+
+        //2. 결제 가능 가격 검증
+        if (this.totalPrice.compareTo(amount) != 0 ) {
+            throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+        }
+    }
+
+    public void validateCancelable() {
+        //1. 결제 취소 상태 검증
+        if (this.status != ReservationStatus.CONFIRMED) {
+            throw new CustomException(ErrorCode.PAYMENT_INVALID_CANCEL_STATUS);
+        }
+
     }
 
 }
