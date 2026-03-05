@@ -4,6 +4,7 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.payment.entity.Payment;
+import com.pdg.reservation.review.entity.Review;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.common.entity.BaseEntity;
 import com.pdg.reservation.member.entity.Member;
