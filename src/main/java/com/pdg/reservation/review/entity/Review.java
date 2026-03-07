@@ -43,6 +43,9 @@ public class Review {
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private LocalDateTime deletedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
@@ -54,5 +57,15 @@ public class Review {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false, unique = true)
     private Reservation reservation;
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public void delete(){
+        this.deletedAt = LocalDateTime.now();
+    }
+
+
 
 }
