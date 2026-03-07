@@ -52,6 +52,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .join(reservation.room, room).fetchJoin()
                 .where(
                         review.member.id.eq(memberId),
+                        isNotDeleted(),
                         eqMinRating(minRating)
                 )
                 .orderBy(getOrderSpecifier(condition.getSortType()))
@@ -74,6 +75,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .join(reservation.room, room).fetchJoin()
                 .where(
                         review.accommodation.id.eq(accommodationId),
+                        isNotDeleted(),
                         eqMinRating(condition.getMinRating())
                 )
                 .orderBy(getOrderSpecifier(condition.getSortType()))
@@ -89,6 +91,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .from(review)
                 .where(
                         review.member.id.eq(memberId),
+                        isNotDeleted(),
                         eqMinRating(minRating)
                 );
     }
@@ -99,16 +102,15 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .from(review)
                 .where(
                         review.accommodation.id.eq(accommodationId),
+                        isNotDeleted(),
                         eqMinRating(minRating)
                 );
     }
 
 
-
-
-
-
-
+    private BooleanExpression isNotDeleted() {
+        return review.deletedAt.isNull();
+    }
 
     private BooleanExpression eqMinRating(Integer minRating) {
         return minRating != null ? review.rating.goe(minRating) : null;

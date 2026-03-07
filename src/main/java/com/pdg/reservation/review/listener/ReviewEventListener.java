@@ -5,6 +5,7 @@ import com.pdg.reservation.accommodation.repository.AccommodationRepository;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.review.event.ReviewCreatedEvent;
+import com.pdg.reservation.review.event.ReviewDeletedEvent;
 import com.pdg.reservation.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +31,28 @@ public class ReviewEventListener {
     @Async("reviewAsyncExecutor")
     @Transactional(propagation = REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void updateAccommodationRating(ReviewCreatedEvent event) {
-        log.info("숙소 평점 업데이트 시작 - ID: {}", event.accommodationId);
-        Accommodation accommodation = accommodationRepository.findById(event.accommodationId)
+    public void handleReviewCreated(ReviewCreatedEvent event) {
+        log.info("리뷰 생성 이벤트 수신 - 숙소 ID: {}", event.accommodationId);
+        updateRating(event.accommodationId);
+    }
+
+    @Async("reviewAsyncExecutor")
+    @Transactional(propagation = REQUIRES_NEW)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleReviewDeleted(ReviewDeletedEvent event) {
+        log.info("리뷰 삭제 이벤트 수신 - 숙소 ID: {}", event.accommodationId);
+        updateRating(event.accommodationId);
+    }
+
+    private void updateRating(Long accommodationId) {
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACC_NOT_FOUND));
 
-        BigDecimal ratingAvg = reviewRepository.calculateAverageRating(event.accommodationId);
+        BigDecimal ratingAvg = reviewRepository.calculateAverageRating(accommodationId);
         accommodation.updateAverageRating(ratingAvg);
-        // 3. 추후 카프카로 이관
+
+        log.info("숙소 평점 업데이트 완료 - ID: {}, 새 평점: {}", accommodationId, ratingAvg);
+
+        // 추후 카프카 이관
     }
 }

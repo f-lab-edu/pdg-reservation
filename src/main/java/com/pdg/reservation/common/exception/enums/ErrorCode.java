@@ -55,6 +55,9 @@ public enum ErrorCode {
     REVIEW_NOT_ELIGIBLE(HttpStatus.BAD_REQUEST, "REVIEW_001", "이용 완료 상태만 리뷰 작성이 가능합니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "REVIEW_002", "이미 작성된 리뷰가 존재합니다."),
     REVIEW_BEFORE_CHECKOUT(HttpStatus.BAD_REQUEST, "REVIEW_003", "리뷰는 체크아웃 날짜 이후부터 작성할 수 있습니다."),
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_004", "해당 리뷰가 존재하지 않습니다."),
+    REVIEW_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "REVIEW_005", "해당 리뷰는 이미 삭제되었습니다."),
+    REVIEW_OWNER_MISMATCH(HttpStatus.FORBIDDEN, "REVIEW_006", "본인이 작성한 리뷰만 삭제할 수 있습니다."),
 
     ;
 

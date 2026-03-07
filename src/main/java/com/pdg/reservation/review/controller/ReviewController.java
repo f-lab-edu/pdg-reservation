@@ -2,10 +2,7 @@ package com.pdg.reservation.review.controller;
 
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
-import com.pdg.reservation.review.dto.ReviewCreateRequest;
-import com.pdg.reservation.review.dto.ReviewCreateResponse;
-import com.pdg.reservation.review.dto.ReviewResponse;
-import com.pdg.reservation.review.dto.ReviewSearchCondition;
+import com.pdg.reservation.review.dto.*;
 import com.pdg.reservation.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +46,14 @@ public class ReviewController {
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
         return ApiResponse.ok(reviewService.getAccommodationReviews(accommodationId, condition, pageable));
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<ReviewDeleteResponse>> deleteReview(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reviewId
+    ) {
+        return ApiResponse.ok(reviewService.deleteReview(userDetails.getMember().getId(), reviewId));
     }
 
 
