@@ -44,12 +44,18 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT_004", "결제 가격이 예약 가격과 상이합니다."),
     PAYMENT_PG_CONNECTION_ERROR(HttpStatus.BAD_GATEWAY,"PAYMENT_005","PG사 통신 중 오류가 발생했습니다."),
     PAYMENT_INVALID_CANCEL_STATUS(HttpStatus.BAD_REQUEST, "PAYMENT_006", "결제 완료 상태만 취소할 수 있습니다."),
+
     // 일반 비즈니스 예외 (사용자 재시도 유도)
     PAYMENT_PG_CANCEL_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "PAYMENT_007", "결제 취소 요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요."),
     // 보상 트랜잭션 실패, 시스템 무결성 예외 (내부 관리용 - 매우 중요)
     PAYMENT_PG_CANCEL_COMPENSATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT_008", "시스템 오류로 인한 자동 결제 취소에 실패했습니다. 관리자 확인이 필요합니다."),
     PAYMENT_INVALID_STATUS(HttpStatus.BAD_REQUEST, "PAYMENT_009", "현재 결제 상태에서는 요청하신 작업을 수행할 수 없습니다."),
-    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND,"PAYMENT_010", "연관된 결제 내역을 찾을 수 없습니다.")
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND,"PAYMENT_010", "연관된 결제 내역을 찾을 수 없습니다."),
+
+    REVIEW_NOT_ELIGIBLE(HttpStatus.BAD_REQUEST, "REVIEW_001", "이용 완료 상태만 리뷰 작성이 가능합니다."),
+    REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "REVIEW_002", "이미 작성된 리뷰가 존재합니다."),
+    REVIEW_BEFORE_CHECKOUT(HttpStatus.BAD_REQUEST, "REVIEW_003", "리뷰는 체크아웃 날짜 이후부터 작성할 수 있습니다."),
+
     ;
 
     private final HttpStatus httpStatus;

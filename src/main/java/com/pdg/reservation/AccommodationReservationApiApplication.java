@@ -4,9 +4,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
 
+@EnableAsync       // @Async 활성화
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 @EnableJpaAuditing // [필수] JPA Auditing 기능 활성화
 @SpringBootApplication

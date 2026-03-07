@@ -11,4 +11,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
     @EntityGraph(attributePaths = {"payment"})
     //예약 ID와 예약한 유저 ID 일치되는 예약 데이터 조회
     Optional<Reservation> findByIdAndMemberId(Long id, Long memberId);
+
 }
