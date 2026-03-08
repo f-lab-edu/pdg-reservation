@@ -122,7 +122,18 @@ public class Reservation extends BaseEntity {
         if (this.status != ReservationStatus.CONFIRMED) {
             throw new CustomException(ErrorCode.PAYMENT_INVALID_CANCEL_STATUS);
         }
+    }
 
+    public void validateReviewEligibility(){
+        // 리뷰 등록 가능 상태 검증
+        /*
+        if (this.checkOutDate.isAfter(LocalDate.now())) {
+            throw new CustomException(ErrorCode.REVIEW_BEFORE_CHECKOUT);
+        }
+        */
+        if (this.status != ReservationStatus.COMPLETED) {
+            throw new CustomException(ErrorCode.REVIEW_NOT_ELIGIBLE);
+        }
     }
 
 }

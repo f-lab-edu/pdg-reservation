@@ -102,4 +102,7 @@ public class Accommodation extends BaseEntity {
         return Collections.unmodifiableList(images);
     }
 
+    public void updateAverageRating(BigDecimal ratingAverage) {
+        this.ratingAverage = ratingAverage;
+    }
 }
