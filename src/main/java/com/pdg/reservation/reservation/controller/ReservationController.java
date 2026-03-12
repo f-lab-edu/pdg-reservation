@@ -4,6 +4,7 @@ import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.dto.*;
 import com.pdg.reservation.reservation.service.ReservationCancelService;
@@ -48,12 +49,13 @@ public class ReservationController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<ReservationSearchResponse>>> searchReservations(
+    public ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> searchReservations(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid ReservationSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return ApiResponse.ok(reservationService.search(userDetails.getMember().getId(), condition, pageable));
+        Page<ReservationSearchResponse> page = reservationService.search(userDetails.getMember().getId(), condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page));
     }
 
 

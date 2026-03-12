@@ -1,6 +1,7 @@
 package com.pdg.reservation.room.controller;
 
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.room.dto.RoomDetailResponse;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
 import com.pdg.reservation.room.dto.RoomSearchResponse;
@@ -26,12 +27,13 @@ public class RoomController {
     private final RoomService roomService;
 
     @GetMapping("/accommodations/{accommodationId}/rooms")
-    public ResponseEntity<ApiResponse<Page<RoomSearchResponse>>> getRooms(
+    public ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> getRooms(
             @PathVariable Long accommodationId,
             @Valid RoomSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return ApiResponse.ok(roomService.getRooms(accommodationId, condition, pageable));
+        Page<RoomSearchResponse> page = roomService.getRooms(accommodationId, condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page));
     }
 
     @GetMapping("/rooms/{roomId}")

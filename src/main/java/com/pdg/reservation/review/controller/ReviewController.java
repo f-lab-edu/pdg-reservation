@@ -2,11 +2,13 @@ package com.pdg.reservation.review.controller;
 
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.review.dto.*;
 import com.pdg.reservation.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -31,16 +33,17 @@ public class ReviewController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> myReviews(
+    public ResponseEntity<ApiResponse<PageResponse<ReviewResponse>>> myReviews(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid ReviewSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return ApiResponse.ok(reviewService.findMyReviews(userDetails.getMember().getId(), condition, pageable));
+        Page<ReviewResponse> page = reviewService.findMyReviews(userDetails.getMember().getId(), condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page));
     }
 
     @GetMapping("/accommodations/{accommodationId}")
-    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> getAccommodationReviews(
+    public ResponseEntity<ApiResponse<PageResponse<ReviewResponse>>> getAccommodationReviews(
             @PathVariable Long accommodationId,
             @Valid ReviewSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable

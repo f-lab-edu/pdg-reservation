@@ -7,14 +7,20 @@ import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.room.repository.RoomExpressions;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.util.StringUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.pdg.reservation.accommodation.entity.QAccommodation.accommodation;
-import static com.pdg.reservation.accommodation.entity.QAccommodationImage.*;
+import static com.pdg.reservation.accommodation.entity.QAccommodationImage.accommodationImage;
 import static com.pdg.reservation.room.entity.QRoom.room;
 import static com.pdg.reservation.room.entity.QRoomInventory.roomInventory;
 
@@ -134,6 +140,41 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
                                         .orElse(0L),// Value: 객실 평균가
                         Math::min // 객실 최소값
                 ));
+    }
+
+    @Override
+    public Long incrementRating(Long accommodationId, BigDecimal rating) {
+        return jpaQueryFactory
+                .update(accommodation)
+                .set(accommodation.totalRatingSum, accommodation.totalRatingSum.add(rating))
+                .set(accommodation.reviewCount, accommodation.reviewCount.add(1L))
+                .set(accommodation.ratingAverage,
+                        Expressions.numberTemplate(BigDecimal.class,
+                                "ROUND(({0} + {1}) / ({2} + 1), 1)",
+                                accommodation.totalRatingSum, rating, accommodation.reviewCount))
+                .where(accommodation.id.eq(accommodationId))
+                .execute();
+    }
+
+    @Override
+    public Long decrementRating(Long accommodationId, BigDecimal rating) {
+        return jpaQueryFactory
+                .update(accommodation)
+                .set(accommodation.totalRatingSum, accommodation.totalRatingSum.subtract(rating))
+                .set(accommodation.reviewCount, accommodation.reviewCount.subtract(1L))
+                .set(accommodation.ratingAverage,
+                        Expressions.numberTemplate(
+                                BigDecimal.class,
+                                "CASE WHEN {0} > 1 THEN ROUND(({1} - {2}) / ({0} - 1), 1) ELSE 0 END",
+                                accommodation.reviewCount,
+                                accommodation.totalRatingSum,
+                                rating
+                        ))
+                .where(
+                        accommodation.id.eq(accommodationId)
+                                .and(accommodation.reviewCount.gt(0L)) // [필수] 음수 카운트 방지
+                )
+                .execute();
     }
 
 }

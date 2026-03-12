@@ -3,10 +3,7 @@ package com.pdg.reservation.accommodation.dto;
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.accommodation.entity.Address;
 import com.pdg.reservation.accommodation.enums.AccommodationType;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 
 import java.math.BigDecimal;
@@ -17,19 +14,20 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AccommodationDetailResponse {
 
-    private final Long id;
-    private final String name;
-    private final AccommodationType type;
-    private final String description;
-    private final List<String> amenities;
-    private final LocalTime checkInTime;
-    private final LocalTime checkOutTime;
-    private final BigDecimal ratingAverage;
-    private final boolean isOperational;
-    private final Address address;
-    private final List<ImageResponse> images;
+    private Long id;
+    private String name;
+    private AccommodationType type;
+    private String description;
+    private List<String> amenities;
+    private LocalTime checkInTime;
+    private LocalTime checkOutTime;
+    private BigDecimal ratingAverage;
+    private boolean operational;
+    private Address address;
+    private List<ImageResponse> images;
 
     public static AccommodationDetailResponse from(Accommodation accommodation) {
         return AccommodationDetailResponse.builder()
@@ -41,7 +39,7 @@ public class AccommodationDetailResponse {
                 .checkInTime(accommodation.getCheckInTime())
                 .checkOutTime(accommodation.getCheckOutTime())
                 .ratingAverage(accommodation.getRatingAverage())
-                .isOperational(accommodation.isOperational())
+                .operational(accommodation.isOperational())
                 .address(accommodation.getAddress())
                 .images(accommodation.getImages()
                         .stream()
