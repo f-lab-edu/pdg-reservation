@@ -53,6 +53,18 @@ public class DistributedLockAspect {
                 throw new CustomException(ErrorCode.RESERVE_LOCK_ACQUISITION_FAILED);
             }
 
+            if (!isLocked) {
+                // 1. 옵션이 true인 경우 (예약 등): 예외 발생
+                if (distributedLock.throwExceptionOnFailure()) {
+                    log.warn("[DistributedLock] 락 획득 실패 - 예외 발생. Key: {}", lockKey);
+                    throw new CustomException(ErrorCode.RESERVE_LOCK_ACQUISITION_FAILED);
+                }
+
+                // 2. 옵션이 false인 경우 (조회 등): 예외 없이 다음 로직(DB 조회) 진행
+                log.warn("[DistributedLock] 락 획득 실패 - Fallback(DB 조회) 진행. Key: {}", lockKey);
+                return joinPoint.proceed();
+            }
+
             log.info("[DistributedLock] 락 획득 성공 - Key: {}", lockKey);
             return joinPoint.proceed();
 

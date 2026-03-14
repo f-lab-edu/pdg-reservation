@@ -668,280 +668,61 @@ INSERT INTO reserv.room_inventory (room_id, inventory_date, is_stocked, price, c
 INSERT INTO reserv.room_inventory (room_id, inventory_date, is_stocked, price, created_at, updated_at) VALUES (281, '2026-03-01', 1, 120000, NOW(), NOW()),(281, '2026-03-02', 1, 100000, NOW(), NOW()),(281, '2026-03-03', 1, 100000, NOW(), NOW()),(281, '2026-03-04', 1, 100000, NOW(), NOW()),(281, '2026-03-05', 1, 100000, NOW(), NOW()),(281, '2026-03-06', 1, 120000, NOW(), NOW()),(281, '2026-03-07', 1, 120000, NOW(), NOW()),(281, '2026-03-08', 1, 120000, NOW(), NOW()),(281, '2026-03-09', 1, 100000, NOW(), NOW()),(281, '2026-03-10', 1, 100000, NOW(), NOW()),(281, '2026-03-11', 1, 100000, NOW(), NOW()),(281, '2026-03-12', 1, 100000, NOW(), NOW()),(281, '2026-03-13', 1, 120000, NOW(), NOW()),(281, '2026-03-14', 1, 120000, NOW(), NOW()),(281, '2026-03-15', 1, 120000, NOW(), NOW()),(281, '2026-03-16', 1, 100000, NOW(), NOW()),(281, '2026-03-17', 1, 100000, NOW(), NOW()),(281, '2026-03-18', 1, 100000, NOW(), NOW()),(281, '2026-03-19', 1, 100000, NOW(), NOW()),(281, '2026-03-20', 1, 120000, NOW(), NOW()),(281, '2026-03-21', 1, 120000, NOW(), NOW()),(281, '2026-03-22', 1, 120000, NOW(), NOW()),(281, '2026-03-23', 1, 100000, NOW(), NOW()),(281, '2026-03-24', 1, 100000, NOW(), NOW()),(281, '2026-03-25', 1, 100000, NOW(), NOW()),(281, '2026-03-26', 1, 100000, NOW(), NOW()),(281, '2026-03-27', 1, 120000, NOW(), NOW()),(281, '2026-03-28', 1, 120000, NOW(), NOW()),(281, '2026-03-29', 1, 120000, NOW(), NOW()),(281, '2026-03-30', 1, 100000, NOW(), NOW());
 INSERT INTO reserv.room_inventory (room_id, inventory_date, is_stocked, price, created_at, updated_at) VALUES (282, '2026-03-01', 1, 70000, NOW(), NOW()),(282, '2026-03-02', 1, 50000, NOW(), NOW()),(282, '2026-03-03', 1, 50000, NOW(), NOW()),(282, '2026-03-04', 1, 50000, NOW(), NOW()),(282, '2026-03-05', 1, 50000, NOW(), NOW()),(282, '2026-03-06', 1, 70000, NOW(), NOW()),(282, '2026-03-07', 1, 70000, NOW(), NOW()),(282, '2026-03-08', 1, 70000, NOW(), NOW()),(282, '2026-03-09', 1, 50000, NOW(), NOW()),(282, '2026-03-10', 1, 50000, NOW(), NOW()),(282, '2026-03-11', 1, 50000, NOW(), NOW()),(282, '2026-03-12', 1, 50000, NOW(), NOW()),(282, '2026-03-13', 1, 70000, NOW(), NOW()),(282, '2026-03-14', 1, 70000, NOW(), NOW()),(282, '2026-03-15', 1, 70000, NOW(), NOW()),(282, '2026-03-16', 1, 50000, NOW(), NOW()),(282, '2026-03-17', 1, 50000, NOW(), NOW()),(282, '2026-03-18', 1, 50000, NOW(), NOW()),(282, '2026-03-19', 1, 50000, NOW(), NOW()),(282, '2026-03-20', 1, 70000, NOW(), NOW()),(282, '2026-03-21', 1, 70000, NOW(), NOW()),(282, '2026-03-22', 1, 70000, NOW(), NOW()),(282, '2026-03-23', 1, 50000, NOW(), NOW()),(282, '2026-03-24', 1, 50000, NOW(), NOW()),(282, '2026-03-25', 1, 50000, NOW(), NOW()),(282, '2026-03-26', 1, 50000, NOW(), NOW()),(282, '2026-03-27', 1, 70000, NOW(), NOW()),(282, '2026-03-28', 1, 70000, NOW(), NOW()),(282, '2026-03-29', 1, 70000, NOW(), NOW()),(282, '2026-03-30', 1, 50000, NOW(), NOW());
 
--- 4. Review Data
-/*
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 4, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 4, 4, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 2, 4, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 18, 5, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 24, 5, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 16, 5, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 6, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 30, 6, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 3, 6, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 11, 7, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 7, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 22, 7, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 6, 8, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 28, 8, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 2, 8, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 14, 9, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 9, 9, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 5, 9, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 12, 10, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 3, 10, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 9, 10, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 11, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 19, 11, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 24, 11, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 3, 12, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 14, 12, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 12, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 27, 13, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 25, 13, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 20, 13, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 24, 14, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 25, 14, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 3, 14, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 15, 15, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 5, 15, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 5, 15, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 20, 16, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 5, 16, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 21, 16, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 17, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 1, 17, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 4, 17, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 18, 18, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 13, 18, NOW(), '침구 푹신하고 조식 맛있음.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 27, 18, NOW(), '주차 편리.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 19, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 14, 19, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 26, 19, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 8, 20, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 26, 20, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 21, 20, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 21, NOW(), '직원 친절 룸 컨디션 최고.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 4, 21, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 23, 21, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 27, 22, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 20, 22, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 18, 22, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 12, 23, NOW(), '주차 편리.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 17, 23, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 23, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 26, 24, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 24, 24, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 5, 24, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 27, 25, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 25, 25, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 14, 25, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 9, 26, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 8, 26, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 21, 26, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 24, 27, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 18, 27, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 27, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 11, 28, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 28, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 30, 28, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 18, 29, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 25, 29, NOW(), '비즈니스 센터 편리.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 16, 29, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 25, 30, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 27, 30, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 23, 30, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 7, 31, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 31, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 5, 31, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 32, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 19, 32, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 23, 32, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 20, 33, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 25, 33, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 21, 33, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 34, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 26, 34, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 17, 34, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 26, 35, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 10, 35, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 25, 35, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 21, 36, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 14, 36, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 20, 36, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 17, 37, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 1, 37, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 7, 37, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 22, 38, NOW(), '주차 편리.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 27, 38, NOW(), '침구 푹신하고 조식 맛있음.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 38, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 2, 39, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 11, 39, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 27, 39, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 40, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 29, 40, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 11, 40, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 16, 41, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 5, 41, NOW(), '비즈니스 센터 편리.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 9, 41, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 20, 42, NOW(), '직원 친절 룸 컨디션 최고.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 8, 42, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 7, 42, NOW(), '비즈니스 센터 편리.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 11, 43, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 19, 43, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 22, 43, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 44, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 15, 44, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 44, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 3, 45, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 1, 45, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 27, 45, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 9, 46, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 46, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 14, 46, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 26, 47, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 8, 47, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 47, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 2, 48, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 16, 48, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 10, 48, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 25, 49, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 28, 49, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 13, 49, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 9, 50, NOW(), '비즈니스 센터 편리.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 29, 50, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 5, 50, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 51, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 28, 51, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 51, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 11, 52, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 2, 52, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 16, 52, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 6, 53, NOW(), '침구 푹신하고 조식 맛있음.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 12, 53, NOW(), '주차 편리.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 24, 53, NOW(), '직원 친절 룸 컨디션 최고.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 25, 54, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 12, 54, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 17, 54, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 16, 55, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 23, 55, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 18, 55, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 16, 56, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 30, 56, NOW(), '직원 친절 룸 컨디션 최고.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 1, 56, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 11, 57, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 10, 57, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 19, 57, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 8, 58, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 13, 58, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 8, 58, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 18, 59, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 59, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 24, 59, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 20, 60, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 5, 60, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 21, 60, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 4, 61, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 24, 61, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 21, 61, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 30, 62, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 62, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 13, 62, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 3, 63, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 15, 63, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 23, 63, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 16, 64, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 23, 64, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 14, 64, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 21, 65, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 19, 65, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 11, 65, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 1, 66, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 2, 66, NOW(), '침구 푹신하고 조식 맛있음.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 28, 66, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 11, 67, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 12, 67, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 67, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 18, 68, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 21, 68, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 21, 68, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 25, 69, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 6, 69, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 22, 69, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 70, NOW(), '독서등 콘센트 편리.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 70, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 12, 70, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 30, 71, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 15, 71, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 11, 71, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 2, 72, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 25, 72, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 28, 72, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 73, NOW(), '주차 편리.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 15, 73, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 24, 73, NOW(), '직원 친절 룸 컨디션 최고.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 14, 74, NOW(), '루프탑 야경 굿.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 11, 74, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 16, 74, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 24, 75, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 15, 75, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 9, 75, NOW(), '사장님 친절 토스트 맛집.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 4, 76, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 19, 76, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 24, 76, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 6, 77, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 12, 77, NOW(), '비즈니스 센터 편리.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 24, 77, NOW(), '디너 뷔페 추천.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 78, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 9, 78, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 25, 78, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 17, 79, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 29, 79, NOW(), '파티 재밌음.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 15, 79, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 4, 80, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 5, 80, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 6, 80, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 20, 81, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 3, 81, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 16, 81, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 26, 82, NOW(), '화장실 넉넉함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 7, 82, NOW(), '개인 커튼 있어서 좋음.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 19, 82, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 1, 83, NOW(), 'OTT 서비스 굿. 늦은 체크아웃도 가능.', '푸른모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 29, 83, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 26, 83, NOW(), '접근성 좋음.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 84, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 14, 84, NOW(), '역이랑 가까움.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 23, 84, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 85, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 85, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 28, 85, NOW(), '스위트룸 넓고 쾌적.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 2, 86, NOW(), '주차 편리.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 6, 86, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 14, 86, NOW(), '비즈니스 센터 편리.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 22, 87, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 27, 87, NOW(), '토스트 조식 제공됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 29, 87, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 1, 88, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 29, 88, NOW(), '가격 대비 객실이 넓고 난방이 잘 돼서 따뜻하게 잤습니다.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 88, NOW(), '가성비 최고.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 15, 89, NOW(), '짐 보관 가능.', '보라모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 25, 89, NOW(), '주방 시설 굿.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 29, 89, NOW(), '청결도 높음.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 26, 90, NOW(), '욕조 커서 좋음.', '흰색모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 7, 90, NOW(), 'PC 사양 좋음.', '황금모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 7, 90, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 4, 91, NOW(), '인테리어 고급짐.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 26, 91, NOW(), '룸 서비스 훌륭.', '검은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 14, 91, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 5, 92, NOW(), '침구 푹신하고 조식 맛있음.', '초록모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 10, 92, NOW(), '뷰가 아름답습니다.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (3, 10, 92, NOW(), '방음 잘됨.', '분홍모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (2, 25, 93, NOW(), '무인텔이라 편리함.', '붉은모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (4, 13, 93, NOW(), '수압 셈.', '하늘모자');
-INSERT INTO reserv.review (rating, member_id, accommodation_id, created_at, content, nick_name) VALUES (5, 26, 93, NOW(), '담배 냄새 약간 나지만 깔끔함.', '노란모자');
-*/
 
+-- 예약 데이터
+INSERT INTO reserv.reservation (check_in_date,check_out_date,guest_count,total_price,accommodation_id,canceled_at,confirmed_at,created_at,member_id,room_id,updated_at,version,guest_phone_number,guest_name,status) VALUES
+('2026-03-10','2026-03-11',2,90000.00,4,NULL,'2026-03-09 20:17:22.150122','2026-03-09 20:17:09.581828',2,14,'2026-03-09 20:17:22.152741',1,'01015884640','박대광','COMPLETED'),
+('2026-03-11','2026-03-12',2,90000.00,4,NULL,'2026-03-09 20:17:36.470015','2026-03-09 20:17:30.074824',2,14,'2026-03-09 20:17:36.470552',1,'01015884640','박대광','COMPLETED'),
+('2026-03-12','2026-03-13',2,90000.00,4,NULL,'2026-03-09 20:17:45.893571','2026-03-09 20:17:40.959389',2,14,'2026-03-09 20:17:45.893571',1,'01015884640','박대광','COMPLETED'),
+('2026-03-13','2026-03-14',2,108000.00,4,NULL,'2026-03-09 20:18:04.662046','2026-03-09 20:17:58.219784',2,14,'2026-03-09 20:18:04.662577',1,'01015884640','박대광','COMPLETED'),
+('2026-03-14','2026-03-15',2,108000.00,4,NULL,'2026-03-09 20:18:14.111982','2026-03-09 20:18:09.732977',2,14,'2026-03-09 20:18:14.112494',1,'01015884640','박대광','COMPLETED'),
+('2026-03-15','2026-03-16',2,108000.00,4,NULL,'2026-03-09 20:18:23.628677','2026-03-09 20:18:19.042927',2,14,'2026-03-09 20:18:23.629201',1,'01015884640','박대광','COMPLETED'),
+('2026-03-16','2026-03-17',2,90000.00,4,NULL,'2026-03-09 20:18:39.163502','2026-03-09 20:18:31.990140',2,14,'2026-03-09 20:18:39.163502',1,'01015884640','박대광','COMPLETED'),
+('2026-03-17','2026-03-18',2,90000.00,4,NULL,'2026-03-09 20:18:52.426772','2026-03-09 20:18:46.661598',2,14,'2026-03-09 20:18:52.427300',1,'01015884640','박대광','COMPLETED'),
+('2026-03-18','2026-03-19',2,90000.00,4,NULL,'2026-03-09 20:19:07.111621','2026-03-09 20:18:59.583520',2,14,'2026-03-09 20:19:07.112149',1,'01015884640','박대광','COMPLETED'),
+('2026-03-19','2026-03-20',2,90000.00,4,NULL,'2026-03-09 20:19:17.603483','2026-03-09 20:19:12.916330',2,14,'2026-03-09 20:19:17.603483',1,'01015884640','박대광','COMPLETED');
+INSERT INTO reserv.reservation (check_in_date,check_out_date,guest_count,total_price,accommodation_id,canceled_at,confirmed_at,created_at,member_id,room_id,updated_at,version,guest_phone_number,guest_name,status) VALUES
+('2026-03-20','2026-03-21',2,108000.00,4,NULL,'2026-03-09 20:19:41.452447','2026-03-09 20:19:28.793288',2,14,'2026-03-09 20:19:41.452973',1,'01015884640','박대광','COMPLETED'),
+('2026-03-21','2026-03-22',2,108000.00,4,NULL,'2026-03-09 20:19:44.463539','2026-03-09 20:19:33.081167',2,14,'2026-03-09 20:19:44.464070',1,'01015884640','박대광','COMPLETED');
+
+-- 결제 데이터
+INSERT INTO reserv.payment (amount,canceled_at,paid_at,reservation_id,pg_transaction_number,card_company,`method`,status) VALUES
+(90000.00,NULL,'2026-03-09 20:17:22.144862',1,'TXNUM_559B50CE','KB','KAKAO_PAY','PAID'),
+(90000.00,NULL,'2026-03-09 20:17:36.467379',2,'TXNUM_AE9236B4','KB','KAKAO_PAY','PAID'),
+(90000.00,NULL,'2026-03-09 20:17:45.890437',3,'TXNUM_1F15AAE8','KB','KAKAO_PAY','PAID'),
+(108000.00,NULL,'2026-03-09 20:18:04.659440',4,'TXNUM_8E7E3F1E','KB','KAKAO_PAY','PAID'),
+(108000.00,NULL,'2026-03-09 20:18:14.109855',5,'TXNUM_54F7F168','KB','KAKAO_PAY','PAID'),
+(108000.00,NULL,'2026-03-09 20:18:23.626012',6,'TXNUM_CB581A9F','KB','KAKAO_PAY','PAID'),
+(90000.00,NULL,'2026-03-09 20:18:39.161249',7,'TXNUM_8DED4144','KB','KAKAO_PAY','PAID'),
+(90000.00,NULL,'2026-03-09 20:18:52.423613',8,'TXNUM_2C705C0F','KB','KAKAO_PAY','PAID'),
+(90000.00,NULL,'2026-03-09 20:19:07.109999',9,'TXNUM_A54C6AB5','KB','KAKAO_PAY','PAID'),
+(90000.00,NULL,'2026-03-09 20:19:17.601303',10,'TXNUM_2DFB0CC0','KB','KAKAO_PAY','PAID');
+INSERT INTO reserv.payment (amount,canceled_at,paid_at,reservation_id,pg_transaction_number,card_company,`method`,status) VALUES
+(108000.00,NULL,'2026-03-09 20:19:41.450344',11,'TXNUM_609A1979','KB','KAKAO_PAY','PAID'),
+(108000.00,NULL,'2026-03-09 20:19:44.460886',12,'TXNUM_295D1837','KB','KAKAO_PAY','PAID');
+
+
+-- 4. Review Data
+INSERT INTO reserv.review (rating,accommodation_id,created_at,deleted_at,member_id,reservation_id,nick_name,content) VALUES
+	 (3.0,4,'2026-03-09 20:20:30.926827',NULL,2,1,'푸른모자','리뷰내용 리뷰내용 리뷰내용1'),
+	 (3.0,4,'2026-03-09 20:20:35.175769',NULL,2,2,'푸른모자','리뷰내용 리뷰내용 리뷰내용2'),
+	 (3.0,4,'2026-03-09 20:20:37.606503',NULL,2,3,'푸른모자','리뷰내용 리뷰내용 리뷰내용3'),
+	 (3.0,4,'2026-03-09 20:20:40.632029',NULL,2,4,'푸른모자','리뷰내용 리뷰내용 리뷰내용4'),
+	 (3.0,4,'2026-03-09 20:20:43.562860',NULL,2,5,'푸른모자','리뷰내용 리뷰내용 리뷰내용5'),
+	 (3.0,4,'2026-03-09 20:20:46.815794',NULL,2,6,'푸른모자','리뷰내용 리뷰내용 리뷰내용6'),
+	 (3.0,4,'2026-03-09 20:20:50.140348',NULL,2,7,'푸른모자','리뷰내용 리뷰내용 리뷰내용7'),
+	 (3.0,4,'2026-03-09 20:20:51.773724',NULL,2,8,'푸른모자','리뷰내용 리뷰내용 리뷰내용7'),
+	 (3.0,4,'2026-03-09 20:20:55.504660',NULL,2,9,'푸른모자','리뷰내용 리뷰내용 리뷰내용9'),
+	 (3.0,4,'2026-03-09 20:20:58.666040',NULL,2,10,'푸른모자','리뷰내용 리뷰내용 리뷰내용10');
+INSERT INTO reserv.review (rating,accommodation_id,created_at,deleted_at,member_id,reservation_id,nick_name,content) VALUES
+	 (3.0,4,'2026-03-09 20:21:01.168822',NULL,2,11,'푸른모자','리뷰내용 리뷰내용 리뷰내용11'),
+	 (3.0,4,'2026-03-09 20:21:03.484323',NULL,2,12,'푸른모자','리뷰내용 리뷰내용 리뷰내용12');
+
+update reserv.room_inventory set is_stocked = false
+where id in(40,41,42,43,44,45,46,47,48,49,50,51);
+
+update accommodation set rating_average = 3, total_rating_sum = 32, review_count=12
+where id='4';
 
 
 -- 숙소 이미지 데이터 (90개 숙소 x 3개 = 270행)
@@ -2561,7 +2342,7 @@ INSERT INTO reserv.accommodation_image (image_type, is_main, sort_order, accommo
                                                                                                                                  ('ROOM', 0, 5, null, 280, 'https://fake-img.com/room280/sub4.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 1, 1, null, 281, 'https://fake-img.com/room281/main.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 0, 2, null, 281, 'https://fake-img.com/room281/sub1.jpg', NOW(), NOW()),
-                                                                                                                                 ('ROOM', 0, 3, null, 281, 'https://fake-img.com/room281/sub2.jpg', NOW(), NOW()),
+                                                                                                                      ('ROOM', 0, 3, null, 281, 'https://fake-img.com/room281/sub2.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 0, 4, null, 281, 'https://fake-img.com/room281/sub3.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 0, 5, null, 281, 'https://fake-img.com/room281/sub4.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 1, 1, null, 282, 'https://fake-img.com/room282/main.jpg', NOW(), NOW()),
@@ -2569,3 +2350,5 @@ INSERT INTO reserv.accommodation_image (image_type, is_main, sort_order, accommo
                                                                                                                                  ('ROOM', 0, 3, null, 282, 'https://fake-img.com/room282/sub2.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 0, 4, null, 282, 'https://fake-img.com/room282/sub3.jpg', NOW(), NOW()),
                                                                                                                                  ('ROOM', 0, 5, null, 282, 'https://fake-img.com/room282/sub4.jpg', NOW(), NOW());
+
+

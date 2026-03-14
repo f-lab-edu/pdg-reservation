@@ -60,6 +60,15 @@ public class Accommodation extends BaseEntity {
     @Builder.Default
     private BigDecimal ratingAverage = BigDecimal.ZERO;
 
+    @Column(nullable = false, precision = 10, scale = 1)
+    @ColumnDefault("0.0")
+    private BigDecimal totalRatingSum = BigDecimal.ZERO;
+
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    @Builder.Default
+    private Long reviewCount = 0L;
+
     @Column(nullable = false)
     @ColumnDefault("false")
     @Builder.Default
@@ -102,7 +111,4 @@ public class Accommodation extends BaseEntity {
         return Collections.unmodifiableList(images);
     }
 
-    public void updateAverageRating(BigDecimal ratingAverage) {
-        this.ratingAverage = ratingAverage;
-    }
 }

@@ -27,6 +27,7 @@ public enum ErrorCode {
     JWT_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "JWT-004", "유효하지 않은 리프레시 토큰입니다."),
 
     ACC_NOT_FOUND(HttpStatus.NOT_FOUND, "ACC-001", "해당 숙소를 찾을 수 없습니다."),
+    ACC_NOT_FOUND_OR_REVIEW_ZERO(HttpStatus.NOT_FOUND, "ACC-002", "해당 숙소를 찾을 수 없거나 리뷰 카운트가 0입니다."),
 
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "ROOM-001", "해당 객실을 찾을 수 없습니다."),
 

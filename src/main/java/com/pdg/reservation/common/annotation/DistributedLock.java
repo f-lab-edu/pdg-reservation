@@ -17,6 +17,9 @@ public @interface DistributedLock {
     // 시간 단위 (기본: 초)
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 
+    //락 획득 실패 시 예외 발생 여부 (기본값 true)
+    boolean throwExceptionOnFailure() default true;
+
     /**
      * 락을 기다리는 시간 (기본: 5초)
      * 락 획득을 위해 기다리는 최대 시간

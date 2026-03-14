@@ -8,6 +8,7 @@ logging:
     org.hibernate.orm.jdbc.bind: OFF              # [JPA] SQL의 물음표(?) 파라미터에 들어가는 값을 표시 (Boot 3.x 기준)
     # (참고: Boot 2.x라면 org.hibernate.type.descriptor.sql.BasicBinder: TRACE 사용)
     p6spy: INFO                                   # P6Spy 로그는 INFO로 설정
+    org.springframework.cache: TRACE              # 캐시 추상화 라이브러리의 로그 레벨을 TRACE로 올립니다.
 
 # 2. P6Spy 상세 설정
 decorator:

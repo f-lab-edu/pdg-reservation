@@ -27,19 +27,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    public BigDecimal calculateAverageRating(Long accommodationId) {
-
-        Double ratingAvg = jpaQueryFactory
-                .select(review.rating.avg())
-                .from(review)
-                .where(review.accommodation.id.eq(accommodationId))
-                .fetchOne();
-
-        // 리뷰가 하나도 없을 경우 null이 반환되므로 BigDecimal.ZERO로 처리
-        return (ratingAvg == null) ? BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP) :
-                BigDecimal.valueOf(ratingAvg).setScale(1, RoundingMode.HALF_UP);
-    }
-
     @Override
     public Page<Review> findMyReviews(Long memberId, ReviewSearchCondition condition, Pageable pageable) {
         Integer minRating = condition.getMinRating();

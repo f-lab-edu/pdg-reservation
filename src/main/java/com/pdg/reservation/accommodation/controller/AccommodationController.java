@@ -6,6 +6,7 @@ import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.accommodation.service.AccommodationService;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +28,12 @@ public class AccommodationController {
     private final AccommodationService accommodationService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<Page<AccommodationSearchResponse>>> searchAccommodations(
+    public ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> searchAccommodations(
                 @Valid AccommodationSearchCondition condition,
                 @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return ApiResponse.ok(accommodationService.search(condition, pageable));
+        Page<AccommodationSearchResponse> page = accommodationService.search(condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page));
     }
 
     @GetMapping("/{accommodationId}")

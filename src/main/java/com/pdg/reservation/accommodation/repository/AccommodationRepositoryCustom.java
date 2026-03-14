@@ -6,10 +6,14 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface AccommodationRepositoryCustom {
 
-    public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable);
+    Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable);
+    Long incrementRating(Long accommodationId, BigDecimal rating);
+    Long decrementRating(Long accommodationId, BigDecimal rating);
+
 
 }
