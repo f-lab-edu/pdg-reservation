@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.pdg.reservation.common.constant.RedisKeyNames;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,7 +24,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
+@Slf4j
 @Configuration
 @EnableCaching // 캐시 기능 활성화
 public class RedisConfig {
@@ -82,22 +87,44 @@ public class RedisConfig {
         RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
-                .entryTtl(Duration.ofMinutes(30)); // 기본 30분
+                .entryTtl(createDynamicJitter(30)); // 기본 30분
 
         // 3. 캐시 이름별 차등 설정 (숙소 상세와 리뷰 목록의 수명이 다를 수 있음)
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
 
         // 숙소 상세 정보: 변경이 적으므로 1시간 동안 유지
-        cacheConfigurations.put(RedisKeyNames.ACCOMMODATION_DETAIL, defaultCacheConfig.entryTtl(Duration.ofSeconds(10)));
+        cacheConfigurations.put(RedisKeyNames.ACCOMMODATION_DETAIL,
+                defaultCacheConfig.entryTtl(createDynamicJitter(60)));
 
         // 리뷰 첫 페이지: 최신 리뷰가 자주 올라오므로 10분으로 짧게 유지
-        cacheConfigurations.put(RedisKeyNames.REVIEW_FIRST_PAGE, defaultCacheConfig.entryTtl(Duration.ofSeconds(10)));
+        cacheConfigurations.put(RedisKeyNames.REVIEW_FIRST_PAGE,
+                defaultCacheConfig.entryTtl(createDynamicJitter(10)));
 
         return RedisCacheManager.RedisCacheManagerBuilder
                 .fromConnectionFactory(connectionFactory)
                 .cacheDefaults(defaultCacheConfig) // 기본값 적용
                 .withInitialCacheConfigurations(cacheConfigurations) // 개별 설정 적용
                 .build();
+    }
+
+    /**
+     * 캐시 아발란체 방어
+     * 매 호출 시점마다 새로운 Duration을 계산하여 반환하는 TtlFunction 생성
+     * 0초 ~ 300초(5분) 사이에서 초 단위로 무작위 분산
+     */
+    private RedisCacheWriter.TtlFunction createDynamicJitter(int baseMinutes) {
+        return (key, value) -> {
+            log.info("캐시 jitter 난수 생성기 실행 key : {},  value : {}", key, value);
+
+            // [핵심 로직] 데이터가 null(존재하지 않음)이면 5분만 저장하여 관통 방어
+            if (value == null) {
+                log.info("캐시 관통 방어: Key {}에 대해 Null 캐싱(5분) 적용", key);
+                return Duration.ofMinutes(5);
+            }
+
+            int jitter = ThreadLocalRandom.current().nextInt(301); // 0~4분 랜덤 추가
+            return Duration.ofMinutes(baseMinutes).plusSeconds(jitter);
+        };
     }
 
 }

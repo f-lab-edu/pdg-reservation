@@ -32,8 +32,7 @@ public class ReviewCacheService {
             // 모든 항목에 접두어(acc, v, sz)를 붙여 가독성 향상
             // 결과 예시: review:firstpage::acc:1:v:3:r:0:s:LATEST:sz:10
             key = "'acc:' + #accommodationId + ':v:' + #version + ':' + #condition.toCacheKey() + ':sz:' + #pageable.pageSize",
-            condition = "#pageable.pageNumber == 0",
-            sync = true // Cache Stampede 방지 보조, 단일 서버 부하 감소
+            condition = "#pageable.pageNumber == 0"
     )
     public PageResponse<ReviewResponse> getReviewsWithCache(
             Long accommodationId, int version, ReviewSearchCondition condition, Pageable pageable) {
