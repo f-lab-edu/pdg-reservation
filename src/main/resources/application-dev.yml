@@ -51,6 +51,39 @@ spring:
       host: localhost
       port: 6379
 
+  # 카프카 설정
+  kafka:
+    # 카프카 브로커 접속 주소 (Docker Compose의 advertised listener와 일치해야 함)
+    bootstrap-servers: localhost:9092
+
+    # --- 프로듀서(Producer): 메시지를 보내는 API 서버 설정 ---
+    producer:
+      # 메시지 키(Key) 직렬화 방식: 주로 조회/파티셔닝 용도로 String 사용
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 메시지 값(Value) 직렬화 방식: 자바 객체(DTO)를 JSON 바이트로 변환
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # 메시지 전송 신뢰성 설정 (all: 모든 복제본에 저장 확인 / 1: 리더만 확인)
+        acks: all
+        # 배치 처리: 성능 향상을 위해 메시지를 모아서 보내는 최대 메모리 크기
+        batch-size: 16384
+
+    # --- 컨슈머(Consumer): 메시지를 받는 Worker 설정 ---
+    consumer:
+      # 같은 그룹 ID를 가진 컨슈머끼리 메시지를 나눠서 처리 (병렬 처리의 단위)
+      group-id: reservation-group
+      # 메시지 키 역직렬화: 카프카의 바이트 데이터를 다시 String으로 복원
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # 실제 역직렬화기 대신 에러 핸들링 대리자를 지정
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      # 새로운 컨슈머 그룹이 생성되었을 때, 어디서부터 읽을지 결정 (earliest: 처음부터 / latest: 최신부터)
+      auto-offset-reset: earliest
+      properties:
+        # 실제 작업은 내부의 JsonDeserializer에게 위임
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        # [보안] 역직렬화 시 신뢰할 수 있는 패키지 경로 지정 (RCE 방어 필수 설정)
+        spring.json.trusted.packages: "com.pdg.*"
+
 # 3. JWT (토큰) 및 커스텀 설정
 accessToken:
   expired:

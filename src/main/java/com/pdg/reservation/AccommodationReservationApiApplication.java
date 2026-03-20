@@ -11,7 +11,7 @@ import static org.springframework.data.web.config.EnableSpringDataWebSupport.Pag
 @EnableAsync       // @Async 활성화
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 @EnableJpaAuditing // [필수] JPA Auditing 기능 활성화
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.pdg") // com.pdg 하위의 모든 패키지를 스캔
 public class AccommodationReservationApiApplication {
 
 	public static void main(String[] args) {

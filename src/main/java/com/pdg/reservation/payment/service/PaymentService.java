@@ -9,6 +9,7 @@ import com.pdg.reservation.payment.dto.PaymentResponse;
 import com.pdg.reservation.payment.entity.Payment;
 import com.pdg.reservation.payment.entity.PaymentCancelHistory;
 import com.pdg.reservation.payment.enums.CancelType;
+import com.pdg.reservation.payment.event.PaymentConfirmedEvent;
 import com.pdg.reservation.payment.repository.PaymentCancelHistoryRepository;
 import com.pdg.reservation.payment.repository.PaymentRepository;
 import com.pdg.reservation.reservation.entity.Reservation;
@@ -16,8 +17,13 @@ import com.pdg.reservation.reservation.repository.ReservationRedisRepository;
 import com.pdg.reservation.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -29,7 +35,8 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentCommandService paymentCommandService;
     private final PaymentCancelHistoryRepository paymentCancelHistoryRepository;
-    private final ReservationRedisRepository reservationRedisRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @DistributedLock(key = "'payment:reservationId:' + #reservationId")
     public PaymentResponse processPayment(Long memberId, Long reservationId ,PaymentRequest paymentRequest) {
@@ -45,13 +52,19 @@ public class PaymentService {
         PaymentResponse response = null;
 
         try {
-            response = paymentCommandService.pay(reservationId, pgTransactionNumber, paymentRequest);
+            response = paymentCommandService.pay(memberId, reservationId, pgTransactionNumber, paymentRequest);
         } catch (Exception e) {
             log.error("DB 영속화 실패로 인한 보상 트랜잭션 실행. 예약ID: {}", reservationId, e);
             executeCompensation(pgTransactionNumber);
             throw e;
         }
-        reservationRedisRepository.deletePaymentTimeout(reservationId);
+        eventPublisher.publishEvent(
+                new PaymentConfirmedEvent(
+                    memberId,
+                    reservationId,
+                    UUID.randomUUID().toString(),
+                    LocalDateTime.now())
+                );
         return response;
     }
 
