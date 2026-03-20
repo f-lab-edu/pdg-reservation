@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
-//@NoArgsConstructor
+@NoArgsConstructor
 public class PaymentKafkaEvent {
 
     private Long memberId;
