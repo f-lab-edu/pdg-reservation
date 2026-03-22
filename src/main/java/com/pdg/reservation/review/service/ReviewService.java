@@ -1,5 +1,6 @@
 package com.pdg.reservation.review.service;
 
+import com.pdg.reservation.accommodation.service.AccommodationService;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
@@ -32,6 +33,7 @@ public class ReviewService {
     private final ReservationRepository reservationRepository;
     private final ReviewCacheService reviewCacheService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AccommodationService accommodationService;
 
     @Transactional
     public ReviewCreateResponse createReview(Member member, ReviewCreateRequest reviewCreateRequest) {
@@ -67,6 +69,9 @@ public class ReviewService {
 
     public PageResponse<ReviewResponse> getAccommodationReviews(
             Long accommodationId, ReviewSearchCondition condition, Pageable pageable) {
+
+        accommodationService.validateExists(accommodationId);
+
         // 1. 버전 조회
         int version = reviewCacheService.getVersion(accommodationId);
         // 2. 캐시 서비스 호출
@@ -98,5 +103,7 @@ public class ReviewService {
         ));
         return ReviewDeleteResponse.from(reviewId, review.getDeletedAt());
     }
+
+
 
 }

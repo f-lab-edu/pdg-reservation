@@ -1,6 +1,7 @@
 package com.pdg.reservation.review.event;
 
 import com.pdg.reservation.common.enums.EventType;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -8,14 +9,15 @@ import java.time.LocalDateTime;
 /**
  * 리뷰 등록 시, 평점 계산을 하기 위한 객체
  */
+@Getter
 public class ReviewDeletedEvent {
 
-    public final Long accommodationId;
-    public final BigDecimal rating;
-    public final Long reviewId;
-    public final String eventId; // 멱등성 식별자
-    public final LocalDateTime createdAt;
-    public final EventType eventType = EventType.REVIEW_CREATED;
+    private final Long accommodationId;
+    private final BigDecimal rating;
+    private final Long reviewId;
+    private final String eventId; // 멱등성 식별자
+    private final LocalDateTime createdAt;
+    private final EventType eventType = EventType.REVIEW_CREATED;
 
     public ReviewDeletedEvent(Long accommodationId, BigDecimal rating,
                               Long reviewId, String eventId, LocalDateTime createdAt) {

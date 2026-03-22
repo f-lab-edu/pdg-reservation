@@ -15,4 +15,6 @@ public interface EventLogRepository extends JpaRepository<EventLog, Long> {
     int insertIgnore(@Param("eventId") String eventId,
                      @Param("eventType") String eventType,
                      @Param("aggregateId") Long aggregateId);
+
+    boolean existsByEventId(String eventId);
 }

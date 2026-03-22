@@ -1,102 +1,69 @@
 package com.pdg.reservation.review.listener;
 
-import com.pdg.reservation.accommodation.repository.AccommodationRepository;
-import com.pdg.reservation.common.repository.EventLogRepository;
+import com.pdg.kafka.event.ReviewKafkaEvent;
 import com.pdg.reservation.review.event.ReviewCreatedEvent;
 import com.pdg.reservation.review.event.ReviewDeletedEvent;
-import com.pdg.reservation.review.service.ReviewCacheService;
-import jakarta.persistence.EntityManager;
+import org.springframework.kafka.support.SendResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.math.BigDecimal;
-
-import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReviewEventListener {
 
-    private final AccommodationRepository accommodationRepository;
-    private final EventLogRepository eventLogRepository;
-    private final ReviewCacheService reviewCacheService;
-    private final EntityManager em;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Async("reviewAsyncExecutor")
-    @Transactional(propagation = REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleReviewCreated(ReviewCreatedEvent event) {
-        // 1. 멱등성 체크: 성공 시 1, 중복 시 0 반환 (예외 발생 안 함)
-        if(isProcessed(event.eventId, event.eventType.name(), event.reviewId)){
-            return;
-        }
-
-        Long accommodationId = event.accommodationId;
-        BigDecimal rating = event.rating;
-        log.info("리뷰 생성 이벤트 수신 - 숙소 ID: {}", accommodationId);
-
-        Long updateCount = accommodationRepository.incrementRating(accommodationId, rating);
-        em.flush();
-        em.clear();
-
-        if(updateCount == 0){
-            log.error("평점 증가 실패 - 숙소 없음  (ID: {})", accommodationId);
-            return;
-        }
-
-        cacheClear(accommodationId);
-        log.info("숙소 평점 증가 업데이트 완료 - ID: {}", accommodationId);
+        publishEvent(event.getEventId(), event.getAccommodationId(), event.getReviewId(), event.getRating(), event.getEventType().name(), event.getCreatedAt());
     }
 
-    @Async("reviewAsyncExecutor")
-    @Transactional(propagation = REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleReviewDeleted(ReviewDeletedEvent event) {
-
-        if(isProcessed(event.eventId, event.eventType.name(), event.reviewId)){
-            return;
-        }
-
-        Long accommodationId = event.accommodationId;
-        BigDecimal rating = event.rating;
-        log.info("리뷰 삭제 이벤트 수신 - 숙소 ID: {}", accommodationId);
-
-        Long updateCount = accommodationRepository.decrementRating(accommodationId, rating);
-        em.flush();
-        em.clear();
-
-        if(updateCount == 0){
-            log.error("평점 감소 실패 - 숙소 없음 또는 카운트 0 (ID: {})", accommodationId);
-            return;
-        }
-
-        cacheClear(accommodationId);
-        log.info("숙소 평점 감소 업데이트 완료 - ID: {}", accommodationId);
-
-
-        // 추후 카프카 이관
+        publishEvent(event.getEventId(), event.getAccommodationId(), event.getReviewId(), event.getRating(), event.getEventType().name(), event.getCreatedAt());
     }
 
+    private void publishEvent(String eventId, Long accommodationId, Long reviewId, BigDecimal rating, String actionType, LocalDateTime createdAt) {
+        ReviewKafkaEvent message = new ReviewKafkaEvent(eventId, accommodationId, reviewId, rating, actionType, createdAt);
 
-    private boolean isProcessed(String eventId, String type, Long aggregateId) {
-        int inserted = eventLogRepository.insertIgnore(eventId, type, aggregateId);
-        if (inserted == 0) {
-            log.info("[IDEMPOTENCY] 중복 이벤트 스킵: {}", eventId);
-            return true;
+        try {
+            //accommodationId를 키로 지정하여 파티션 순서 보장(기본이 스티키 방식, 키를 넣으면 해시 방식으로 동작)
+            //등록 후, 즉시 삭제 처리 시 딜레이 발생하면 삭제가 먼저 시도 될 가능성이 존재하여 동일 파티션으로 보내서 순서 보장)
+            kafkaTemplate.send("review-topic", String.valueOf(accommodationId), message)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            handleFailure(eventId, reviewId, ex);
+                            return;
+                        }
+                        handleSuccess(eventId, result);
+                    });
+        } catch (Exception e) {
+            log.error("[Kafka Producer] 큐 진입 실패 - eventId: {}, error: {}", eventId, e.getMessage(), e);
+            // errorAlertService.sendMessengerAlert(...);
         }
-        return false;
     }
 
-    private void cacheClear(Long accommodationId) {
-
-        // 버전 증가 및 상세 캐시 삭제
-        reviewCacheService.increaseVersion(accommodationId);
-        reviewCacheService.evictAccommodationDetail(accommodationId);
+    private void handleSuccess(String eventId, SendResult<String, Object> result) {
+        log.info("[Kafka] 발행 성공 - eventId: {}, offset: {}, partition: {}",
+                eventId,
+                result.getRecordMetadata().offset(),
+                result.getRecordMetadata().partition()
+        );
     }
+
+    private void handleFailure(String eventId, Long key, Throwable ex) {
+        log.error("[Kafka] 발행 실패 - eventId: {}, key: {}, error: {}",
+                eventId, key, ex.getMessage(), ex);
+        //errorAlertService.sendMessengerAlert(...);
+        // 추후 카프카 발행 실패 시 Outbox 패턴 or DLQ 이관 예정
+    }
+
 }
