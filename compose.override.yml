@@ -1,0 +1,20 @@
+services:
+  mysql:
+    ports:
+      - "3306:3306"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  kafka:
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      # 1. 외부 접속용 EXTERNAL 리스너 추가
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      # 2. [중요] CONTROLLER 주소를 포함하여 0.0.0.0 에러 방지
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092,CONTROLLER://kafka:9093
+      # 3. 맵 형식을 사용하여 베이스 설정을 정확히 대체
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT

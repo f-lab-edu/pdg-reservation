@@ -54,7 +54,7 @@ spring:
   # 카프카 설정
   kafka:
     # 카프카 브로커 접속 주소 (Docker Compose의 advertised listener와 일치해야 함)
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:29092
 
     # --- 프로듀서(Producer): 메시지를 보내는 API 서버 설정 ---
     producer:
