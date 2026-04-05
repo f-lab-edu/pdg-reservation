@@ -1,55 +1,52 @@
 services:
-  my-db-server:
-    image: mysql
+  mysql:
+    image: mysql:8.0
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: qkreorhkd1!      # root 비번 (관리자용)
-      MYSQL_DATABASE: reserv                # 생성할 DB 이름
-      MYSQL_USER: pdg                       # <--- 추가: 스프링이 사용할 ID
-      MYSQL_PASSWORD: qkreorhkd1!           # <--- 추가: 스프링이 사용할 비번
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: reserv
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - ../mysql_data:/var/lib/mysql
-    ports:
-      - 3306:3306
-  my-redis:
-    image: redis
-    ports:
-      - 6379:6379
+      - mysql_data:/var/lib/mysql
+    networks:
+      - infra-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+
+  redis:
+    image: redis:7.4-alpine
+    restart: always
     command: ["redis-server", "--notify-keyspace-events", "Ex"]
+    networks:
+      - infra-net
 
-  my-kafka:
-    image: apache/kafka:latest           # 2026년 현재 가장 표준인 Apache 공식 최신 이미지
-    ports:
-      - "9092:9092"                      # [호스트 포트:컨테이너 포트] 외부(Spring)에서 접근할 통로
-    environment:
-      # --- 노드 기본 정보 ---
-      - KAFKA_NODE_ID=1                       # 클러스터 내 브로커 식별 번호 (중복 불가)
-      - KAFKA_PROCESS_ROLES=broker,controller # 이 노드가 데이터 처리(Broker)와 클러스터 관리(Controller)를 겸임함
-
-      # --- 리스너 및 네트워크 설정 (핵심) ---
-      # LISTENERS: 컨테이너 내부 프로세스가 "어느 IP와 포트"에서 대기할지 정의 (0.0.0.0은 모든 유입 허용)
-      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      # ADVERTISED_LISTENERS: 클라이언트(Spring)에게 "나한테 오려면 이 주소로 들어와"라고 광고하는 주소
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-      # LISTENER_SECURITY_PROTOCOL_MAP: 각 리스너 이름에 사용할 보안 프로토콜 매핑 (현재는 인증 없음)
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      # CONTROLLER_LISTENER_NAMES: 컨트롤러 통신을 위해 사용할 리스너 이름 지정
-      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-
-      # --- KRaft 쿼럼(Quorum) 설정 ---
-      # CONTROLLER_QUORUM_VOTERS: 컨트롤러 선출 권한을 가진 노드 목록 (ID@HOST:PORT 형식)
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
-
-      # --- 토이 프로젝트용 최적화 설정 ---
-      # OFFSETS_TOPIC_REPLICATION_FACTOR: 컨슈머 읽기 위치 정보 토픽의 복제본 개수 (단일 노드라 1개)
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      # TRANSACTION_STATE_LOG: 트랜잭션 로그의 복제본 및 최소 동기화 설정 (정합성 유지용)
-      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
-      # AUTO_CREATE_TOPICS_ENABLE: 존재하지 않는 토픽으로 요청 시 자동 생성 허용
-      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
-
+  kafka:
+    image: apache/kafka:3.9.0
+    restart: always
     volumes:
-      # [영속성] 컨테이너가 죽어도 메시지 데이터가 남도록 호스트 디렉토리에 마운트
-      # (참고: Apache 공식 이미지는 /var/lib/kafka/data 경로를 사용함)
-      - ../kafka_data:/var/lib/kafka/data
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - infra-net
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # 기본 리스너 정의
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,CONTROLLER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
+volumes:
+  mysql_data:
+  kafka_data:
+
+networks:
+  infra-net:
+    name: my-shared-network
