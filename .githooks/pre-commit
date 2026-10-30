@@ -1,0 +1,24 @@
+#!/bin/sh
+# 커밋에 들어가면 안 되는 것을 막는다.
+#   1. .env 파일 커밋
+#   2. main 브랜치에 직접 커밋
+# 규칙: docs/git-rules.md
+
+# 1. main 직접 커밋 차단
+branch=$(git branch --show-current)
+if [ "$branch" = "main" ]; then
+  echo "main 브랜치에는 직접 커밋할 수 없습니다." >&2
+  echo "  작업 브랜치를 만들어서 작업하세요. 예: git switch -c feat/작업이름" >&2
+  exit 1
+fi
+
+# 2. .env 커밋 차단 (.env.example 같은 다른 이름은 허용)
+staged_env=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(^|/)\.env$')
+if [ -n "$staged_env" ]; then
+  echo ".env 파일은 커밋할 수 없습니다." >&2
+  echo "$staged_env" | sed 's/^/  /' >&2
+  echo "  스테이징에서 빼려면: git restore --staged <파일>" >&2
+  exit 1
+fi
+
+exit 0
