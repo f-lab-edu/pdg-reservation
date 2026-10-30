@@ -28,7 +28,8 @@
 - 테스트가 쓰는 데이터는 **용도별 Fixture로 준비**한다. `TestFixture` 하나로 고정하지 않고 용도에 맞게 `xxxFixture`로 나눈다. 예: 회원 준비용 `MemberFixture`의 `createMember()`
 - 회원처럼 API가 있는 데이터는 API를 호출해서 만든다. 스키마가 바뀌어도 테스트가 남는다.
 - API가 없는 데이터(숙소, 객실, 재고)는 해당 Fixture가 리포지터리로 직접 저장한다. 이런 코드는 스키마 변경 때 고칠 곳을 줄이기 위해 Fixture 안에만 둔다.
-- **데이터 격리는 cleanUp으로 한다.** `@AfterEach`에서 DB와 Redis를 초기화한다. 외래 키 검사를 끄고 테이블을 비운 뒤 다시 켠다.
+- **데이터 격리는 cleanUp으로 한다.** `@AfterEach`에서 테스트가 사용하는 저장소만 초기화한다. DB는 `DatabaseCleanUp.truncateAllTables()`로 외래 키 검사를 끄고 테이블을 비운 뒤 다시 켠다. Redis는 아래 규칙대로 `RedisCleanUp`을 쓴다. 로그인처럼 Redis를 건드리는 테스트에서 추가한다.
+- Fixture는 프로토타입 범위의 빈으로 두고, 안에서 `TestRestTemplate`을 직접 만들어 쓴다. 공유되는 `TestRestTemplate`에 기본 토큰 인터셉터를 달면 테스트 사이에 새기 때문이다. 토큰이 필요한 API를 테스트할 때 적용한다.
 - **임의 테스트 데이터**를 생성해서 쓴다(이메일, 비밀번호 등). 고정 값을 쓰면 테스트끼리 값이 겹칠 수 있다.
 - 리소스 ID는 하드코딩하지 않고 응답에서 꺼내 재사용한다.
 - 검증은 기본적으로 API 응답으로 한다. 응답에 나오지 않는 결과(예: 암호화되어 저장된 비밀번호, 아웃박스 기록)만 DB를 직접 조회해서 확인한다.
@@ -46,10 +47,28 @@
 
 ## 5. 구조
 
-미작성 (`IntegrationTestBase`, cleanUp, `xxxFixture` 등을 만든 뒤 작성한다.)
+```
+src/test/java/com/pdg/reservation/
+├── api/v1/members/POST_specs.java        # POST /api/v1/members
+├── api/v1/members/login/POST_specs.java  # POST /api/v1/members/login
+├── member/entity/MemberTest.java         # 엔티티 단위 테스트(로직이 생기면)
+├── support/                              # IntegrationTest, TestContainersConfig, DatabaseCleanUp, RedisCleanUp
+└── fixture/                              # xxxFixture
+```
+
+- API 테스트는 URL을 패키지로 따라가고(버전 포함), HTTP 메서드별로 `GET_specs`, `POST_specs` 클래스를 둔다. 시나리오 묶음은 `@Nested`로 그룹화한다.
+- 단위 테스트는 운영 코드 패키지를 그대로 따라가며 `XxxTest`로 이름 짓는다.
+- 패키지 이름: 고정 경로는 그대로, 경로 변수는 변수 이름만 쓴다(`/accommodations/{id}` → `accommodations/id`). 하이픈은 제거한다.
+- 인프라(`support`)와 데이터 준비(`fixture`)는 분리한다.
+- 테스트 메서드 이름은 한글 문장으로 쓰고, 띄어쓰기 대신 `_`를 쓴다. `@DisplayName`은 쓰지 않는다. 메서드 이름 자체가 요구사항이 되도록 "조건_결과" 형태로 쓴다.
+  예: `올바른_정보로_가입하면_201을_반환한다`, `이메일이_중복이면_409를_반환한다`
+- `@Nested` 클래스 이름도 한글로 쓰고 같은 규칙을 따른다. 예: `이름_검증`
+- 테스트 본문은 AAA 패턴으로 작성하고 `// Arrange`, `// Act`, `// Assert` 주석으로 구분한다.
+  - Arrange: 테스트에 필요한 데이터와 상태를 준비한다.
+  - Act: 검증할 동작을 한 번 실행한다.
+  - Assert: 결과를 검증한다.
 
 ## 6. 미정
 
-- 테스트 메서드 이름 형식
 - Kafka 소비가 늦어져서 다음 테스트와 겹치는 일이 생기면 컨슈머 랙 대기 도우미를 추가할지
 - 로그인이 반복되는 테스트가 늘 때 `PasswordEncoder`를 테스트용으로 교체할지(속도 개선)
