@@ -41,3 +41,6 @@ src/main/generated/
 
 ### Secret Environment ###
 .env
+
+### Roadmap ###
+docs/roadmap.md
