@@ -24,6 +24,9 @@ repositories {
     mavenCentral()
 }
 
+// Docker 29 이상과 호환되도록 Spring Boot 관리 버전(1.21.3)을 덮어쓴다.
+ext['testcontainers.version'] = '1.21.4'
+
 dependencies {
     // [Spring Boot Starters]
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
