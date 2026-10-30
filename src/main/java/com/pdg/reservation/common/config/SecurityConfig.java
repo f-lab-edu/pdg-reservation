@@ -47,6 +47,7 @@ public class SecurityConfig {
                 // 모든 요청을 허용 (로그인 페이지로 가지 않음)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
                         .requestMatchers(permitAllUrls).permitAll()
                         .requestMatchers(adminPermitUrls).hasRole("ADMIN")
                         .anyRequest().authenticated()// 인증된 사용자만 허용

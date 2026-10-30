@@ -43,6 +43,13 @@ public class ApiResponse<T> {
         return ResponseEntity.ok(new ApiResponse<>(true, null, message, null));
     }
 
+    // 생성 성공 (201 Created), 데이터가 없을 때
+    public static <T> ResponseEntity<ApiResponse<T>> created() {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, null, null, null));
+    }
+
     // 생성 성공 (201 Created)
     public static <T> ResponseEntity<ApiResponse<T>> created(T data) {
         return ResponseEntity

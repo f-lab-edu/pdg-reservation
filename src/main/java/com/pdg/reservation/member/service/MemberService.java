@@ -7,6 +7,7 @@ import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.common.util.JwtTokenProvider;
 import com.pdg.reservation.member.dto.LoginRequest;
 import com.pdg.reservation.member.dto.LoginResponse;
+import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.member.dto.TokenResponse;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.member.repository.MemberRepository;
@@ -34,6 +35,13 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final JwtRedisRepository jwtRedisRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public void signup(SignupRequest signupRequest) {
+        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
+        memberRepository.save(signupRequest.toEntity(encodedPassword));
+    }
 
     public LoginResponse login(LoginRequest loginRequest) {
 

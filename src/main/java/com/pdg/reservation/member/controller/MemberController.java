@@ -7,6 +7,7 @@ import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.common.util.JwtTokenProvider;
 import com.pdg.reservation.member.dto.LoginRequest;
 import com.pdg.reservation.member.dto.LoginResponse;
+import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.member.dto.TokenResponse;
 import com.pdg.reservation.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +26,12 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest) {
+        memberService.signup(signupRequest);
+        return ApiResponse.created();
+    }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest,
