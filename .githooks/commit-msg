@@ -12,6 +12,17 @@ case "$subject" in
   "Merge "*|"Revert "*) exit 0 ;;
 esac
 
+# 한글 입력 중 섞여 들어오는 라틴 확장 문자(예: ì, í)가 있으면 거부한다.
+# UTF-8 바이트 기준으로 U+00C0~U+024F 범위(C3 80 ~ C9 BF)를 검사한다.
+latin_ext=$(printf '\303[\200-\277]|[\304-\311][\200-\277]')
+broken=$(grep -v '^#' "$msg_file" | LC_ALL=C grep -E "$latin_ext")
+if [ -n "$broken" ]; then
+  echo "커밋 메시지에 깨진 글자가 섞여 있습니다. (ì, í 같은 라틴 확장 문자)" >&2
+  echo "$broken" | sed 's/^/  /' >&2
+  echo "  한글 입력 중 글자가 섞인 것일 수 있습니다. 메모장 등에서 작성한 뒤 붙여넣거나 편집창(git commit)으로 다시 작성하세요." >&2
+  exit 1
+fi
+
 pattern='^(feat|fix|refactor|test|docs|chore|perf)(\([a-z0-9-]+\))?: .+'
 
 if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
