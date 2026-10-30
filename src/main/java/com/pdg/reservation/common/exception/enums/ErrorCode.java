@@ -35,9 +35,9 @@ public enum ErrorCode {
     RESERVE_INVALID_PERIOD(HttpStatus.BAD_REQUEST, "RESERVE_002", "올바르지 않은 예약 기간입니다. 체크인 및 체크아웃 날짜를 다시 확인해 주세요."),
     RESERVE_ALREADY_BOOKED(HttpStatus.CONFLICT, "RESERVE_003", "선택하신 날짜에 이미 예약이 마감되었습니다. 다른 날짜를 선택해 주세요."),
     RESERVE_PRICE_MISMATCH(HttpStatus.BAD_REQUEST, "RESERVE_004", "결제 요청 금액이 실제 객실 요금과 일치하지 않습니다. 다시 시도해 주세요."),
-    RESERVE_EXCEED_MAX_CAPACITY(HttpStatus.BAD_REQUEST,"RESERVE_004", "객실 최대 수용 인원을 초과할 수 없습니다."),
-    RESERVE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVE_005", "해당 예약을 찾을 수 없습니다."),
-    RESERVE_INVALID_STATUS(HttpStatus.BAD_REQUEST, "RESERVE_006", "현재 예약 상태에서는 요청하신 작업을 수행할 수 없습니다."),
+    RESERVE_EXCEED_MAX_CAPACITY(HttpStatus.BAD_REQUEST,"RESERVE_005", "객실 최대 수용 인원을 초과할 수 없습니다."),
+    RESERVE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVE_006", "해당 예약을 찾을 수 없습니다."),
+    RESERVE_INVALID_STATUS(HttpStatus.BAD_REQUEST, "RESERVE_007", "현재 예약 상태에서는 요청하신 작업을 수행할 수 없습니다."),
 
     PAYMENT_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "PAYMENT_001", "유효하지 않은 결제 요청입니다."),
     PAYMENT_MISSING_CARD_COMPANY(HttpStatus.BAD_REQUEST, "PAYMENT_002", "카드 결제 시 카드사 정보는 필수입니다."),
