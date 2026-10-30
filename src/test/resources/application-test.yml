@@ -1,0 +1,54 @@
+# application-test.yml (테스트 환경 설정)
+# DB·Redis·Kafka 접속 주소는 넣지 않는다. Testcontainers가 코드에서 주입한다.
+# 주소가 없으므로 컨테이너 설정 없이 돌리면 연결 실패로 끝나고, 개발 DB는 건드리지 않는다.
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create        # 컨테이너 DB에 스키마 생성
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+    show-sql: false
+
+  sql:
+    init:
+      mode: never             # data.sql 실행 안 함
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        acks: all
+        batch-size: 16384
+    consumer:
+      group-id: reservation-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "com.pdg.*"
+
+accessToken:
+  expired:
+    value: 86400
+refreshToken:
+  expired:
+    value: 604800
+
+jwt:
+  secret: +NZIGgXSjqmvaStXqBYWNfEfTysYkXxKyEm3MpZ/qlj/bg1xWT5xbJ/GarlKixZh   # 테스트 전용 Base64 값
