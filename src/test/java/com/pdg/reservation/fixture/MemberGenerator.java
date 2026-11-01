@@ -35,8 +35,14 @@ public final class MemberGenerator {
         return "가".repeat(length);
     }
 
+    // "nick" + 임의 6자 = 10자 (3~10자 규칙 안, 한 테스트 안에서 겹칠 확률은 무시할 수 있다)
     public static String generateNickName() {
-        return "nick" + UUID.randomUUID().toString().substring(0, 8);
+        return "nick" + UUID.randomUUID().toString().substring(0, 6);
+    }
+
+    // 지정한 길이의 닉네임을 만든다
+    public static String generateNickNameOfLength(int length) {
+        return "가".repeat(length);
     }
 
     // 영문·숫자·특수문자를 각각 1개 이상 포함한 지정 길이의 비밀번호를 만든다 (3자 이상)

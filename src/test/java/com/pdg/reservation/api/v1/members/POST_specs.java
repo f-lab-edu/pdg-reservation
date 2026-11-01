@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
+import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -171,6 +172,43 @@ class POST_specs {
     void 이름이_최대_길이_10자이면_가입된다() {
         // Arrange
         SignupRequest request = memberFixture.signupRequestBuilder().name(generateNameOfLength(10)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidNickNames")
+    void 유효하지_않은_닉네임이면_400을_반환한다(String nickName) {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().nickName(nickName).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void 닉네임이_최소_길이_3자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().nickName(generateNickNameOfLength(3)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 닉네임이_최대_길이_10자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().nickName(generateNickNameOfLength(10)).build();
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);

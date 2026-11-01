@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
+import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -33,6 +34,17 @@ public final class TestDataSource {
                 arguments(named("공백만 3자", "   ")),
                 arguments(named("최소 길이 미만 (2자)", generateNameOfLength(2))),
                 arguments(named("최대 길이 초과 (11자)", generateNameOfLength(11)))
+        );
+    }
+
+    public static Stream<Arguments> invalidNickNames() {
+        return Stream.of(
+                arguments(named("null", null)),
+                arguments(named("빈 문자열", "")),
+                arguments(named("공백", " ")),
+                arguments(named("공백만 3자", "   ")),
+                arguments(named("최소 길이 미만 (2자)", generateNickNameOfLength(2))),
+                arguments(named("최대 길이 초과 (11자)", generateNickNameOfLength(11)))
         );
     }
 
