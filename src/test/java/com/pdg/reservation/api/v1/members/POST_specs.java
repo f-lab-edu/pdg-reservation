@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
+import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -133,6 +134,43 @@ class POST_specs {
     void 비밀번호가_최대_길이_20자이면_가입된다() {
         // Arrange
         SignupRequest request = memberFixture.signupRequestBuilder().password(generatePasswordOfLength(20)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidNames")
+    void 유효하지_않은_이름이면_400을_반환한다(String name) {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().name(name).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void 이름이_최소_길이_3자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().name(generateNameOfLength(3)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 이름이_최대_길이_10자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().name(generateNameOfLength(10)).build();
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);

@@ -30,6 +30,11 @@ public final class MemberGenerator {
         return pick(SURNAMES) + pick(GIVEN_SYLLABLES) + pick(GIVEN_SYLLABLES);
     }
 
+    // 지정한 길이의 이름을 만든다
+    public static String generateNameOfLength(int length) {
+        return "가".repeat(length);
+    }
+
     public static String generateNickName() {
         return "nick" + UUID.randomUUID().toString().substring(0, 8);
     }
