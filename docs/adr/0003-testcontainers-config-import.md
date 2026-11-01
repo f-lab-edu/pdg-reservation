@@ -8,7 +8,7 @@
 - `@SpringBootTest`와 `@ActiveProfiles("test")` 설정과 컨테이너를 한 곳에 묶을지 분리할지 논의했다.
 
 ## 결정
-- `@IntegrationTest`(합성 애노테이션)는 `@SpringBootTest(webEnvironment = RANDOM_PORT)`와 `@ActiveProfiles("test")`만 담는다. `classes`는 쓰지 않는다(메인 클래스를 자동 탐색).
+- `@IntegrationTest`(합성 애노테이션)는 `@SpringBootTest(webEnvironment = RANDOM_PORT)`, `@ActiveProfiles("test")`, 테스트용 비밀번호 인코더 설정(`TestPasswordEncoderConfig`, ADR 0009)을 담는다. 컨테이너는 담지 않는다. `classes`는 쓰지 않는다(메인 클래스를 자동 탐색).
 - `TestContainersConfig`는 `@TestConfiguration`으로 두고, 컨테이너가 필요한 테스트가 `@Import(TestContainersConfig.class)`로 명시한다.
 
 ## 검토한 대안

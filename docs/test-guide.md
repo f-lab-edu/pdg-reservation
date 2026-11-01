@@ -67,7 +67,11 @@ src/test/java/com/pdg/reservation/
   - Arrange: 테스트에 필요한 데이터와 상태를 준비한다.
   - Act: 검증할 동작을 한 번 실행한다.
   - Assert: 결과를 검증한다.
-
+  - Act에는 이 테스트가 검증하려는 동작을 드러낸다. 전제 조건은 Arrange에 두고 Fixture로 묶어도 된다. 같은 동작(예: 로그인)이 어떤 테스트에서는 Act, 다른 테스트에서는 Arrange일 수 있다.
+- 검증은 AssertJ(`assertThat`)로 통일한다. JUnit의 `Assertions`(`assertEquals`, `assertAll` 등)는 쓰지 않고, JUnit은 `@Test`, `@AfterEach` 같은 구조용으로만 쓴다.
+  - 같은 이름의 `Assertions` 클래스가 AssertJ(`org.assertj.core.api`)와 JUnit(`org.junit.jupiter.api`)에 둘 다 있어서, 섞어 쓰면 import를 보지 않고는 어느 쪽인지 알 수 없고 와일드카드 import에서 같은 이름 메서드가 충돌할 수 있다.
+  - 인자 순서가 반대다. JUnit의 `assertEquals(expected, actual)`은 기대값이 앞이고, AssertJ의 `assertThat(actual).isEqualTo(expected)`는 실제값이 앞이다. 섞으면 순서를 실수해서 실패 메시지가 거꾸로 보인다.
+  - 실패 메시지 형식이 다르다. AssertJ는 `Expecting actual: ... to be equal to: ...`, JUnit은 `expected: <...> but was: <...>`로 나온다. 하나로 통일해야 실패 원인을 읽는 방식이 일정하다.
 ## 6. 미정
 
 - Kafka 소비가 늦어져서 다음 테스트와 겹치는 일이 생기면 컨슈머 랙 대기 도우미를 추가할지
