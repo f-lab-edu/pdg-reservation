@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
+import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -101,6 +102,43 @@ class POST_specs {
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPasswords")
+    void 유효하지_않은_비밀번호이면_400을_반환한다(String password) {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().password(password).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void 비밀번호가_최소_길이_8자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().password(generatePasswordOfLength(8)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 비밀번호가_최대_길이_20자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().password(generatePasswordOfLength(20)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     @Test

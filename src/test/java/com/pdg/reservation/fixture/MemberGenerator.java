@@ -34,15 +34,19 @@ public final class MemberGenerator {
         return "nick" + UUID.randomUUID().toString().substring(0, 8);
     }
 
-    // 영문·숫자·특수문자를 각각 1개 이상 포함한 11자
-    public static String generatePassword() {
+    // 영문·숫자·특수문자를 각각 1개 이상 포함한 지정 길이의 비밀번호를 만든다 (3자 이상)
+    public static String generatePasswordOfLength(int length) {
         StringBuilder password = new StringBuilder();
-        password.append(pick(LETTERS)).append(pick(DIGITS));
-        for (int i = 0; i < 8; i++) {
+        password.append(pick(LETTERS)).append(pick(DIGITS)).append(pick(SPECIALS));
+        for (int i = 3; i < length; i++) {
             password.append(pick(LETTERS + DIGITS));
         }
-        password.append(pick(SPECIALS));
         return password.toString();
+    }
+
+    // 영문·숫자·특수문자를 각각 1개 이상 포함한 11자
+    public static String generatePassword() {
+        return generatePasswordOfLength(11);
     }
 
     public static String generatePhoneNumber() {
