@@ -106,6 +106,18 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    void 이메일이_최대_길이_100자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().email(generateEmailOfLength(100)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPasswords")
     void 유효하지_않은_비밀번호이면_400을_반환한다(String password) {
@@ -246,18 +258,6 @@ class POST_specs {
     void 전화번호의_가운데_자리가_최대_길이_4자리이면_가입된다() {
         // Arrange
         SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber("010-1234-5678").build();
-
-        // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
-
-        // Assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    }
-
-    @Test
-    void 이메일이_최대_길이_100자이면_가입된다() {
-        // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().email(generateEmailOfLength(100)).build();
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
