@@ -140,6 +140,25 @@ class POST_specs {
         });
     }
 
+    @Test
+    void 이미_사용_중인_닉네임이면_409를_반환한다() {
+        // Arrange
+        SignupRequest existing = memberFixture.createMember();
+        SignupRequest request = memberFixture.signupRequestBuilder().nickName(existing.getNickName()).build();
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = client.exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertSoftly(softly -> {
+            softly.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            softly.assertThat(response.getBody().getErrorCode()).isEqualTo("MEMBER-002");
+        });
+    }
+
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPasswords")
     void 유효하지_않은_비밀번호이면_400을_반환한다(String password) {

@@ -22,6 +22,7 @@ public enum ErrorCode {
     AUTH_USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "AUTH-003", "아이디 또는 비밀번호가 일치하지 않습니다."),
 
     MEMBER_EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-001", "이미 가입된 이메일입니다."),
+    MEMBER_NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-002", "이미 사용 중인 닉네임입니다."),
 
     JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT-001", "유효하지 않은 토큰입니다."),
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "JWT-002", "유효 기간이 만료된 토큰입니다."),
