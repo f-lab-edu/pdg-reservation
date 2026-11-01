@@ -53,16 +53,18 @@ src/test/java/com/pdg/reservation/
 ├── api/v1/members/login/POST_specs.java  # POST /api/v1/members/login
 ├── member/entity/MemberTest.java         # 엔티티 단위 테스트(로직이 생기면)
 ├── support/                              # IntegrationTest, TestContainersConfig, DatabaseCleanUp, RedisCleanUp
-└── fixture/                              # xxxFixture
+└── fixture/                              # xxxFixture, MemberGenerator(임의 값), TestDataSource(잘못된 값 목록)
 ```
 
-- API 테스트는 URL을 패키지로 따라가고(버전 포함), HTTP 메서드별로 `GET_specs`, `POST_specs` 클래스를 둔다. 시나리오 묶음은 `@Nested`로 그룹화한다.
+- API 테스트는 URL을 패키지로 따라가고(버전 포함), HTTP 메서드별로 `GET_specs`, `POST_specs` 클래스를 둔다.
 - 단위 테스트는 운영 코드 패키지를 그대로 따라가며 `XxxTest`로 이름 짓는다.
 - 패키지 이름: 고정 경로는 그대로, 경로 변수는 변수 이름만 쓴다(`/accommodations/{id}` → `accommodations/id`). 하이픈은 제거한다.
 - 인프라(`support`)와 데이터 준비(`fixture`)는 분리한다.
 - 테스트 메서드 이름은 한글 문장으로 쓰고, 띄어쓰기 대신 `_`를 쓴다. `@DisplayName`은 쓰지 않는다. 메서드 이름 자체가 요구사항이 되도록 "조건_결과" 형태로 쓴다.
   예: `올바른_정보로_가입하면_201을_반환한다`, `이메일이_중복이면_409를_반환한다`
-- `@Nested` 클래스 이름도 한글로 쓰고 같은 규칙을 따른다. 예: `이름_검증`
+- 같은 필드의 규칙 테스트(유효하지 않은 값이면 400, 한계 값이면 성공)는 같은 클래스에 나란히 둔다. `@Nested`는 쓰지 않는다.
+- 잘못된 값 목록은 `fixture/TestDataSource`에 값의 종류별로 한곳에 모은다(`invalidEmails()` 등). 새 목록을 만들기 전에 이 파일을 먼저 확인한다. 도메인마다 정책이 다른 값은 메서드 이름에 도메인을 붙인다.
+- 잘못된 요청은 `MemberFixture.signupRequestBuilder()`가 돌려주는 유효한 값으로 채운 빌더에서 한 필드만 덮어써서 만든다. 운영 DTO에 `toBuilder`를 추가하지 않는다.
 - 테스트 본문은 AAA 패턴으로 작성하고 `// Arrange`, `// Act`, `// Assert` 주석으로 구분한다.
   - Arrange: 테스트에 필요한 데이터와 상태를 준비한다.
   - Act: 검증할 동작을 한 번 실행한다.

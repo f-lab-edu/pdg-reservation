@@ -12,7 +12,9 @@
 - Fixture 안에서 `TestRestTemplate`을 직접 만든다(`LocalHostUriTemplateHandler`로 서버 포트 지정). 공유 빈에 인터셉터를 달지 않는다.
 - Fixture는 `com.pdg.reservation.fixture` 패키지에 두고, 인프라(`support`)와 분리한다.
 - 회원처럼 API가 있는 데이터는 API로 만들고, API가 없는 데이터(숙소, 객실, 재고)는 해당 Fixture가 리포지터리로 저장한다.
-- 임의 값 생성은 우선 Fixture 안에 두고, 반복되면 별도 생성기로 뺀다.
+- 임의 값 생성은 `MemberGenerator`(정적 메서드)에 두고 Fixture와 테스트가 정적 임포트로 쓴다. 가입 테스트마다 값이 겹치지 않도록 이메일, 닉네임 등을 모두 임의로 만든다.
+- 잘못된 값 목록은 `TestDataSource`에 값의 종류별로 한곳에 모은다(`invalidEmails()` 등). 여러 도메인이 같은 목록을 중복해서 만드는 것을 막기 위해서다.
+- 잘못된 요청은 `MemberFixture.signupRequestBuilder()`가 돌려주는 빌더에서 한 필드만 덮어써서 만든다.
 
 ## 검토한 대안
 - 싱글톤 Fixture: 토큰 설정이 다음 테스트로 새서 격리가 깨진다.

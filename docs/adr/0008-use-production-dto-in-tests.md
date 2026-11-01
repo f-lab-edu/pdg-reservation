@@ -16,6 +16,7 @@
 ## 검토한 대안
 - `Map`으로 JSON을 직접 구성: 운영 DTO에 의존하지 않아 API 계약(JSON 키) 변경을 테스트가 잡는다. 키 오타를 컴파일러가 못 잡고 반복이 늘어서 쓰지 않았다.
 - 테스트 전용 요청 타입(`record`): 계약은 독립적이지만 타입이 중복된다.
+- 요청 DTO에 `@Builder(toBuilder = true)`: 한 필드만 바꾼 변형 요청을 만들기 위한 것인데, `MemberFixture`가 유효한 값으로 채운 빌더를 돌려주면 운영 소스를 바꾸지 않고도 같은 효과를 낸다.
 - `@Jacksonized`로 응답 역직렬화: 한 줄로 되지만 기존 DTO 스타일(`@NoArgsConstructor` + `@AllArgsConstructor`)과 맞추기 위해 쓰지 않았다.
 
 ## 결과
