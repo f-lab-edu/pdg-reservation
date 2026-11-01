@@ -217,6 +217,43 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPhoneNumbers")
+    void 유효하지_않은_전화번호이면_400을_반환한다(String phoneNumber) {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber(phoneNumber).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void 전화번호의_가운데_자리가_최소_길이_3자리이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber("010-123-4567").build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 전화번호의_가운데_자리가_최대_길이_4자리이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber("010-1234-5678").build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
     @Test
     void 이메일이_최대_길이_100자이면_가입된다() {
         // Arrange

@@ -35,6 +35,8 @@ public class SignupRequest {
     @Size(min = 3, max = 10, message = "닉네임은 3자 이상 10자 이하여야 합니다.")
     private String nickName;
 
+    @NotBlank(message = "전화번호는 필수입니다.")
+    @Pattern(regexp = "^010-\\d{3,4}-\\d{4}$", message = "전화번호는 010-1234-5678 또는 010-123-4567 형식이어야 합니다.")
     private String phoneNumber;
 
     public Member toEntity(String encodedPassword) {

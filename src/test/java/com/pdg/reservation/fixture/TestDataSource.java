@@ -48,6 +48,22 @@ public final class TestDataSource {
         );
     }
 
+    public static Stream<Arguments> invalidPhoneNumbers() {
+        return Stream.of(
+                arguments(named("null", null)),
+                arguments(named("빈 문자열", "")),
+                arguments(named("공백", " ")),
+                arguments(named("하이픈 없음", "01012345678")),
+                arguments(named("허용하지 않는 앞자리 (011)", "011-1234-5678")),
+                arguments(named("가운데 자리 최소 길이 미만 (2자리)", "010-12-5678")),
+                arguments(named("가운데 자리 최대 길이 초과 (5자리)", "010-12345-5678")),
+                arguments(named("끝 자리 최소 길이 미만 (3자리)", "010-1234-567")),
+                arguments(named("끝 자리 최대 길이 초과 (5자리)", "010-1234-56789")),
+                arguments(named("숫자가 아닌 문자 포함", "010-12a4-5678")),
+                arguments(named("앞에 공백", " 010-1234-5678"))
+        );
+    }
+
     public static Stream<Arguments> invalidPasswords() {
         return Stream.of(
                 arguments(named("null", null)),
