@@ -104,7 +104,7 @@ class POST_specs {
     }
 
     @Test
-    void 이메일이_100자이면_가입된다() {
+    void 이메일이_최대_길이_100자이면_가입된다() {
         // Arrange
         SignupRequest request = memberFixture.signupRequestBuilder().email(generateEmailOfLength(100)).build();
 

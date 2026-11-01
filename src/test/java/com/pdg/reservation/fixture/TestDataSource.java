@@ -19,7 +19,7 @@ public final class TestDataSource {
                 arguments(named("빈 문자열", "")),
                 arguments(named("공백", " ")),
                 arguments(named("형식 오류", "plainaddress")),
-                arguments(named("101자", generateEmailOfLength(101)))
+                arguments(named("최대 길이 초과 (101자)", generateEmailOfLength(101)))
         );
     }
 }
