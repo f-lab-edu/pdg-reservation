@@ -28,15 +28,19 @@ public class MemberFixture {
         client.setUriTemplateHandler(new LocalHostUriTemplateHandler(environment));
     }
 
-    // 임의 값으로 채운 유효한 가입 요청을 만든다
-    public SignupRequest signupRequest() {
+    // 임의 값으로 채운 유효한 가입 요청 빌더. 테스트가 필요한 필드만 덮어쓴다
+    public SignupRequest.SignupRequestBuilder signupRequestBuilder() {
         return SignupRequest.builder()
                 .email(generateEmail())
                 .password(generatePassword())
                 .name(generateName())
                 .nickName(generateNickName())
-                .phoneNumber(generatePhoneNumber())
-                .build();
+                .phoneNumber(generatePhoneNumber());
+    }
+
+    // 임의 값으로 채운 유효한 가입 요청을 만든다
+    public SignupRequest signupRequest() {
+        return signupRequestBuilder().build();
     }
 
     // 가입한 회원의 이메일과 비밀번호로 로그인 요청을 만든다

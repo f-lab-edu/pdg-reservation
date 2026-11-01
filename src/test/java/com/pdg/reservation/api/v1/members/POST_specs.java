@@ -9,6 +9,8 @@ import com.pdg.reservation.support.IntegrationTest;
 import com.pdg.reservation.support.TestContainersConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -85,5 +88,30 @@ class POST_specs {
         Member saved = memberRepository.findByEmail(request.getEmail()).orElseThrow();
         assertThat(saved.getPassword()).isNotEqualTo(request.getPassword());
         assertThat(passwordEncoder.matches(request.getPassword(), saved.getPassword())).isTrue();
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidEmails")
+    void 유효하지_않은_이메일이면_400을_반환한다(String email) {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().email(email).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void 이메일이_100자이면_가입된다() {
+        // Arrange
+        SignupRequest request = memberFixture.signupRequestBuilder().email(generateEmailOfLength(100)).build();
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 }

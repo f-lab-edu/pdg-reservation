@@ -19,6 +19,13 @@ public final class MemberGenerator {
         return "user-" + UUID.randomUUID() + "@example.com";
     }
 
+    // 지정한 길이의 유효한 형식 이메일을 만든다 (46~108자)
+    public static String generateEmailOfLength(int length) {
+        String local = "a".repeat(40);
+        String domainLabel = "b".repeat(length - local.length() - ".com".length() - 1);
+        return local + "@" + domainLabel + ".com";
+    }
+
     public static String generateName() {
         return pick(SURNAMES) + pick(GIVEN_SYLLABLES) + pick(GIVEN_SYLLABLES);
     }
