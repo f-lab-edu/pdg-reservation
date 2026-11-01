@@ -37,12 +37,26 @@ public class DatabaseCleanUp implements InitializingBean {
     @Transactional
     public void truncateAllTables() {
         entityManager.clear();
+
+        List<String> dirtyTables = tableNames.stream()
+                .filter(this::hasRows)
+                .toList();
+        if (dirtyTables.isEmpty()) {
+            return;
+        }
+
         entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
 
-        for (String table : tableNames) {
+        for (String table : dirtyTables) {
             entityManager.createNativeQuery("TRUNCATE TABLE `" + table + "`").executeUpdate();
         }
 
         entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+    }
+
+    private boolean hasRows(String table) {
+        return !entityManager.createNativeQuery("SELECT 1 FROM `" + table + "` LIMIT 1")
+                .getResultList()
+                .isEmpty();
     }
 }
