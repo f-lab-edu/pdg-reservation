@@ -39,6 +39,10 @@ public class MemberService {
 
     @Transactional
     public void signup(SignupRequest signupRequest) {
+        if (memberRepository.existsByEmail(signupRequest.getEmail())) {
+            throw new CustomException(ErrorCode.MEMBER_EMAIL_DUPLICATED);
+        }
+
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
         memberRepository.save(signupRequest.toEntity(encodedPassword));
     }

@@ -1,5 +1,6 @@
 package com.pdg.reservation.api.v1.members;
 
+import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.member.entity.Member;
@@ -14,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +26,7 @@ import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLeng
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.springframework.http.RequestEntity.post;
 
 @IntegrationTest
 @Import(TestContainersConfig.class)
@@ -116,6 +119,25 @@ class POST_specs {
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 이미_가입된_이메일이면_409를_반환한다() {
+        // Arrange
+        SignupRequest existing = memberFixture.createMember();
+        SignupRequest request = memberFixture.signupRequestBuilder().email(existing.getEmail()).build();
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = client.exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertSoftly(softly -> {
+            softly.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            softly.assertThat(response.getBody().getErrorCode()).isEqualTo("MEMBER-001");
+        });
     }
 
     @ParameterizedTest
