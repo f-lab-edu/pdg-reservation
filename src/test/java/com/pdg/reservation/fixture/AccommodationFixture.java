@@ -35,4 +35,9 @@ public class AccommodationFixture {
         bloomFilter.add(accommodation.getId());
         return accommodation;
     }
+
+    // 숙소를 DB에만 저장하고 블룸 필터에는 등록하지 않는다
+    public Accommodation createAccommodationOutsideBloomFilter() {
+        return accommodationRepository.save(generateAccommodation());
+    }
 }

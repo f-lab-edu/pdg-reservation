@@ -70,4 +70,37 @@ class GET_specs {
             softly.assertThat(detail.getAddress()).isEqualTo(accommodation.getAddress());
         });
     }
+
+    @Test
+    void 존재하지_않는_숙소를_조회하면_404와_ACC_001을_반환한다() {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        long missingId = accommodation.getId() + 1;
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", missingId).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("ACC-001");
+    }
+
+    @Test
+    void 블룸_필터에_없는_숙소는_DB에_있어도_404와_ACC_001을_반환한다() {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodationOutsideBloomFilter();
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("ACC-001");
+    }
 }
