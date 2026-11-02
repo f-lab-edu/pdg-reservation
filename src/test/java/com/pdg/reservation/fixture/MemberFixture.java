@@ -10,6 +10,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -53,6 +54,22 @@ public class MemberFixture {
             throw new IllegalStateException("로그인 실패: " + response.getStatusCode());
         }
         return response.getBody().getData().getAccessToken();
+    }
+
+    // 가입한 회원으로 로그인하고, 응답으로 받은 리프레시 토큰 쿠키의 값을 돌려준다
+    public String issueRefreshToken(SignupRequest member) {
+        ResponseEntity<Void> response = client.exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                Void.class
+        );
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("로그인 실패: " + response.getStatusCode());
+        }
+        return response.getHeaders().get(HttpHeaders.SET_COOKIE).stream()
+                .filter(cookie -> cookie.startsWith("refreshToken="))
+                .map(cookie -> cookie.substring("refreshToken=".length(), cookie.indexOf(';')))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("리프레시 토큰 쿠키가 없습니다."));
     }
 
     // 회원을 만들고 로그인해서, 이후 클라이언트의 모든 요청에 그 회원의 토큰이 붙게 한다
