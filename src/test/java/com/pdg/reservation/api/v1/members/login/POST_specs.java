@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -92,6 +93,39 @@ class POST_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-003");
+    }
+
+    @Test
+    void 로그인하면_리프레시_토큰이_HttpOnly_쿠키로_내려온다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        ResponseEntity<Void> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                Void.class
+        );
+
+        // Assert
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE))
+                .anySatisfy(cookie -> assertThat(cookie)
+                        .startsWith("refreshToken=")
+                        .contains("HttpOnly"));
+    }
+
+    @Test
+    void 로그인하면_응답_본문에_리프레시_토큰이_없다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        ResponseEntity<String> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getBody()).doesNotContain("refreshToken");
     }
 
     @Test
