@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -79,6 +80,9 @@ public class JwtTokenProvider {
         try {
             refreshToken = Jwts.builder()
                     .claims() // Claims 객체를 시작하는 최신 방식
+                    // 토큰마다 고유해야 한다. exp/iat는 초 단위라 같은 초에 발급하면 토큰이 같아지고,
+                    // 그러면 재발급 후에도 이전 토큰이 Redis 값과 일치해 Rotation이 무력화된다.
+                    .id(UUID.randomUUID().toString())
                     .subject(email)
                     .expiration(new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(refreshTokenExpiredValue)))
                     .issuedAt(new Date(System.currentTimeMillis())) // 현재 시간
