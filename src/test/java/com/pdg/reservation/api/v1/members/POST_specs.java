@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -41,9 +40,6 @@ import static org.springframework.http.RequestEntity.post;
 class POST_specs {
 
     @Autowired
-    TestRestTemplate client;
-
-    @Autowired
     MemberFixture memberFixture;
 
     @Autowired
@@ -66,7 +62,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequest();
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -78,7 +74,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequest();
 
         // Act
-        client.postForEntity("/api/v1/members", request, Void.class);
+        memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         Member saved = memberRepository.findByEmail(request.getEmail()).orElseThrow();
@@ -96,7 +92,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequest();
 
         // Act
-        client.postForEntity("/api/v1/members", request, Void.class);
+        memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         Member saved = memberRepository.findByEmail(request.getEmail()).orElseThrow();
@@ -111,7 +107,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithEmail(email);
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -123,7 +119,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithEmail(generateEmailOfLength(100));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -136,7 +132,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithEmail(existing.getEmail());
 
         // Act
-        ResponseEntity<ApiResponse<Void>> response = client.exchange(
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
                 post("/api/v1/members").body(request),
                 new ParameterizedTypeReference<>() { }
         );
@@ -155,7 +151,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithNickName(existing.getNickName());
 
         // Act
-        ResponseEntity<ApiResponse<Void>> response = client.exchange(
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
                 post("/api/v1/members").body(request),
                 new ParameterizedTypeReference<>() { }
         );
@@ -174,7 +170,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithPassword(password);
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -186,7 +182,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithPassword(generatePasswordOfLength(8));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -198,7 +194,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithPassword(generatePasswordOfLength(20));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -211,7 +207,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithName(name);
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -223,7 +219,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithName(generateNameOfLength(3));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -235,7 +231,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithName(generateNameOfLength(10));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -248,7 +244,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithNickName(nickName);
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -260,7 +256,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithNickName(generateNickNameOfLength(3));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -272,7 +268,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithNickName(generateNickNameOfLength(10));
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -285,7 +281,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithPhoneNumber(phoneNumber);
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -297,7 +293,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithPhoneNumber("010-123-4567");
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -309,7 +305,7 @@ class POST_specs {
         SignupRequest request = generateSignupRequestWithPhoneNumber("010-1234-5678");
 
         // Act
-        ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);

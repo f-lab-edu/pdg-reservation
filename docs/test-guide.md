@@ -16,7 +16,7 @@
 
 - DB(MySQL), Redis, Kafka는 Testcontainers로 실제 컨테이너를 띄운다. 컨테이너는 테스트 전체가 한 번만 띄워서 공유하고, 테스트마다 새로 띄우지 않는다.
 - 테스트는 `test` 프로필로 돌린다. 개발용 샘플 데이터(`data.sql`)는 테스트에서 실행하지 않는다(`spring.sql.init.mode: never`).
-- API 호출은 `TestRestTemplate`을 쓴다.
+- API 호출은 Fixture가 가진 `TestRestTemplate`으로 한다(`memberFixture.client()`). 테스트 클래스에서 `TestRestTemplate`을 직접 주입받지 않는다.
 - 테스트 실행에는 Docker가 실행 중이어야 한다.
 
 ```bash
@@ -29,7 +29,7 @@
 - 회원처럼 API가 있는 데이터는 API를 호출해서 만든다. 스키마가 바뀌어도 테스트가 남는다.
 - API가 없는 데이터(숙소, 객실, 재고)는 해당 Fixture가 리포지터리로 직접 저장한다. 이런 코드는 스키마 변경 때 고칠 곳을 줄이기 위해 Fixture 안에만 둔다.
 - **데이터 격리는 cleanUp으로 한다.** `@AfterEach`에서 테스트가 사용하는 저장소만 초기화한다. DB는 `DatabaseCleanUp.truncateAllTables()`로 외래 키 검사를 끄고 테이블을 비운 뒤 다시 켠다. Redis는 아래 규칙대로 `RedisCleanUp`을 쓴다. 로그인처럼 Redis를 건드리는 테스트에서 추가한다.
-- Fixture는 프로토타입 범위의 빈으로 두고, 안에서 `TestRestTemplate`을 직접 만들어 쓴다. 공유되는 `TestRestTemplate`에 기본 토큰 인터셉터를 달면 테스트 사이에 새기 때문이다. 토큰이 필요한 API를 테스트할 때 적용한다.
+- Fixture는 프로토타입 범위의 빈으로 두고, 안에서 `TestRestTemplate`을 직접 만들어 쓴다. 공유되는 `TestRestTemplate`에 기본 토큰 인터셉터를 달면 테스트 사이에 새기 때문이다. 로그인한 사용자의 토큰은 Fixture가 자기 클라이언트의 기본 `Authorization`으로 심고(`createMemberThenSetAsDefaultUser()`), 요청에 직접 붙인 헤더가 있으면 그것이 우선한다. 지금은 API로 만드는 Fixture가 `MemberFixture` 하나라서 테스트가 그 클라이언트를 그대로 쓴다. API로 만드는 Fixture가 둘 이상이 되면 클라이언트를 어떻게 공유할지 다시 정한다(ADR 0006).
 - **임의 테스트 데이터**를 생성해서 쓴다(이메일, 비밀번호 등). 고정 값을 쓰면 테스트끼리 값이 겹칠 수 있다.
 - 리소스 ID는 하드코딩하지 않고 응답에서 꺼내 재사용한다.
 - 검증은 기본적으로 API 응답으로 한다. 응답에 나오지 않는 결과(예: 암호화되어 저장된 비밀번호, 아웃박스 기록)만 DB를 직접 조회해서 확인한다.

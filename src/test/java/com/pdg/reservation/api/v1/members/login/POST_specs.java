@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -28,9 +27,6 @@ import static org.springframework.http.RequestEntity.post;
 @IntegrationTest
 @Import(TestContainersConfig.class)
 class POST_specs {
-
-    @Autowired
-    TestRestTemplate client;
 
     @Autowired
     MemberFixture memberFixture;
@@ -53,7 +49,7 @@ class POST_specs {
         SignupRequest member = memberFixture.createMember();
 
         // Act
-        ResponseEntity<ApiResponse<LoginResponse>> response = client.exchange(
+        ResponseEntity<ApiResponse<LoginResponse>> response = memberFixture.client().exchange(
                 post("/api/v1/members/login").body(generateLoginRequest(member)),
                 new ParameterizedTypeReference<>() { }
         );
@@ -69,7 +65,7 @@ class POST_specs {
         SignupRequest member = memberFixture.createMember();
 
         // Act
-        ResponseEntity<ApiResponse<LoginResponse>> response = client.exchange(
+        ResponseEntity<ApiResponse<LoginResponse>> response = memberFixture.client().exchange(
                 post("/api/v1/members/login").body(generateLoginRequest(member)),
                 new ParameterizedTypeReference<>() { }
         );
