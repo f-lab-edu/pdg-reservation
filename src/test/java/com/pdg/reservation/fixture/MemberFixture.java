@@ -82,6 +82,14 @@ public class MemberFixture {
         return extractRefreshToken(response);
     }
 
+    // 기본 사용자로 로그아웃한다. 그 사용자의 액세스 토큰이 블랙리스트에 올라간다
+    public void logout() {
+        ResponseEntity<Void> response = client.postForEntity("/api/v1/members/logout", null, Void.class);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("로그아웃 실패: " + response.getStatusCode());
+        }
+    }
+
     // 이미 교체된 리프레시 토큰을 다시 보낸다. 서버는 거절하고 저장된 토큰을 삭제한다
     public void reuseRefreshToken(String usedRefreshToken) {
         client.exchange(
