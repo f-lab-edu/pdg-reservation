@@ -138,7 +138,7 @@ class POST_specs {
 
         // Act
         List<String> refreshTokens = IntStream.range(0, 5)
-                .mapToObj(i -> memberFixture.issueRefreshToken(member))
+                .mapToObj(i -> memberFixture.login(member).refreshToken())
                 .toList();
 
         // Assert

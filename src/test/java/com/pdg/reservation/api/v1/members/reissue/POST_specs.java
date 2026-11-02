@@ -46,7 +46,7 @@ class POST_specs {
     void 리프레시_쿠키로_재발급하면_200과_새_액세스_토큰을_반환한다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
-        String refreshToken = memberFixture.issueRefreshToken(member);
+        String refreshToken = memberFixture.login(member).refreshToken();
 
         // Act
         ResponseEntity<ApiResponse<TokenResponse>> response = memberFixture.client().exchange(
@@ -65,7 +65,7 @@ class POST_specs {
     void 재발급하면_응답_본문에_리프레시_토큰이_없다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
-        String refreshToken = memberFixture.issueRefreshToken(member);
+        String refreshToken = memberFixture.login(member).refreshToken();
 
         // Act
         ResponseEntity<String> response = memberFixture.client().exchange(
@@ -83,7 +83,7 @@ class POST_specs {
     void 재발급한_뒤_이전_리프레시_토큰으로_재발급하면_401과_JWT_001을_반환한다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
-        String oldRefreshToken = memberFixture.issueRefreshToken(member);
+        String oldRefreshToken = memberFixture.login(member).refreshToken();
         memberFixture.reissueRefreshToken(oldRefreshToken);
 
         // Act
@@ -134,7 +134,7 @@ class POST_specs {
     void 이전_토큰의_재사용이_감지되면_새_토큰도_무효가_되어_401과_JWT_003을_반환한다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
-        String usedRefreshToken = memberFixture.issueRefreshToken(member);
+        String usedRefreshToken = memberFixture.login(member).refreshToken();
         String newRefreshToken = memberFixture.reissueRefreshToken(usedRefreshToken);
         memberFixture.reuseRefreshToken(usedRefreshToken);
 

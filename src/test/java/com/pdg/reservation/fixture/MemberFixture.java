@@ -44,8 +44,8 @@ public class MemberFixture {
         return request;
     }
 
-    // 가입한 회원으로 로그인하고 액세스 토큰을 돌려준다
-    public String issueAccessToken(SignupRequest member) {
+    // 가입한 회원으로 로그인하고, 한 번의 응답으로 받은 액세스 토큰과 리프레시 토큰(쿠키 값)을 돌려준다
+    public LoginSession login(SignupRequest member) {
         ResponseEntity<ApiResponse<LoginResponse>> response = client.exchange(
                 post("/api/v1/members/login").body(generateLoginRequest(member)),
                 new ParameterizedTypeReference<>() { }
@@ -53,19 +53,10 @@ public class MemberFixture {
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new IllegalStateException("로그인 실패: " + response.getStatusCode());
         }
-        return response.getBody().getData().getAccessToken();
-    }
-
-    // 가입한 회원으로 로그인하고, 응답으로 받은 리프레시 토큰 쿠키의 값을 돌려준다
-    public String issueRefreshToken(SignupRequest member) {
-        ResponseEntity<Void> response = client.exchange(
-                post("/api/v1/members/login").body(generateLoginRequest(member)),
-                Void.class
+        return new LoginSession(
+                response.getBody().getData().getAccessToken(),
+                extractRefreshToken(response)
         );
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new IllegalStateException("로그인 실패: " + response.getStatusCode());
-        }
-        return extractRefreshToken(response);
     }
 
     // 리프레시 토큰으로 재발급하고, 응답으로 받은 새 리프레시 토큰 쿠키의 값을 돌려준다
@@ -111,7 +102,7 @@ public class MemberFixture {
     // 회원을 만들고 로그인해서, 이후 클라이언트의 모든 요청에 그 회원의 토큰이 붙게 한다
     public SignupRequest createMemberThenSetAsDefaultUser() {
         SignupRequest member = createMember();
-        setDefaultAuthorization("Bearer " + issueAccessToken(member));
+        setDefaultAuthorization("Bearer " + login(member).accessToken());
         return member;
     }
 
