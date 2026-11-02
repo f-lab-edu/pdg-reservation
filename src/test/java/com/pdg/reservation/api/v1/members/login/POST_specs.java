@@ -93,4 +93,20 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-003");
     }
+
+    @Test
+    void 가입하지_않은_이메일로_로그인하면_401과_AUTH_003을_반환한다() {
+        // Arrange
+        LoginRequest request = generateLoginRequest();
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-003");
+    }
 }

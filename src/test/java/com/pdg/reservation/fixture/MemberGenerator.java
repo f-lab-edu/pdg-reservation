@@ -102,6 +102,14 @@ public final class MemberGenerator {
                 .build();
     }
 
+    // 가입하지 않은 계정의 로그인 요청을 만든다 (임의 이메일과 비밀번호)
+    public static LoginRequest generateLoginRequest() {
+        return LoginRequest.builder()
+                .email(generateEmail())
+                .password(generatePassword())
+                .build();
+    }
+
     // 가입한 회원의 이메일과 주어진 비밀번호로 로그인 요청을 만든다
     public static LoginRequest generateLoginRequestWithPassword(SignupRequest member, String password) {
         return LoginRequest.builder()
