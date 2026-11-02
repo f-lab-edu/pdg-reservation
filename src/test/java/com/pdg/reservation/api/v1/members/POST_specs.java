@@ -25,6 +25,12 @@ import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
+import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequest;
+import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequestWithEmail;
+import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequestWithName;
+import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequestWithNickName;
+import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequestWithPassword;
+import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequestWithPhoneNumber;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.springframework.http.RequestEntity.post;
@@ -57,7 +63,7 @@ class POST_specs {
     @Test
     void 올바른_정보로_가입하면_201을_반환한다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequest();
+        SignupRequest request = generateSignupRequest();
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -69,7 +75,7 @@ class POST_specs {
     @Test
     void 가입하면_입력한_값이_저장된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequest();
+        SignupRequest request = generateSignupRequest();
 
         // Act
         client.postForEntity("/api/v1/members", request, Void.class);
@@ -87,7 +93,7 @@ class POST_specs {
     @Test
     void 가입하면_비밀번호는_인코딩되어_저장된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequest();
+        SignupRequest request = generateSignupRequest();
 
         // Act
         client.postForEntity("/api/v1/members", request, Void.class);
@@ -102,7 +108,7 @@ class POST_specs {
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidEmails")
     void 유효하지_않은_이메일이면_400을_반환한다(String email) {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().email(email).build();
+        SignupRequest request = generateSignupRequestWithEmail(email);
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -114,7 +120,7 @@ class POST_specs {
     @Test
     void 이메일이_최대_길이_100자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().email(generateEmailOfLength(100)).build();
+        SignupRequest request = generateSignupRequestWithEmail(generateEmailOfLength(100));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -127,7 +133,7 @@ class POST_specs {
     void 이미_가입된_이메일이면_409를_반환한다() {
         // Arrange
         SignupRequest existing = memberFixture.createMember();
-        SignupRequest request = memberFixture.signupRequestBuilder().email(existing.getEmail()).build();
+        SignupRequest request = generateSignupRequestWithEmail(existing.getEmail());
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = client.exchange(
@@ -146,7 +152,7 @@ class POST_specs {
     void 이미_사용_중인_닉네임이면_409를_반환한다() {
         // Arrange
         SignupRequest existing = memberFixture.createMember();
-        SignupRequest request = memberFixture.signupRequestBuilder().nickName(existing.getNickName()).build();
+        SignupRequest request = generateSignupRequestWithNickName(existing.getNickName());
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = client.exchange(
@@ -165,7 +171,7 @@ class POST_specs {
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPasswords")
     void 유효하지_않은_비밀번호이면_400을_반환한다(String password) {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().password(password).build();
+        SignupRequest request = generateSignupRequestWithPassword(password);
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -177,7 +183,7 @@ class POST_specs {
     @Test
     void 비밀번호가_최소_길이_8자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().password(generatePasswordOfLength(8)).build();
+        SignupRequest request = generateSignupRequestWithPassword(generatePasswordOfLength(8));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -189,7 +195,7 @@ class POST_specs {
     @Test
     void 비밀번호가_최대_길이_20자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().password(generatePasswordOfLength(20)).build();
+        SignupRequest request = generateSignupRequestWithPassword(generatePasswordOfLength(20));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -202,7 +208,7 @@ class POST_specs {
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidNames")
     void 유효하지_않은_이름이면_400을_반환한다(String name) {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().name(name).build();
+        SignupRequest request = generateSignupRequestWithName(name);
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -214,7 +220,7 @@ class POST_specs {
     @Test
     void 이름이_최소_길이_3자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().name(generateNameOfLength(3)).build();
+        SignupRequest request = generateSignupRequestWithName(generateNameOfLength(3));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -226,7 +232,7 @@ class POST_specs {
     @Test
     void 이름이_최대_길이_10자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().name(generateNameOfLength(10)).build();
+        SignupRequest request = generateSignupRequestWithName(generateNameOfLength(10));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -239,7 +245,7 @@ class POST_specs {
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidNickNames")
     void 유효하지_않은_닉네임이면_400을_반환한다(String nickName) {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().nickName(nickName).build();
+        SignupRequest request = generateSignupRequestWithNickName(nickName);
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -251,7 +257,7 @@ class POST_specs {
     @Test
     void 닉네임이_최소_길이_3자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().nickName(generateNickNameOfLength(3)).build();
+        SignupRequest request = generateSignupRequestWithNickName(generateNickNameOfLength(3));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -263,7 +269,7 @@ class POST_specs {
     @Test
     void 닉네임이_최대_길이_10자이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().nickName(generateNickNameOfLength(10)).build();
+        SignupRequest request = generateSignupRequestWithNickName(generateNickNameOfLength(10));
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -276,7 +282,7 @@ class POST_specs {
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPhoneNumbers")
     void 유효하지_않은_전화번호이면_400을_반환한다(String phoneNumber) {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber(phoneNumber).build();
+        SignupRequest request = generateSignupRequestWithPhoneNumber(phoneNumber);
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -288,7 +294,7 @@ class POST_specs {
     @Test
     void 전화번호의_가운데_자리가_최소_길이_3자리이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber("010-123-4567").build();
+        SignupRequest request = generateSignupRequestWithPhoneNumber("010-123-4567");
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
@@ -300,7 +306,7 @@ class POST_specs {
     @Test
     void 전화번호의_가운데_자리가_최대_길이_4자리이면_가입된다() {
         // Arrange
-        SignupRequest request = memberFixture.signupRequestBuilder().phoneNumber("010-1234-5678").build();
+        SignupRequest request = generateSignupRequestWithPhoneNumber("010-1234-5678");
 
         // Act
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);

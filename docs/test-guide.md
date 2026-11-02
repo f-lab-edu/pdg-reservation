@@ -53,7 +53,7 @@ src/test/java/com/pdg/reservation/
 ├── api/v1/members/login/POST_specs.java  # POST /api/v1/members/login
 ├── member/entity/MemberTest.java         # 엔티티 단위 테스트(로직이 생기면)
 ├── support/                              # IntegrationTest, TestContainersConfig, DatabaseCleanUp, RedisCleanUp
-└── fixture/                              # xxxFixture, MemberGenerator(임의 값), TestDataSource(잘못된 값 목록)
+└── fixture/                              # xxxFixture, MemberGenerator(임의 값·요청 생성), TestDataSource(잘못된 값 목록)
 ```
 
 - API 테스트는 URL을 패키지로 따라가고(버전 포함), HTTP 메서드별로 `GET_specs`, `POST_specs` 클래스를 둔다.
@@ -70,7 +70,8 @@ src/test/java/com/pdg/reservation/
   - 잘못된 값 쪽 표시 이름은 `최소 길이 미만 (7자)`, `최대 길이 초과 (21자)`처럼 경계 이름과 숫자를 함께 쓴다. 성공 쪽 테스트 이름은 `비밀번호가_최소_길이_8자이면_가입된다`처럼 쓴다.
   - 성공 경계 테스트는 구현 전에도 통과하는 회귀 방지용이라, 한계를 일부러 한 칸 어긋나게 만들어 실패하는지 확인한다.
 - 잘못된 값 목록은 `fixture/TestDataSource`에 값의 종류별로 한곳에 모은다(`invalidEmails()` 등). 새 목록을 만들기 전에 이 파일을 먼저 확인한다. 도메인마다 정책이 다른 값은 메서드 이름에 도메인을 붙인다.
-- 잘못된 요청은 `MemberFixture.signupRequestBuilder()`가 돌려주는 유효한 값으로 채운 빌더에서 한 필드만 덮어써서 만든다. 운영 DTO에 `toBuilder`를 추가하지 않는다.
+- 필드 하나만 바꾼 요청은 `MemberGenerator`의 `generateSignupRequestWithNickName(값)`처럼 값 하나를 받아 나머지는 임의 값으로 채운 요청을 돌려주는 메서드로 만든다. 필드 이름이 바뀌면 `MemberGenerator` 한 곳만 고치면 되고, 규칙 하나가 필드 여러 개를 묶을 때는 필드 수가 아니라 개념 이름으로 메서드를 만든다(예: `generateReserveRequestWithPeriod(체크인, 체크아웃)`). 운영 DTO에 `toBuilder`를 추가하지 않는다.
+- 이름은 부작용으로 나눈다. 객체를 만들어 돌려주기만 하는 메서드는 `generate`로 시작하고 `MemberGenerator`의 정적 메서드로 둔다(`generateSignupRequest()`). API를 호출해서 서버에 실제로 데이터를 만드는 메서드는 `create`로 시작하고 `MemberFixture`에 둔다(`createMember()`).
 - 인증이 필요한 API 호출이 필요한 인증 테스트(토큰 거부·블랙리스트 등)는 `/members/logout`을 호출 대상으로 쓴다. `/logout`은 `permitAll`이 아니라 인증이 필요하고 인증 도메인 안에 있어서, 무관한 다른 도메인 URL이 바뀌어도 인증 테스트가 깨지지 않는다.
 - 신원을 쓰는 보호 API(예약, 리뷰 등)의 명세에는 "토큰 없이 호출하면 401" 케이스를 하나씩 둔다. 공개 API는 각 명세가 토큰 없이 호출하므로 접근이 막히면 그 명세가 잡는다.
 - 테스트 본문은 AAA 패턴으로 작성하고 `// Arrange`, `// Act`, `// Assert` 주석으로 구분한다.

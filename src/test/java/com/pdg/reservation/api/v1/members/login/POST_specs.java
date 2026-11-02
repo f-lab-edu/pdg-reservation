@@ -18,6 +18,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import static com.pdg.reservation.fixture.MemberGenerator.generateLoginRequest;
 import static com.pdg.reservation.support.JwtAssertions.conformsToJwtFormat;
 import static com.pdg.reservation.support.JwtAssertions.hasSubject;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +54,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<LoginResponse>> response = client.exchange(
-                post("/api/v1/members/login").body(memberFixture.loginRequest(member)),
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -69,7 +70,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<LoginResponse>> response = client.exchange(
-                post("/api/v1/members/login").body(memberFixture.loginRequest(member)),
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
                 new ParameterizedTypeReference<>() { }
         );
 

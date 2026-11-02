@@ -1,5 +1,8 @@
 package com.pdg.reservation.fixture;
 
+import com.pdg.reservation.member.dto.LoginRequest;
+import com.pdg.reservation.member.dto.SignupRequest;
+
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -63,6 +66,49 @@ public final class MemberGenerator {
     public static String generatePhoneNumber() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         return String.format("010-%04d-%04d", random.nextInt(10000), random.nextInt(10000));
+    }
+
+    // 임의 값으로 채운 유효한 가입 요청을 만든다
+    public static SignupRequest generateSignupRequest() {
+        return defaultSignupRequestBuilder().build();
+    }
+
+    // 아래 generateSignupRequestWithXxx는 해당 필드만 주어진 값으로 하고 나머지는 임의 값으로 채운 가입 요청을 만든다
+    public static SignupRequest generateSignupRequestWithEmail(String email) {
+        return defaultSignupRequestBuilder().email(email).build();
+    }
+
+    public static SignupRequest generateSignupRequestWithPassword(String password) {
+        return defaultSignupRequestBuilder().password(password).build();
+    }
+
+    public static SignupRequest generateSignupRequestWithName(String name) {
+        return defaultSignupRequestBuilder().name(name).build();
+    }
+
+    public static SignupRequest generateSignupRequestWithNickName(String nickName) {
+        return defaultSignupRequestBuilder().nickName(nickName).build();
+    }
+
+    public static SignupRequest generateSignupRequestWithPhoneNumber(String phoneNumber) {
+        return defaultSignupRequestBuilder().phoneNumber(phoneNumber).build();
+    }
+
+    // 가입한 회원의 이메일과 비밀번호로 로그인 요청을 만든다
+    public static LoginRequest generateLoginRequest(SignupRequest member) {
+        return LoginRequest.builder()
+                .email(member.getEmail())
+                .password(member.getPassword())
+                .build();
+    }
+
+    private static SignupRequest.SignupRequestBuilder defaultSignupRequestBuilder() {
+        return SignupRequest.builder()
+                .email(generateEmail())
+                .password(generatePassword())
+                .name(generateName())
+                .nickName(generateNickName())
+                .phoneNumber(generatePhoneNumber());
     }
 
     private static String pick(String[] values) {
