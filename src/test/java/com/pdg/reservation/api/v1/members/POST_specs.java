@@ -5,6 +5,7 @@ import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.member.repository.MemberRepository;
+import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.IntegrationTest;
 import com.pdg.reservation.support.TestContainersConfig;
@@ -43,6 +44,9 @@ class POST_specs {
     MemberFixture memberFixture;
 
     @Autowired
+    ApiClient apiClient;
+
+    @Autowired
     MemberRepository memberRepository;
 
     @Autowired
@@ -54,6 +58,7 @@ class POST_specs {
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();
+        apiClient.reset();
     }
 
     @Test

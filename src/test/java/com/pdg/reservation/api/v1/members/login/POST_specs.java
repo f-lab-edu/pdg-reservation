@@ -5,6 +5,7 @@ import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.member.dto.LoginRequest;
 import com.pdg.reservation.member.dto.LoginResponse;
 import com.pdg.reservation.member.dto.SignupRequest;
+import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.IntegrationTest;
 import com.pdg.reservation.support.RedisCleanUp;
@@ -39,6 +40,9 @@ class POST_specs {
     MemberFixture memberFixture;
 
     @Autowired
+    ApiClient apiClient;
+
+    @Autowired
     DatabaseCleanUp databaseCleanUp;
 
     @Autowired
@@ -48,6 +52,7 @@ class POST_specs {
     void tearDown() {
         databaseCleanUp.truncateAllTables();
         redisCleanUp.flushAll();
+        apiClient.reset();
     }
 
     @Test
