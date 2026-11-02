@@ -98,4 +98,25 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-001");
     }
+
+    @Test
+    void 이전_토큰의_재사용이_감지되면_새_토큰도_무효가_되어_401과_JWT_003을_반환한다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+        String usedRefreshToken = memberFixture.issueRefreshToken(member);
+        String newRefreshToken = memberFixture.reissueRefreshToken(usedRefreshToken);
+        memberFixture.reuseRefreshToken(usedRefreshToken);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + newRefreshToken)
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-003");
+    }
 }

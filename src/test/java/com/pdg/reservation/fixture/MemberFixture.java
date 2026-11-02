@@ -82,6 +82,16 @@ public class MemberFixture {
         return extractRefreshToken(response);
     }
 
+    // 이미 교체된 리프레시 토큰을 다시 보낸다. 서버는 거절하고 저장된 토큰을 삭제한다
+    public void reuseRefreshToken(String usedRefreshToken) {
+        client.exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + usedRefreshToken)
+                        .build(),
+                Void.class
+        );
+    }
+
     private String extractRefreshToken(ResponseEntity<?> response) {
         return response.getHeaders().get(HttpHeaders.SET_COOKIE).stream()
                 .filter(cookie -> cookie.startsWith("refreshToken="))
