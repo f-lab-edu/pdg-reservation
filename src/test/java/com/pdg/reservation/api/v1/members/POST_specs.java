@@ -9,6 +9,7 @@ import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.IntegrationTest;
 import com.pdg.reservation.support.TestContainersConfig;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.springframework.http.RequestEntity.post;
 
+@DisplayName("POST /api/v1/members")
 @IntegrationTest
 @Import(TestContainersConfig.class)
 class POST_specs {
