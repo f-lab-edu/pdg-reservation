@@ -81,6 +81,19 @@ public class MemberFixture {
         }
     }
 
+    // 지정한 액세스 토큰으로 로그아웃한다. 그 토큰이 블랙리스트에 올라가고 리프레시 토큰이 삭제된다
+    public void logout(String accessToken) {
+        ResponseEntity<Void> response = client.exchange(
+                post("/api/v1/members/logout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .build(),
+                Void.class
+        );
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("로그아웃 실패: " + response.getStatusCode());
+        }
+    }
+
     // 이미 교체된 리프레시 토큰을 다시 보낸다. 서버는 거절하고 저장된 토큰을 삭제한다
     public void reuseRefreshToken(String usedRefreshToken) {
         client.exchange(

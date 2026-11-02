@@ -1,6 +1,7 @@
 package com.pdg.reservation.api.v1.members.reissue;
 
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.member.dto.TokenResponse;
@@ -128,6 +129,26 @@ class POST_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-004");
+    }
+
+    @Test
+    void 로그아웃한_뒤에는_리프레시_토큰으로_재발급할_수_없어_401과_JWT_003을_반환한다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+        LoginSession session = memberFixture.login(member);
+        memberFixture.logout(session.accessToken());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + session.refreshToken())
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-003");
     }
 
     @Test
