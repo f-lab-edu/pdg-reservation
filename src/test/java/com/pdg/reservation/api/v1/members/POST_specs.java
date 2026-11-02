@@ -102,15 +102,19 @@ class POST_specs {
 
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidEmails")
-    void 유효하지_않은_이메일이면_400을_반환한다(String email) {
+    void 유효하지_않은_이메일이면_400과_COMMON_005를_반환한다(String email) {
         // Arrange
         SignupRequest request = generateSignupRequestWithEmail(email);
 
         // Act
-        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
     }
 
     @Test
@@ -126,7 +130,7 @@ class POST_specs {
     }
 
     @Test
-    void 이미_가입된_이메일이면_409를_반환한다() {
+    void 이미_가입된_이메일이면_409와_MEMBER_001을_반환한다() {
         // Arrange
         SignupRequest existing = memberFixture.createMember();
         SignupRequest request = generateSignupRequestWithEmail(existing.getEmail());
@@ -138,14 +142,12 @@ class POST_specs {
         );
 
         // Assert
-        assertSoftly(softly -> {
-            softly.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            softly.assertThat(response.getBody().getErrorCode()).isEqualTo("MEMBER-001");
-        });
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("MEMBER-001");
     }
 
     @Test
-    void 이미_사용_중인_닉네임이면_409를_반환한다() {
+    void 이미_사용_중인_닉네임이면_409와_MEMBER_002를_반환한다() {
         // Arrange
         SignupRequest existing = memberFixture.createMember();
         SignupRequest request = generateSignupRequestWithNickName(existing.getNickName());
@@ -157,23 +159,25 @@ class POST_specs {
         );
 
         // Assert
-        assertSoftly(softly -> {
-            softly.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            softly.assertThat(response.getBody().getErrorCode()).isEqualTo("MEMBER-002");
-        });
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("MEMBER-002");
     }
 
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPasswords")
-    void 유효하지_않은_비밀번호이면_400을_반환한다(String password) {
+    void 유효하지_않은_비밀번호이면_400과_COMMON_005를_반환한다(String password) {
         // Arrange
         SignupRequest request = generateSignupRequestWithPassword(password);
 
         // Act
-        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
     }
 
     @Test
@@ -202,15 +206,19 @@ class POST_specs {
 
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidNames")
-    void 유효하지_않은_이름이면_400을_반환한다(String name) {
+    void 유효하지_않은_이름이면_400과_COMMON_005를_반환한다(String name) {
         // Arrange
         SignupRequest request = generateSignupRequestWithName(name);
 
         // Act
-        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
     }
 
     @Test
@@ -239,15 +247,19 @@ class POST_specs {
 
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidNickNames")
-    void 유효하지_않은_닉네임이면_400을_반환한다(String nickName) {
+    void 유효하지_않은_닉네임이면_400과_COMMON_005를_반환한다(String nickName) {
         // Arrange
         SignupRequest request = generateSignupRequestWithNickName(nickName);
 
         // Act
-        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
     }
 
     @Test
@@ -276,15 +288,19 @@ class POST_specs {
 
     @ParameterizedTest
     @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidPhoneNumbers")
-    void 유효하지_않은_전화번호이면_400을_반환한다(String phoneNumber) {
+    void 유효하지_않은_전화번호이면_400과_COMMON_005를_반환한다(String phoneNumber) {
         // Arrange
         SignupRequest request = generateSignupRequestWithPhoneNumber(phoneNumber);
 
         // Act
-        ResponseEntity<Void> response = memberFixture.client().postForEntity("/api/v1/members", request, Void.class);
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
     }
 
     @Test
