@@ -113,6 +113,24 @@ class POST_specs {
     }
 
     @Test
+    void 깨진_리프레시_토큰으로_재발급하면_401과_JWT_004를_반환한다() {
+        // Arrange
+        String brokenRefreshToken = "broken-refresh-token";
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + brokenRefreshToken)
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-004");
+    }
+
+    @Test
     void 이전_토큰의_재사용이_감지되면_새_토큰도_무효가_되어_401과_JWT_003을_반환한다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
