@@ -100,6 +100,19 @@ class POST_specs {
     }
 
     @Test
+    void 쿠키_없이_재발급하면_401과_JWT_003을_반환한다() {
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/reissue").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-003");
+    }
+
+    @Test
     void 이전_토큰의_재사용이_감지되면_새_토큰도_무효가_되어_401과_JWT_003을_반환한다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
