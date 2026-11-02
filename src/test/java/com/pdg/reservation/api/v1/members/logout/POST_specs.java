@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -56,6 +57,24 @@ class POST_specs {
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
                 post("/api/v1/members/logout").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-001");
+    }
+
+    @Test
+    void 깨진_액세스_토큰으로_로그아웃하면_401과_AUTH_001을_반환한다() {
+        // Arrange
+        String brokenAccessToken = "broken-access-token";
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/logout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + brokenAccessToken)
+                        .build(),
                 new ParameterizedTypeReference<>() { }
         );
 
