@@ -19,6 +19,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static com.pdg.reservation.fixture.MemberGenerator.generateLoginRequest;
 import static com.pdg.reservation.fixture.MemberGenerator.generateLoginRequestWithPassword;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePassword;
@@ -126,6 +129,20 @@ class POST_specs {
 
         // Assert
         assertThat(response.getBody()).doesNotContain("refreshToken");
+    }
+
+    @Test
+    void 같은_회원이_연속으로_로그인해도_리프레시_토큰이_서로_다르다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        List<String> refreshTokens = IntStream.range(0, 5)
+                .mapToObj(i -> memberFixture.issueRefreshToken(member))
+                .toList();
+
+        // Assert
+        assertThat(refreshTokens).doesNotHaveDuplicates();
     }
 
     @Test

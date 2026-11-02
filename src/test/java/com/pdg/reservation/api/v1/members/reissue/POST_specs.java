@@ -78,4 +78,24 @@ class POST_specs {
         // Assert
         assertThat(response.getBody()).doesNotContain("refreshToken");
     }
+
+    @Test
+    void 재발급한_뒤_이전_리프레시_토큰으로_재발급하면_401과_JWT_001을_반환한다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+        String oldRefreshToken = memberFixture.issueRefreshToken(member);
+        memberFixture.reissueRefreshToken(oldRefreshToken);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + oldRefreshToken)
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-001");
+    }
 }

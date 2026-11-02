@@ -65,6 +65,24 @@ public class MemberFixture {
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new IllegalStateException("로그인 실패: " + response.getStatusCode());
         }
+        return extractRefreshToken(response);
+    }
+
+    // 리프레시 토큰으로 재발급하고, 응답으로 받은 새 리프레시 토큰 쿠키의 값을 돌려준다
+    public String reissueRefreshToken(String refreshToken) {
+        ResponseEntity<Void> response = client.exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + refreshToken)
+                        .build(),
+                Void.class
+        );
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("재발급 실패: " + response.getStatusCode());
+        }
+        return extractRefreshToken(response);
+    }
+
+    private String extractRefreshToken(ResponseEntity<?> response) {
         return response.getHeaders().get(HttpHeaders.SET_COOKIE).stream()
                 .filter(cookie -> cookie.startsWith("refreshToken="))
                 .map(cookie -> cookie.substring("refreshToken=".length(), cookie.indexOf(';')))
