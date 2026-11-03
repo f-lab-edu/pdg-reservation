@@ -22,8 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.RequestEntity.get;
@@ -62,6 +64,20 @@ class GET_specs {
     void 존재하는_숙소를_조회하면_200과_상세를_반환한다() {
         // Arrange
         Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 기대값은 운영의 from(...)이 아니라 저장한 값에서 직접 채운다 (test-guide 참고)
+        AccommodationDetailResponse expected = AccommodationDetailResponse.builder()
+                .id(accommodation.getId())
+                .name(accommodation.getName())
+                .type(accommodation.getType())
+                .description(accommodation.getDescription())
+                .amenities(accommodation.getAmenities())
+                .checkInTime(accommodation.getCheckInTime())
+                .checkOutTime(accommodation.getCheckOutTime())
+                .ratingAverage(accommodation.getRatingAverage())
+                .operational(true)
+                .address(accommodation.getAddress())
+                .images(List.of())
+                .build();
 
         // Act
         ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
@@ -71,16 +87,10 @@ class GET_specs {
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        AccommodationDetailResponse detail = response.getBody().getData();
-        assertSoftly(softly -> {
-            softly.assertThat(detail.getId()).isEqualTo(accommodation.getId());
-            softly.assertThat(detail.getName()).isEqualTo(accommodation.getName());
-            softly.assertThat(detail.getType()).isEqualTo(accommodation.getType());
-            softly.assertThat(detail.getDescription()).isEqualTo(accommodation.getDescription());
-            softly.assertThat(detail.getAmenities()).isEqualTo(accommodation.getAmenities());
-            softly.assertThat(detail.isOperational()).isTrue();
-            softly.assertThat(detail.getAddress()).isEqualTo(accommodation.getAddress());
-        });
+        assertThat(response.getBody().getData())
+                .usingRecursiveComparison()
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expected);
     }
 
     @Test
