@@ -2,6 +2,7 @@ package com.pdg.reservation.api.v1.accommodations;
 
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
@@ -335,5 +336,38 @@ class GET_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getData().getContent()).isEmpty();
+    }
+
+    @Test
+    void 숙소에_이미지가_여러_장이면_대표_이미지의_URL이_mainImage로_나온다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        // 기대값은 저장한 이미지 중 대표 이미지의 URL이다 (운영의 조회 코드를 쓰지 않는다)
+        String expectedMainImage = accommodation.getImages().stream()
+                .filter(AccommodationImage::isMain)
+                .map(AccommodationImage::getUrl)
+                .findFirst()
+                .orElseThrow();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getMainImage)
+                .containsExactly(expectedMainImage);
     }
 }
