@@ -14,6 +14,7 @@ import java.util.stream.IntStream;
 
 import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodation;
 import static com.pdg.reservation.fixture.AccommodationGenerator.generateCity;
+import static com.pdg.reservation.fixture.AccommodationGenerator.generateNonOperationalAccommodation;
 import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodationWithImages;
 
 @Component
@@ -49,6 +50,13 @@ public class AccommodationFixture {
     // 도시와 유형을 지정한 숙소를 저장하고 블룸 필터에 등록한 뒤 돌려준다
     public Accommodation createAccommodation(String city, AccommodationType type) {
         Accommodation accommodation = accommodationRepository.save(generateAccommodation(city, type));
+        bloomFilter.add(accommodation.getId());
+        return accommodation;
+    }
+
+    // 운영 중이 아닌 숙소를 저장하고 블룸 필터에 등록한 뒤 돌려준다
+    public Accommodation createNonOperationalAccommodation() {
+        Accommodation accommodation = accommodationRepository.save(generateNonOperationalAccommodation());
         bloomFilter.add(accommodation.getId());
         return accommodation;
     }

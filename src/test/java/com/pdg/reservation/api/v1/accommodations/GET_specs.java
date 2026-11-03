@@ -290,6 +290,68 @@ class GET_specs {
     }
 
     @Test
+    void 운영_중이_아닌_숙소도_검색된다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createNonOperationalAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getId)
+                .containsExactly(accommodation.getId());
+    }
+
+    @Test
+    void 일부_밤이_소진된_객실은_최저가_계산에서_제외된다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 객실 A: 첫째 밤 재고 있음(50,000) / 둘째 밤 소진 → 이 기간에는 예약할 수 없다
+        Room soldOutRoom = roomFixture.createRoom(accommodation, 50000L);
+        roomFixture.createRoomInventory(soldOutRoom, checkInDate, true);
+        roomFixture.createRoomInventory(soldOutRoom, checkInDate.plusDays(1), false);
+        // 객실 B: 두 밤 모두 재고 있음(100,000 / 100,000) → 예약할 수 있다
+        Room availableRoom = roomFixture.createRoom(accommodation, 100000L);
+        roomFixture.createRoomInventoriesWithNightlyPrices(availableRoom, checkInDate, List.of(100000L, 100000L));
+        // 최저가는 예약할 수 있는 객실 B의 1박 평균가다
+        long expectedMinPrice = 100000L;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                availableRoom.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getMinPrice)
+                .containsExactly(expectedMinPrice);
+    }
+
+    @Test
     void 숙박하는_밤_중_재고가_등록되지_않은_날이_있으면_검색되지_않는다() {
         // Arrange
         LocalDate checkInDate = LocalDate.now().plusDays(30);

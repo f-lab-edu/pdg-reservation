@@ -26,6 +26,15 @@ public final class AccommodationGenerator {
 
     // 도시와 유형을 지정하고 나머지는 임의 값으로 채운 운영 중인 숙소를 만든다 (저장하지 않는다)
     public static Accommodation generateAccommodation(String city, AccommodationType type) {
+        return generateAccommodation(city, type, true);
+    }
+
+    // 운영 중이 아닌 숙소를 임의 값으로 만든다 (저장하지 않는다)
+    public static Accommodation generateNonOperationalAccommodation() {
+        return generateAccommodation(generateCity(), AccommodationType.HOTEL, false);
+    }
+
+    private static Accommodation generateAccommodation(String city, AccommodationType type, boolean isOperational) {
         return Accommodation.builder()
                 .name("숙소-" + randomSuffix())
                 .type(type)
@@ -33,7 +42,7 @@ public final class AccommodationGenerator {
                 .amenities(List.of("WIFI", "PARKING"))
                 .checkInTime(LocalTime.of(15, 0))
                 .checkOutTime(LocalTime.of(11, 0))
-                .isOperational(true)
+                .isOperational(isOperational)
                 .address(new Address(city, "12345", "거리-" + randomSuffix()))
                 .build();
     }
