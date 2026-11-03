@@ -17,6 +17,8 @@ import com.pdg.reservation.support.TestContainersConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -369,5 +372,97 @@ class GET_specs {
         assertThat(response.getBody().getData().getContent())
                 .extracting(AccommodationSearchResponse::getMainImage)
                 .containsExactly(expectedMainImage);
+    }
+
+    @Test
+    void 첫_번째_페이지는_가장_최근_숙소부터_size만큼_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        int size = 2;
+        int capacity = 1; // 객실 최대 인원(2명) 이하
+        List<Accommodation> accommodations = accommodationFixture.createAccommodationsWithInventories(
+                5, checkInDate, checkOutDate);
+        // 검색 조건은 만들어진 숙소에서 읽는다
+        String city = accommodations.get(0).getAddress().getCity();
+        AccommodationType type = accommodations.get(0).getType();
+        // 숙소는 id 내림차순이므로 가장 최근에 만든 size개가 첫 페이지다
+        List<Long> expectedIds = accommodations.stream()
+                .map(Accommodation::getId)
+                .sorted(Comparator.reverseOrder())
+                .limit(size)
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}&page={page}&size={size}",
+                                city,
+                                type,
+                                checkInDate,
+                                checkOutDate,
+                                capacity,
+                                0,
+                                size).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<AccommodationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
+                .extracting(AccommodationSearchResponse::getId)
+                .containsExactlyElementsOf(expectedIds);
+        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getTotalPages()).isEqualTo(3);
+        assertThat(page.isLast()).isFalse();
+    }
+
+    @ParameterizedTest(name = "마지막 페이지에 숙소가 {0}개 있다")
+    @ValueSource(ints = {1, 2})
+    void 마지막_페이지는_남은_숙소만_반환하고_last가_true이다(int lastPageSize) {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        int size = 2;
+        int capacity = 1; // 객실 최대 인원(2명) 이하
+        int fullPageCount = 2; // 앞의 꽉 찬 페이지 수
+        int totalCount = size * fullPageCount + lastPageSize; // 마지막 페이지에 lastPageSize개가 남는다
+        int lastPageIndex = fullPageCount; // page는 0부터 시작하므로 꽉 찬 페이지 수가 마지막 페이지 번호다
+        List<Accommodation> accommodations = accommodationFixture.createAccommodationsWithInventories(
+                totalCount, checkInDate, checkOutDate);
+        // 검색 조건은 만들어진 숙소에서 읽는다
+        String city = accommodations.get(0).getAddress().getCity();
+        AccommodationType type = accommodations.get(0).getType();
+        // 숙소는 id 내림차순이므로 앞의 꽉 찬 페이지들을 건너뛴 나머지가 마지막 페이지다
+        List<Long> expectedIds = accommodations.stream()
+                .map(Accommodation::getId)
+                .sorted(Comparator.reverseOrder())
+                .skip((long) size * fullPageCount)
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}&page={page}&size={size}",
+                                city,
+                                type,
+                                checkInDate,
+                                checkOutDate,
+                                capacity,
+                                lastPageIndex,
+                                size).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<AccommodationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
+                .extracting(AccommodationSearchResponse::getId)
+                .containsExactlyElementsOf(expectedIds);
+        assertThat(page.getTotalElements()).isEqualTo(totalCount);
+        assertThat(page.getTotalPages()).isEqualTo(fullPageCount + 1);
+        assertThat(page.isLast()).isTrue();
     }
 }

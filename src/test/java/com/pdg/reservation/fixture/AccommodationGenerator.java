@@ -16,7 +16,12 @@ public final class AccommodationGenerator {
 
     // 임의 값으로 채운 운영 중인 숙소를 만든다 (저장하지 않는다)
     public static Accommodation generateAccommodation() {
-        return generateAccommodation("도시-" + randomSuffix(), AccommodationType.HOTEL);
+        return generateAccommodation(generateCity(), AccommodationType.HOTEL);
+    }
+
+    // 임의 도시 이름을 만든다
+    public static String generateCity() {
+        return "도시-" + randomSuffix();
     }
 
     // 도시와 유형을 지정하고 나머지는 임의 값으로 채운 운영 중인 숙소를 만든다 (저장하지 않는다)
