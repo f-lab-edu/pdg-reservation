@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -199,6 +200,86 @@ class GET_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getData().getContent()).isEmpty();
+    }
+
+    @Test
+    void 최저가는_객실별_1박_평균가_중_가장_작은_값이다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 기본 요금은 날짜별 가격과 달라야 한다. 기본 요금을 쓰는 오답과 구별하려는 값이다
+        long basePrice = 100000L;
+        // 객실 A: 첫째 밤 200,000 / 둘째 밤 140,000
+        List<Long> roomAPrices = List.of(200000L, 140000L);
+        // 객실 B: 첫째 밤 130,000 / 둘째 밤 150,000
+        List<Long> roomBPrices = List.of(130000L, 150000L);
+        Room roomA = roomFixture.createRoom(accommodation, basePrice);
+        Room roomB = roomFixture.createRoom(accommodation, basePrice);
+        roomFixture.createRoomInventoriesWithNightlyPrices(roomA, checkInDate, roomAPrices);
+        roomFixture.createRoomInventoriesWithNightlyPrices(roomB, checkInDate, roomBPrices);
+        // 1박 평균: A = (200,000 + 140,000) / 2 = 170,000, B = (130,000 + 150,000) / 2 = 140,000
+        long roomAAveragePrice = 170000L;
+        long roomBAveragePrice = 140000L;
+        long expectedMinPrice = Math.min(roomAAveragePrice, roomBAveragePrice);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                roomA.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getMinPrice)
+                .containsExactly(expectedMinPrice);
+    }
+
+    @Test
+    void 날짜별_가격이_없는_밤은_객실_기본_요금으로_최저가를_계산한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 객실 A: 기본 요금 160,000 / 첫째 밤 120,000 / 둘째 밤 가격 없음
+        long roomABasePrice = 160000L;
+        List<Long> roomAPrices = Arrays.asList(120000L, null);
+        // 객실 B: 기본 요금 150,000 / 두 밤 모두 가격 없음
+        long roomBBasePrice = 150000L;
+        List<Long> roomBPrices = Arrays.asList(null, null);
+        Room roomA = roomFixture.createRoom(accommodation, roomABasePrice);
+        Room roomB = roomFixture.createRoom(accommodation, roomBBasePrice);
+        roomFixture.createRoomInventoriesWithNightlyPrices(roomA, checkInDate, roomAPrices);
+        roomFixture.createRoomInventoriesWithNightlyPrices(roomB, checkInDate, roomBPrices);
+        // 1박 평균: A = (120,000 + 가격 없는 밤은 기본 요금 160,000) / 2 = 140,000, B = (150,000 + 150,000) / 2 = 150,000
+        long roomAAveragePrice = 140000L;
+        long roomBAveragePrice = 150000L;
+        long expectedMinPrice = Math.min(roomAAveragePrice, roomBAveragePrice);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                roomA.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getMinPrice)
+                .containsExactly(expectedMinPrice);
     }
 
     @Test

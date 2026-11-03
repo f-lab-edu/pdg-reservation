@@ -9,11 +9,13 @@ import com.pdg.reservation.support.ApiClient;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesWithNightlyPrices;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventory;
 
 @Component
@@ -51,6 +53,16 @@ public class RoomFixture {
     // 객실의 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고를 저장하고 돌려준다
     public List<RoomInventory> createRoomInventories(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
         return roomInventoryRepository.saveAll(generateRoomInventories(room, checkInDate, checkOutDate));
+    }
+
+    // 기본 요금을 지정한 객실을 저장하고 돌려준다
+    public Room createRoom(Accommodation accommodation, long basePrice) {
+        return roomRepository.save(generateRoom(accommodation, BigDecimal.valueOf(basePrice)));
+    }
+
+    // 객실의 체크인부터 하루씩, 지정한 가격으로 재고를 저장하고 돌려준다. 목록의 null은 가격이 없는 밤이다
+    public List<RoomInventory> createRoomInventoriesWithNightlyPrices(Room room, LocalDate checkInDate, List<Long> prices) {
+        return roomInventoryRepository.saveAll(generateRoomInventoriesWithNightlyPrices(room, checkInDate, prices));
     }
 
     // 객실의 하루치 재고 행을 재고 여부를 지정해 저장하고 돌려준다
