@@ -89,4 +89,33 @@ class GET_specs {
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(expected));
     }
+
+    @Test
+    void 다른_도시의_숙소는_검색되지_않는다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation seoul = accommodationFixture.createAccommodationInCity("서울");
+        Accommodation busan = accommodationFixture.createAccommodationInCity("부산");
+        Room seoulRoom = roomFixture.createRoomWithInventories(seoul, checkInDate, checkOutDate);
+        roomFixture.createRoomWithInventories(busan, checkInDate, checkOutDate);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                "서울",
+                                seoul.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                seoulRoom.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getId)
+                .containsExactly(seoul.getId());
+    }
 }
