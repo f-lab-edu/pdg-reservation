@@ -28,7 +28,7 @@
 
 - 테스트가 쓰는 데이터는 **용도별 Fixture로 준비**한다. `TestFixture` 하나로 고정하지 않고 용도에 맞게 `xxxFixture`로 나눈다. 예: 회원 준비용 `MemberFixture`의 `createMember()`
 - 회원처럼 API가 있는 데이터는 API를 호출해서 만든다. 스키마가 바뀌어도 테스트가 남는다.
-- API가 없는 데이터(숙소, 객실, 재고)는 해당 Fixture가 리포지터리로 직접 저장한다. 이런 코드는 스키마 변경 때 고칠 곳을 줄이기 위해 Fixture 안에만 둔다.
+- API가 없는 데이터(숙소, 객실, 이미지, 재고)는 해당 Fixture가 리포지터리로 직접 저장한다. 이런 코드는 스키마 변경 때 고칠 곳을 줄이기 위해 Fixture 안에만 둔다. 이 데이터를 등록하는 관리자 기능은 이 프로젝트의 범위 밖이다. 관리자 API는 별도로 있다고 가정하고, 이 프로젝트는 조회·예약·결제·동시성 같은 핵심 로직에 집중한다. 숙소를 만들면 블룸 필터에 `add`하는 것도 등록하는 쪽의 책임으로 가정하고, Fixture가 그 동작을 대신한다.
 - **데이터 격리는 cleanUp으로 한다.** `@AfterEach`에서 테스트가 사용하는 저장소만 초기화한다. DB는 `DatabaseCleanUp.truncateAllTables()`로 외래 키 검사를 끄고 테이블을 비운 뒤 다시 켠다. Redis는 아래 규칙대로 `RedisCleanUp`을 쓴다. 로그인처럼 Redis를 건드리는 테스트에서 추가한다.
 - Fixture는 상태가 없는 싱글톤 `@Component`로 두고, API 호출은 주입받은 `ApiClient`로 한다. 로그인한 사용자의 토큰은 `ApiClient`의 기본 `Authorization`으로 심고(`createMemberThenSetAsDefaultUser()`), 요청에 직접 붙인 헤더가 있으면 그것이 우선한다. 기본 사용자는 한 테스트에 한 명이다. 다른 사용자는 요청에 `Authorization`을 직접 붙인다.
 - 테스트 클래스의 `@AfterEach`에서 `apiClient.reset()`을 불러 기본 사용자를 비운다. 새 테스트 클래스를 만들 때 빠뜨리면 이전 테스트의 토큰이 샌다(ADR 0010).
@@ -83,6 +83,7 @@ src/test/java/com/pdg/reservation/
   - Assert: 결과를 검증한다.
   - Act에는 이 테스트가 검증하려는 동작을 드러낸다. 전제 조건은 Arrange에 두고 Fixture로 묶어도 된다. 같은 동작(예: 로그인)이 어떤 테스트에서는 Act, 다른 테스트에서는 Arrange일 수 있다.
 - 검증을 여러 줄 쓸 때는 `assertThat`을 나열하는 것이 기본이다. 서로 독립적인 결과를 한꺼번에 보고 싶을 때만 `assertSoftly`를 쓴다(예: 저장된 필드 여러 개). 상태 코드가 틀리면 에러 코드도 의미가 없는 것처럼 서로 이어진 검증에는 쓰지 않는다.
+- 응답을 비교할 때 **기대값은 운영의 매핑 코드(`from` 등)로 만들지 않고, 저장한 값에서 필드를 하나씩 직접 채운다.** 운영 매핑으로 기대값을 만들면 매핑이 틀리거나 바뀌어도 양쪽이 같은 코드를 거쳐 항상 일치해서 아무것도 검증하지 못하고, 매핑을 교체하는 리팩토링(R3-1)에서 테스트가 `from`에 묶여 함께 깨진다. 필드를 하나씩 채우는 중복은 독립된 정답지를 얻는 대가다. 응답이 여러 필드를 가지면 기대 객체를 만들어 `usingRecursiveComparison()`으로 통째로 비교하고, 스케일이 달라질 수 있는 `BigDecimal`은 `withComparatorForType(BigDecimal::compareTo, BigDecimal.class)`로 비교한다.
 - 검증은 AssertJ(`assertThat`)로 통일한다. JUnit의 `Assertions`(`assertEquals`, `assertAll` 등)는 쓰지 않고, JUnit은 `@Test`, `@AfterEach` 같은 구조용으로만 쓴다.
   - 같은 이름의 `Assertions` 클래스가 AssertJ(`org.assertj.core.api`)와 JUnit(`org.junit.jupiter.api`)에 둘 다 있어서, 섞어 쓰면 import를 보지 않고는 어느 쪽인지 알 수 없고 와일드카드 import에서 같은 이름 메서드가 충돌할 수 있다.
   - 인자 순서가 반대다. JUnit의 `assertEquals(expected, actual)`은 기대값이 앞이고, AssertJ의 `assertThat(actual).isEqualTo(expected)`는 실제값이 앞이다. 섞으면 순서를 실수해서 실패 메시지가 거꾸로 보인다.
