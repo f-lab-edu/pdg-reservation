@@ -200,4 +200,59 @@ class GET_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getData().getContent()).isEmpty();
     }
+
+    @Test
+    void 숙박하는_밤_중_재고가_등록되지_않은_날이_있으면_검색되지_않는다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        // 첫째 밤 재고만 저장한다. 둘째 밤(체크인 다음 날)은 재고 행이 없다
+        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent()).isEmpty();
+    }
+
+    @Test
+    void 숙박하는_밤_중_재고가_소진된_날이_있으면_검색되지_않는다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
+        // 둘째 밤(체크인 다음 날)은 재고 행은 있지만 재고가 없다
+        roomFixture.createRoomInventory(room, checkInDate.plusDays(1), false);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getAddress().getCity(),
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent()).isEmpty();
+    }
 }

@@ -14,6 +14,7 @@ import java.util.List;
 
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventory;
 
 @Component
 public class RoomFixture {
@@ -50,5 +51,10 @@ public class RoomFixture {
     // 객실의 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고를 저장하고 돌려준다
     public List<RoomInventory> createRoomInventories(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
         return roomInventoryRepository.saveAll(generateRoomInventories(room, checkInDate, checkOutDate));
+    }
+
+    // 객실의 하루치 재고 행을 재고 여부를 지정해 저장하고 돌려준다
+    public RoomInventory createRoomInventory(Room room, LocalDate date, boolean isStocked) {
+        return roomInventoryRepository.save(generateRoomInventory(room, date, isStocked));
     }
 }

@@ -28,12 +28,17 @@ public final class RoomGenerator {
     // 체크인부터 체크아웃 전날까지, 날짜마다 재고가 있는 상태의 재고 행을 만든다. 가격은 객실 기본 요금이다
     public static List<RoomInventory> generateRoomInventories(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
         return checkInDate.datesUntil(checkOutDate)
-                .map(date -> RoomInventory.builder()
-                        .inventoryDate(date)
-                        .price(room.getBasePrice())
-                        .isStocked(true)
-                        .room(room)
-                        .build())
+                .map(date -> generateRoomInventory(room, date, true))
                 .toList();
+    }
+
+    // 하루치 재고 행을 만든다. 재고 여부를 지정하고 가격은 객실 기본 요금이다
+    public static RoomInventory generateRoomInventory(Room room, LocalDate date, boolean isStocked) {
+        return RoomInventory.builder()
+                .inventoryDate(date)
+                .price(room.getBasePrice())
+                .isStocked(isStocked)
+                .room(room)
+                .build();
     }
 }
