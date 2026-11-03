@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.pdg.reservation.fixture.AccommodationGenerator.generateCity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.RequestEntity.get;
 
@@ -464,5 +465,37 @@ class GET_specs {
         assertThat(page.getTotalElements()).isEqualTo(totalCount);
         assertThat(page.getTotalPages()).isEqualTo(fullPageCount + 1);
         assertThat(page.isLast()).isTrue();
+    }
+
+    @Test
+    void 조건에_맞는_숙소가_없으면_빈_목록을_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        int capacity = 1; // 객실 최대 인원(2명) 이하
+        // 숙소와 재고는 있지만 검색하는 도시가 다르다
+        List<Accommodation> accommodations = accommodationFixture.createAccommodationsWithInventories(
+                1, checkInDate, checkOutDate);
+        Accommodation accommodation = accommodations.get(0);
+        String otherCity = generateCity();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                otherCity,
+                                accommodation.getType(),
+                                checkInDate,
+                                checkOutDate,
+                                capacity).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<AccommodationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent()).isEmpty();
+        assertThat(page.getTotalElements()).isZero();
+        assertThat(page.getTotalPages()).isZero();
     }
 }
