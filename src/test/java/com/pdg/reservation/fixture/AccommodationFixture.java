@@ -1,6 +1,7 @@
 package com.pdg.reservation.fixture;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.accommodation.repository.AccommodationRepository;
 import com.pdg.reservation.common.cache.bloom.AccommodationBloomFilter;
 import com.pdg.reservation.support.ApiClient;
@@ -8,7 +9,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.stereotype.Component;
 
 import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodation;
-import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodationInCity;
 import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodationWithImages;
 
 @Component
@@ -38,9 +38,9 @@ public class AccommodationFixture {
         return accommodation;
     }
 
-    // 도시를 지정한 숙소를 저장하고 블룸 필터에 등록한 뒤 돌려준다
-    public Accommodation createAccommodationInCity(String city) {
-        Accommodation accommodation = accommodationRepository.save(generateAccommodationInCity(city));
+    // 도시와 유형을 지정한 숙소를 저장하고 블룸 필터에 등록한 뒤 돌려준다
+    public Accommodation createAccommodation(String city, AccommodationType type) {
+        Accommodation accommodation = accommodationRepository.save(generateAccommodation(city, type));
         bloomFilter.add(accommodation.getId());
         return accommodation;
     }

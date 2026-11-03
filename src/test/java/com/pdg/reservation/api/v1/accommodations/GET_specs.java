@@ -2,6 +2,7 @@ package com.pdg.reservation.api.v1.accommodations;
 
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
@@ -95,8 +96,8 @@ class GET_specs {
         // Arrange
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
-        Accommodation seoul = accommodationFixture.createAccommodationInCity("서울");
-        Accommodation busan = accommodationFixture.createAccommodationInCity("부산");
+        Accommodation seoul = accommodationFixture.createAccommodation("서울", AccommodationType.HOTEL);
+        Accommodation busan = accommodationFixture.createAccommodation("부산", AccommodationType.HOTEL);
         Room seoulRoom = roomFixture.createRoomWithInventories(seoul, checkInDate, checkOutDate);
         roomFixture.createRoomWithInventories(busan, checkInDate, checkOutDate);
 
@@ -117,5 +118,34 @@ class GET_specs {
         assertThat(response.getBody().getData().getContent())
                 .extracting(AccommodationSearchResponse::getId)
                 .containsExactly(seoul.getId());
+    }
+
+    @Test
+    void 다른_유형의_숙소는_검색되지_않는다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation hotel = accommodationFixture.createAccommodation("서울", AccommodationType.HOTEL);
+        Accommodation motel = accommodationFixture.createAccommodation("서울", AccommodationType.MOTEL);
+        Room hotelRoom = roomFixture.createRoomWithInventories(hotel, checkInDate, checkOutDate);
+        roomFixture.createRoomWithInventories(motel, checkInDate, checkOutDate);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations?city={city}&type={type}&checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                "서울",
+                                AccommodationType.HOTEL,
+                                checkInDate,
+                                checkOutDate,
+                                hotelRoom.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(AccommodationSearchResponse::getId)
+                .containsExactly(hotel.getId());
     }
 }

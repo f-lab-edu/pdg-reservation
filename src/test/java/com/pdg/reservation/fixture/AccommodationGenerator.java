@@ -16,14 +16,14 @@ public final class AccommodationGenerator {
 
     // 임의 값으로 채운 운영 중인 숙소를 만든다 (저장하지 않는다)
     public static Accommodation generateAccommodation() {
-        return generateAccommodationInCity("도시-" + randomSuffix());
+        return generateAccommodation("도시-" + randomSuffix(), AccommodationType.HOTEL);
     }
 
-    // 도시를 지정하고 나머지는 임의 값으로 채운 운영 중인 숙소를 만든다 (저장하지 않는다)
-    public static Accommodation generateAccommodationInCity(String city) {
+    // 도시와 유형을 지정하고 나머지는 임의 값으로 채운 운영 중인 숙소를 만든다 (저장하지 않는다)
+    public static Accommodation generateAccommodation(String city, AccommodationType type) {
         return Accommodation.builder()
                 .name("숙소-" + randomSuffix())
-                .type(AccommodationType.HOTEL)
+                .type(type)
                 .description("설명-" + UUID.randomUUID())
                 .amenities(List.of("WIFI", "PARKING"))
                 .checkInTime(LocalTime.of(15, 0))
