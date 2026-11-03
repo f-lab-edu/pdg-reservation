@@ -32,7 +32,7 @@ public class RoomInventory extends BaseEntity {
     @Column(nullable = false)
     private LocalDate inventoryDate;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
     @Column(nullable = false)
