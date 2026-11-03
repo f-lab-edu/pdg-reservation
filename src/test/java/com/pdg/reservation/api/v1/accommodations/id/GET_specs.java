@@ -2,6 +2,8 @@ package com.pdg.reservation.api.v1.accommodations.id;
 
 import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.service.AccommodationAtomicReader;
+import com.pdg.reservation.common.constant.RedisKeyNames;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.support.ApiClient;
@@ -13,13 +15,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.RequestEntity.get;
 
 @DisplayName("GET /api/v1/accommodations/{id}")
@@ -38,6 +44,12 @@ class GET_specs {
 
     @Autowired
     RedisCleanUp redisCleanUp;
+
+    @Autowired
+    CacheManager cacheManager;
+
+    @MockitoSpyBean
+    AccommodationAtomicReader accommodationAtomicReader;
 
     @AfterEach
     void tearDown() {
@@ -86,6 +98,42 @@ class GET_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody().getErrorCode()).isEqualTo("ACC-001");
+    }
+
+    @Test
+    void 처음_조회하면_상세가_캐시에_저장된다() {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+
+        // Act
+        accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<ApiResponse<AccommodationDetailResponse>>() { }
+        );
+
+        // Assert
+        assertThat(cacheManager.getCache(RedisKeyNames.ACCOMMODATION_DETAIL).get(accommodation.getId()))
+                .isNotNull();
+    }
+
+    @Test
+    void 같은_숙소를_다시_조회하면_DB를_거치지_않고_캐시된_상세를_반환한다() {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        ResponseEntity<ApiResponse<AccommodationDetailResponse>> first = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Act
+        ResponseEntity<ApiResponse<AccommodationDetailResponse>> second = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(second.getBody().getData()).usingRecursiveComparison().isEqualTo(first.getBody().getData());
+        verify(accommodationAtomicReader, times(1)).getAccommodationDetailWithLock(accommodation.getId());
     }
 
     @Test
