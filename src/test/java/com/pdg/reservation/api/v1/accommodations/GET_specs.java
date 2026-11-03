@@ -18,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -25,6 +26,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -497,5 +499,19 @@ class GET_specs {
         assertThat(page.getContent()).isEmpty();
         assertThat(page.getTotalElements()).isZero();
         assertThat(page.getTotalPages()).isZero();
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidAccommodationSearchUris")
+    void 검색_조건이_없거나_유효하지_않으면_400과_COMMON_005를_반환한다(URI uri) {
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = accommodationFixture.client().exchange(
+                get(uri).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
     }
 }

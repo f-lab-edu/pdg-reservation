@@ -1,9 +1,16 @@
 package com.pdg.reservation.fixture;
 
+import com.pdg.reservation.accommodation.enums.AccommodationType;
 import org.junit.jupiter.params.provider.Arguments;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
+import static com.pdg.reservation.accommodation.enums.AccommodationType.HOTEL;
 import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
@@ -78,5 +85,42 @@ public final class TestDataSource {
                 arguments(named("허용되지 않는 특수문자", "Abcd123^xyz")),
                 arguments(named("중간에 공백", "Abcd 123!xyz"))
         );
+    }
+
+    public static Stream<Arguments> invalidAccommodationSearchUris() {
+        LocalDate checkIn = LocalDate.now().plusDays(30);
+        LocalDate checkOut = checkIn.plusDays(2);
+        return Stream.of(
+                arguments(named("도시 null", searchUri(null, HOTEL, checkIn, checkOut, 1))),
+                arguments(named("도시 빈 문자열", searchUri("", HOTEL, checkIn, checkOut, 1))),
+                arguments(named("도시 공백", searchUri(" ", HOTEL, checkIn, checkOut, 1))),
+                arguments(named("도시 최대 길이 초과 (51자)", searchUri("가".repeat(51), HOTEL, checkIn, checkOut, 1))),
+                arguments(named("유형 null", searchUri("서울", null, checkIn, checkOut, 1))),
+                arguments(named("체크인 null", searchUri("서울", HOTEL, null, checkOut, 1))),
+                arguments(named("체크인 과거", searchUri("서울", HOTEL, LocalDate.now().minusDays(1), checkOut, 1))),
+                arguments(named("체크아웃 null", searchUri("서울", HOTEL, checkIn, null, 1))),
+                arguments(named("체크아웃이 체크인 이전", searchUri("서울", HOTEL, checkIn, checkIn.minusDays(1), 1))),
+                arguments(named("인원 null", searchUri("서울", HOTEL, checkIn, checkOut, null))),
+                arguments(named("인원 최소 미만 (0명)", searchUri("서울", HOTEL, checkIn, checkOut, 0))),
+                arguments(named("인원 최대 초과 (101명)", searchUri("서울", HOTEL, checkIn, checkOut, 101)))
+        );
+    }
+
+    // 숙소 검색 URI를 만든다. 값이 null인 파라미터는 URI에서 뺀다
+    private static URI searchUri(String city, AccommodationType type, LocalDate checkIn, LocalDate checkOut, Integer capacity) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("city", city);
+        parameters.put("type", type);
+        parameters.put("checkInDate", checkIn);
+        parameters.put("checkOutDate", checkOut);
+        parameters.put("capacity", capacity);
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/api/v1/accommodations");
+        parameters.forEach((name, value) -> {
+            if (value != null) {
+                builder.queryParam(name, value);
+            }
+        });
+        return builder.build().encode().toUri();
     }
 }
