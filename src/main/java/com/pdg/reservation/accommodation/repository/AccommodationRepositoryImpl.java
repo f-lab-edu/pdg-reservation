@@ -132,6 +132,7 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
                         roomInventory.inventoryDate.lt(cond.getCheckOutDate())
                 )
                 .groupBy(room.id) // 객실(Room)별로 그룹화하여 1박 평균가 산출
+                .having(roomInventory.count().eq(stayDays)) // 투숙 기간 '모든 날짜'에 재고가 있는 객실만 계산한다
                 .fetch()
                 .stream()
                 .collect(Collectors.toMap(
