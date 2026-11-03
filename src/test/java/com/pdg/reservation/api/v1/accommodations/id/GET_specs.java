@@ -1,7 +1,9 @@
 package com.pdg.reservation.api.v1.accommodations.id;
 
 import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
+import com.pdg.reservation.accommodation.dto.ImageResponse;
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.accommodation.service.AccommodationAtomicReader;
 import com.pdg.reservation.common.constant.RedisKeyNames;
 import com.pdg.reservation.common.dto.ApiResponse;
@@ -23,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,6 +93,33 @@ class GET_specs {
         assertThat(response.getBody().getData())
                 .usingRecursiveComparison()
                 .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expected);
+    }
+
+    @Test
+    void 숙소_이미지는_정렬_순서대로_반환하고_대표_이미지_표시와_URL이_맞다() {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
+        // 기대값은 저장한 이미지를 sortOrder 순으로 정렬해 직접 채운다 (운영의 from(...)을 쓰지 않는다)
+        List<ImageResponse> expected = accommodation.getImages().stream()
+                .sorted(Comparator.comparingInt(AccommodationImage::getSortOrder))
+                .map(image -> ImageResponse.builder()
+                        .id(image.getId())
+                        .url(image.getUrl())
+                        .mainImage(image.isMain())
+                        .sortOrder(image.getSortOrder())
+                        .build())
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getBody().getData().getImages())
+                .usingRecursiveComparison()
                 .isEqualTo(expected);
     }
 

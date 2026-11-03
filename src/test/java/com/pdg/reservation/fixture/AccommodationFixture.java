@@ -8,6 +8,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.stereotype.Component;
 
 import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodation;
+import static com.pdg.reservation.fixture.AccommodationGenerator.generateAccommodationWithImages;
 
 @Component
 public class AccommodationFixture {
@@ -32,6 +33,13 @@ public class AccommodationFixture {
     // 숙소를 저장하고 블룸 필터에 등록한 뒤 돌려준다
     public Accommodation createAccommodation() {
         Accommodation accommodation = accommodationRepository.save(generateAccommodation());
+        bloomFilter.add(accommodation.getId());
+        return accommodation;
+    }
+
+    // 이미지를 가진 숙소를 저장하고 블룸 필터에 등록한 뒤 돌려준다
+    public Accommodation createAccommodationWithImages() {
+        Accommodation accommodation = accommodationRepository.save(generateAccommodationWithImages());
         bloomFilter.add(accommodation.getId());
         return accommodation;
     }
