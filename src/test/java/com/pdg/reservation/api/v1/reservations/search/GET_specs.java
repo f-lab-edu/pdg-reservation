@@ -22,6 +22,8 @@ import com.pdg.reservation.support.TestContainersConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
@@ -29,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -450,5 +453,54 @@ class GET_specs {
         assertThat(page.getContent()).isEmpty();
         assertThat(page.getTotalElements()).isZero();
         assertThat(page.getTotalPages()).isZero();
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidReservationSearchUris")
+    void 검색_조건이_유효하지_않으면_400과_COMMON_005를_반환한다(URI uri) {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                get(uri).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
+    }
+
+    @Test
+    void 객실명이_최대_길이_50자이면_검색된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        String maxLengthRoomName = "가".repeat(50);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?roomName={roomName}", maxLengthRoomName).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void 숙소명이_최대_길이_50자이면_검색된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        String maxLengthAccommodationName = "가".repeat(50);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?accommodationName={accommodationName}", maxLengthAccommodationName).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 }

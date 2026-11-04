@@ -156,6 +156,35 @@ public final class TestDataSource {
         );
     }
 
+    public static Stream<Arguments> invalidReservationSearchUris() {
+        LocalDate checkIn = LocalDate.now().plusDays(30);
+        return Stream.of(
+                arguments(named("객실명 최대 길이 초과 (51자)", reservationSearchUri("가".repeat(51), null, null, null, null))),
+                arguments(named("숙소명 최대 길이 초과 (51자)", reservationSearchUri(null, "가".repeat(51), null, null, null))),
+                arguments(named("체크아웃이 체크인 이전", reservationSearchUri(null, null, null, checkIn, checkIn.minusDays(1)))),
+                arguments(named("체크아웃이 체크인과 같은 날", reservationSearchUri(null, null, null, checkIn, checkIn))),
+                arguments(named("상태 값 오류", reservationSearchUri(null, null, "INVALID", null, null)))
+        );
+    }
+
+    // 예약 검색 URI를 만든다. 값이 null인 파라미터는 URI에서 뺀다
+    private static URI reservationSearchUri(String roomName, String accommodationName, String status, LocalDate checkIn, LocalDate checkOut) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("roomName", roomName);
+        parameters.put("accommodationName", accommodationName);
+        parameters.put("status", status);
+        parameters.put("checkInDate", checkIn);
+        parameters.put("checkOutDate", checkOut);
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/api/v1/reservations/search");
+        parameters.forEach((name, value) -> {
+            if (value != null) {
+                builder.queryParam(name, value);
+            }
+        });
+        return builder.build().encode().toUri();
+    }
+
     public static Stream<Arguments> invalidRoomSearchUris() {
         LocalDate checkIn = LocalDate.now().plusDays(30);
         LocalDate checkOut = checkIn.plusDays(2);
