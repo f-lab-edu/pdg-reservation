@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.RequestEntity.get;
@@ -357,5 +358,78 @@ class GET_specs {
         assertThat(response.getBody().getData().getContent())
                 .extracting(ReservationSearchResponse::getMainImage)
                 .containsExactly(accommodationMainImageUrl);
+    }
+
+    @Test
+    void 예약_검색은_첫_페이지를_올바르게_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(10));
+        // 하룻밤씩 겹치지 않게 순서대로 예약 5건을 만든다
+        List<ReservationResponse> reservations = IntStream.range(0, 5)
+                .mapToObj(i -> reservationFixture.createReservation(room, firstDay.plusDays(2L * i), firstDay.plusDays(2L * i + 1)))
+                .toList();
+        int page = 0;
+        int size = 2;
+        // 최근에 만든 예약부터 보이므로 가장 나중에 만든 size개가 첫 페이지다
+        List<Long> expectedIds = reservations.stream()
+                .map(ReservationResponse::getReservationId)
+                .sorted(Comparator.reverseOrder())
+                .limit(size)
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?page={page}&size={size}", page, size).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> pageResponse = response.getBody().getData();
+        assertThat(pageResponse.getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactlyElementsOf(expectedIds);
+        assertThat(pageResponse.getTotalElements()).isEqualTo(5);
+        assertThat(pageResponse.getTotalPages()).isEqualTo(3);
+        assertThat(pageResponse.isLast()).isFalse();
+    }
+
+    @Test
+    void 예약_검색은_마지막_페이지를_올바르게_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(10));
+        List<ReservationResponse> reservations = IntStream.range(0, 5)
+                .mapToObj(i -> reservationFixture.createReservation(room, firstDay.plusDays(2L * i), firstDay.plusDays(2L * i + 1)))
+                .toList();
+        int lastPage = 2;
+        int size = 2;
+        // 최근에 만든 예약부터 보이므로 마지막 페이지는 가장 먼저 만든 1건이다
+        List<Long> expectedIds = reservations.stream()
+                .map(ReservationResponse::getReservationId)
+                .sorted(Comparator.reverseOrder())
+                .skip(4)
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?page={page}&size={size}", lastPage, size).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> pageResponse = response.getBody().getData();
+        assertThat(pageResponse.getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactlyElementsOf(expectedIds);
+        assertThat(pageResponse.getTotalElements()).isEqualTo(5);
+        assertThat(pageResponse.getTotalPages()).isEqualTo(3);
+        assertThat(pageResponse.isLast()).isTrue();
     }
 }
