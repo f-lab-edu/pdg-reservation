@@ -24,7 +24,9 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.RequestEntity.get;
@@ -497,5 +499,92 @@ class GET_specs {
         assertThat(page.getContent()).isEmpty();
         assertThat(page.getTotalElements()).isZero();
         assertThat(page.getTotalPages()).isZero();
+    }
+
+    @Test
+    void 객실_검색은_첫_페이지를_올바르게_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        List<Room> rooms = IntStream.range(0, 5)
+                .mapToObj(i -> roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate))
+                .toList();
+        // 재고가 없는 객실은 조건에 맞지 않아 목록과 전체 건수에서 빠져야 한다
+        roomFixture.createRoom(accommodation);
+        int page = 0;
+        int size = 2;
+        // 객실은 id 내림차순이므로 가장 최근에 만든 size개가 첫 페이지다
+        List<Long> expectedIds = rooms.stream()
+                .map(Room::getId)
+                .sorted(Comparator.reverseOrder())
+                .limit(size)
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}&page={page}&size={size}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                rooms.get(0).getMaxCapacity(),
+                                page,
+                                size).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<RoomSearchResponse> pageResponse = response.getBody().getData();
+        assertThat(pageResponse.getContent())
+                .extracting(RoomSearchResponse::getId)
+                .containsExactlyElementsOf(expectedIds);
+        assertThat(pageResponse.getTotalElements()).isEqualTo(5);
+        assertThat(pageResponse.getTotalPages()).isEqualTo(3);
+        assertThat(pageResponse.isLast()).isFalse();
+    }
+
+    @Test
+    void 객실_검색은_마지막_페이지를_올바르게_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        List<Room> rooms = IntStream.range(0, 5)
+                .mapToObj(i -> roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate))
+                .toList();
+        roomFixture.createRoom(accommodation);
+        int lastPage = 2;
+        int size = 2;
+        // 객실은 id 내림차순이므로 마지막 페이지는 가장 오래된 1개다
+        List<Long> expectedIds = rooms.stream()
+                .map(Room::getId)
+                .sorted(Comparator.reverseOrder())
+                .skip(4)
+                .toList();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}&page={page}&size={size}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                rooms.get(0).getMaxCapacity(),
+                                lastPage,
+                                size).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<RoomSearchResponse> pageResponse = response.getBody().getData();
+        assertThat(pageResponse.getContent())
+                .extracting(RoomSearchResponse::getId)
+                .containsExactlyElementsOf(expectedIds);
+        assertThat(pageResponse.getTotalElements()).isEqualTo(5);
+        assertThat(pageResponse.getTotalPages()).isEqualTo(3);
+        assertThat(pageResponse.isLast()).isTrue();
     }
 }
