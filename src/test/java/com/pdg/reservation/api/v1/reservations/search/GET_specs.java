@@ -4,11 +4,14 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
+import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.RoomFixture;
+import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
+import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
@@ -24,7 +27,9 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.RequestEntity.get;
@@ -133,5 +138,47 @@ class GET_specs {
         assertThat(page.getTotalElements()).isEqualTo(2);
         assertThat(page.getTotalPages()).isEqualTo(1);
         assertThat(page.isLast()).isTrue();
+    }
+
+    @Test
+    void 내_예약을_검색하면_200과_예약_목록을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
+        // 기대값은 저장한 값과 예약 생성 응답에서 직접 채운다. 이미지는 없고, 결제 전이라 취소·리뷰 작성은 불가능하다
+        ReservationSearchResponse expected = ReservationSearchResponse.builder()
+                .id(reservation.getReservationId())
+                .accommodationName(accommodation.getName())
+                .roomName(room.getName())
+                .mainImage(null)
+                .checkInDate(checkInDate)
+                .checkOutDate(checkOutDate)
+                .guestName(reservation.getGuestName())
+                .guestPhoneNumber(reservation.getGuestPhoneNumber())
+                .status(ReservationStatus.PENDING_PAYMENT)
+                .totalPrice(reservation.getTotalPrice())
+                .reviewable(false)
+                .cancellable(false)
+                .build();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<ReservationSearchResponse> content = response.getBody().getData().getContent();
+        assertThat(content)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(List.of(expected));
+        assertThat(content.get(0).getCreatedAt()).isNotNull();
     }
 }

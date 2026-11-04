@@ -7,6 +7,7 @@ import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -34,9 +35,18 @@ public class ReservationFixture {
 
     // 기본 사용자로 객실을 기본 요금으로 예약한다. 객실의 재고는 기본 요금 그대로여야 한다. 인원은 1명이다
     public ReservationResponse createReservation(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
-        long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
-        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(nights));
-        return createReservation(generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice));
+        return createReservation(createRequest(room, checkInDate, checkOutDate));
+    }
+
+    // 지정한 사용자(Authorization 헤더 값, 예: "Bearer ...")로 객실을 기본 요금으로 예약한다
+    public ReservationResponse createReservation(Room room, LocalDate checkInDate, LocalDate checkOutDate, String authorization) {
+        ResponseEntity<ApiResponse<ReservationResponse>> response = client.exchange(
+                post("/api/v1/reservations")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .body(createRequest(room, checkInDate, checkOutDate)),
+                new ParameterizedTypeReference<>() { }
+        );
+        return extractCreated(response);
     }
 
     // 기본 사용자로 예약 API를 호출해 예약을 만들고 응답을 돌려준다
@@ -45,6 +55,16 @@ public class ReservationFixture {
                 post("/api/v1/reservations").body(request),
                 new ParameterizedTypeReference<>() { }
         );
+        return extractCreated(response);
+    }
+
+    private ReservationRequest createRequest(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
+        long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(nights));
+        return generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+    }
+
+    private ReservationResponse extractCreated(ResponseEntity<ApiResponse<ReservationResponse>> response) {
         if (response.getStatusCode() != HttpStatus.CREATED) {
             throw new IllegalStateException("예약 생성 실패: " + response.getStatusCode());
         }
