@@ -17,7 +17,7 @@ public class ReviewDeletedEvent {
     private final Long reviewId;
     private final String eventId; // 멱등성 식별자
     private final LocalDateTime createdAt;
-    private final EventType eventType = EventType.REVIEW_CREATED;
+    private final EventType eventType = EventType.REVIEW_DELETED;
 
     public ReviewDeletedEvent(Long accommodationId, BigDecimal rating,
                               Long reviewId, String eventId, LocalDateTime createdAt) {
