@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,6 +133,49 @@ class GET_specs {
         List<Long> nightlyPrices = List.of(100_000L, 200_000L, 600_000L);
         long expectedTotalPrice = 900_000L;
         double expectedAvgPrice = 300_000.0;
+        Room room = roomFixture.createRoom(accommodation, basePrice);
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
+        RoomSearchResponse expected = RoomSearchResponse.builder()
+                .id(room.getId())
+                .name(room.getName())
+                .description(room.getDescription())
+                .maxCapacity(room.getMaxCapacity())
+                .roomLabel(room.getRoomLabel())
+                .bedType(room.getBedType())
+                .totalPrice(expectedTotalPrice)
+                .avgPrice(expectedAvgPrice)
+                .mainImage(null)
+                .build();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(expected));
+    }
+
+    @Test
+    void 날짜별_가격이_없는_밤은_객실_기본_요금으로_계산한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(3);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 둘째 밤은 가격이 없어(null) 기본 요금 50,000원으로 계산된다
+        long basePrice = 50_000L;
+        List<Long> nightlyPrices = Arrays.asList(100_000L, null, 600_000L);
+        long expectedTotalPrice = 750_000L;
+        double expectedAvgPrice = 250_000.0;
         Room room = roomFixture.createRoom(accommodation, basePrice);
         roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
         RoomSearchResponse expected = RoomSearchResponse.builder()
