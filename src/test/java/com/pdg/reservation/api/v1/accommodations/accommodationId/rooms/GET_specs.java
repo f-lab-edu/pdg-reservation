@@ -587,4 +587,28 @@ class GET_specs {
         assertThat(pageResponse.getTotalPages()).isEqualTo(3);
         assertThat(pageResponse.isLast()).isTrue();
     }
+
+    @Test
+    void 존재하지_않는_숙소의_객실을_조회하면_404와_ACC_001을_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        long missingId = accommodation.getId() + 1;
+        int capacity = 1;
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                        missingId,
+                        checkInDate,
+                        checkOutDate,
+                        capacity).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("ACC-001");
+    }
 }
