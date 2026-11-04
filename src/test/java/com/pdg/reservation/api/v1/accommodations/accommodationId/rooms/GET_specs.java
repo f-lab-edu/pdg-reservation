@@ -92,4 +92,32 @@ class GET_specs {
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(expected));
     }
+
+    @Test
+    void 객실이_여러_개이면_id_내림차순으로_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room first = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room second = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room third = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                third.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(RoomSearchResponse::getId)
+                .containsExactly(third.getId(), second.getId(), first.getId());
+    }
 }
