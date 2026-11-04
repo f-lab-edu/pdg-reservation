@@ -267,4 +267,31 @@ class GET_specs {
                 .containsExactly(reservation.getReservationId());
         assertThat(page.getTotalElements()).isEqualTo(1);
     }
+
+    @Test
+    void 날짜로_검색하면_체크인과_체크아웃이_범위_안에_있는_예약만_나온다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        // 이어지는 2박씩 3건: [0~2], [2~4], [4~6]일. 가운데 예약이 범위(2~4일)와 시작과 끝이 정확히 같다
+        reservationFixture.createReservation(room, firstDay, firstDay.plusDays(2));
+        ReservationResponse middle = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(4));
+        reservationFixture.createReservation(room, firstDay.plusDays(4), firstDay.plusDays(6));
+        LocalDate startDate = firstDay.plusDays(2);
+        LocalDate endDate = firstDay.plusDays(4);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?checkInDate={start}&checkOutDate={end}", startDate, endDate).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactly(middle.getReservationId());
+    }
 }
