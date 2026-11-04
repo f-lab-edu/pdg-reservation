@@ -20,9 +20,19 @@ public class ReservationValidator {
 
     public void validate(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories) {
 
+        validateReservable(room);
         validateGuestCountCapacity(request, room);
         vakudatePeriod(request, room, inventories);
         validateStockAndPrice(member, request, room, inventories);
+    }
+
+    private void validateReservable(Room room) {
+        // [검증] 예약 가능한 객실이고 숙소가 운영 중인지
+        if (!room.isReservable() || !room.getAccommodation().isOperational()) {
+            log.warn("예약할 수 없는 객실 : roomId={}, isReservable={}, accommodationOperational={}",
+                    room.getId(), room.isReservable(), room.getAccommodation().isOperational());
+            throw new CustomException(ErrorCode.RESERVE_UNAVAILABLE_ROOM);
+        }
     }
 
     private void validateStockAndPrice(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories) {
