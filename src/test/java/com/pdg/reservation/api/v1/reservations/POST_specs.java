@@ -5,6 +5,7 @@ import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.fixture.MemberFixture;
+import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.RoomFixture;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
@@ -50,6 +51,9 @@ class POST_specs {
 
     @Autowired
     RoomFixture roomFixture;
+
+    @Autowired
+    ReservationFixture reservationFixture;
 
     @Autowired
     ApiClient apiClient;
@@ -397,6 +401,29 @@ class POST_specs {
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
                 post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_003");
+    }
+
+    @Test
+    void 이미_예약된_기간을_다시_예약하면_409와_RESERVE_003을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        reservationFixture.createReservation(generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice));
+        ReservationRequest secondRequest = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(secondRequest),
                 new ParameterizedTypeReference<>() { }
         );
 
