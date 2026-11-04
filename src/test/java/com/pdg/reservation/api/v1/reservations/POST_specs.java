@@ -262,4 +262,28 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().getData().getTotalPrice()).isEqualByComparingTo(expectedTotalPrice);
     }
+
+    @Test
+    void 요청_금액이_서버가_계산한_금액과_다르면_400과_RESERVE_004를_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        // 서버가 계산하는 총액(기본 요금 2박)보다 1원 많은 금액을 보낸다
+        BigDecimal serverTotalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        BigDecimal wrongTotalPrice = serverTotalPrice.add(BigDecimal.ONE);
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, wrongTotalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_004");
+    }
 }
