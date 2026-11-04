@@ -452,4 +452,25 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody().getErrorCode()).isEqualTo("ROOM-001");
     }
+
+    @Test
+    void 토큰_없이_예약하면_401과_AUTH_001을_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-001");
+    }
 }
