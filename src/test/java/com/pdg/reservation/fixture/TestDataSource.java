@@ -185,6 +185,15 @@ public final class TestDataSource {
         );
     }
 
+    public static Stream<Arguments> invalidAccommodationReviewSearchUris() {
+        String path = "/api/v1/reviews/accommodations/1";
+        return Stream.of(
+                arguments(named("최소 평점 최소 미만 (-1)", reviewSearchUri(path, -1, null))),
+                arguments(named("최소 평점 최대 초과 (6)", reviewSearchUri(path, 6, null))),
+                arguments(named("정렬 값 오류", reviewSearchUri(path, null, "INVALID")))
+        );
+    }
+
     // 리뷰 검색 URI를 만든다. 값이 null인 파라미터는 URI에서 뺀다. 입력 검증이 먼저 일어나므로 경로의 숙소 id는 존재하지 않아도 된다
     public static URI reviewSearchUri(String path, Integer minRating, String sortType) {
         Map<String, Object> parameters = new LinkedHashMap<>();
