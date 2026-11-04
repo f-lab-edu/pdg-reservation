@@ -312,4 +312,50 @@ class GET_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getData().getContent()).isEmpty();
     }
+
+    @Test
+    void 투숙_기간_밖의_재고는_결과에_영향을_주지_않는다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        long basePrice = 50_000L;
+        Room room = roomFixture.createRoom(accommodation, basePrice);
+        // 투숙하는 두 밤의 가격
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, List.of(100_000L, 200_000L));
+        // 체크인 전날과 체크아웃 날의 재고는 투숙 기간 밖이다. 가격이 크게 달라서 계산에 섞이면 값이 달라진다
+        long outsidePrice = 1_000_000L;
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate.minusDays(1), List.of(outsidePrice));
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkOutDate, List.of(outsidePrice));
+        long expectedTotalPrice = 300_000L;
+        double expectedAvgPrice = 150_000.0;
+        RoomSearchResponse expected = RoomSearchResponse.builder()
+                .id(room.getId())
+                .name(room.getName())
+                .description(room.getDescription())
+                .maxCapacity(room.getMaxCapacity())
+                .roomLabel(room.getRoomLabel())
+                .bedType(room.getBedType())
+                .totalPrice(expectedTotalPrice)
+                .avgPrice(expectedAvgPrice)
+                .mainImage(null)
+                .build();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(expected));
+    }
 }
