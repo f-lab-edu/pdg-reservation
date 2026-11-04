@@ -237,4 +237,34 @@ class GET_specs {
                 .extracting(ReservationSearchResponse::getId)
                 .containsExactly(third.getReservationId(), second.getReservationId(), first.getReservationId());
     }
+
+    @Test
+    void 객실명으로_검색하면_객실명이_부분_일치하는_예약만_나온다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room otherRoom = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
+        reservationFixture.createReservation(otherRoom, checkInDate, checkOutDate);
+        // 객실명의 일부(접두어 "객실-"를 뺀 임의 부분)만으로 검색한다. 1건이 한 페이지(size=1)를 채워 전체 건수 쿼리도 실행된다
+        String roomNamePart = room.getName().substring("객실-".length());
+        int size = 1;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?roomName={roomName}&size={size}", roomNamePart, size).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactly(reservation.getReservationId());
+        assertThat(page.getTotalElements()).isEqualTo(1);
+    }
 }
