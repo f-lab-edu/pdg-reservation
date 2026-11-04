@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.pdg.reservation.fixture.RoomGenerator.generateNonReservableRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesWithNightlyPrices;
@@ -43,6 +44,13 @@ public class RoomFixture {
     // 숙소에 속한 객실을 저장하고 돌려준다
     public Room createRoom(Accommodation accommodation) {
         return roomRepository.save(generateRoom(accommodation));
+    }
+
+    // 예약 불가능한 객실을 저장하고, 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고도 저장한 뒤 객실을 돌려준다
+    public Room createNonReservableRoomWithInventories(Accommodation accommodation, LocalDate checkInDate, LocalDate checkOutDate) {
+        Room room = roomRepository.save(generateNonReservableRoom(accommodation));
+        createRoomInventories(room, checkInDate, checkOutDate);
+        return room;
     }
 
     // 이미지(대표 1개 포함)를 가진 객실을 저장하고 돌려준다

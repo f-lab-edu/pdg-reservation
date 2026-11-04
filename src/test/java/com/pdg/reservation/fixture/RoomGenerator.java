@@ -25,6 +25,15 @@ public final class RoomGenerator {
 
     // 기본 요금을 지정한 예약 가능한 객실을 만든다 (최대 2명). 저장하지 않는다
     public static Room generateRoom(Accommodation accommodation, BigDecimal basePrice) {
+        return generateRoom(accommodation, basePrice, true);
+    }
+
+    // 예약 불가능한 객실을 임의 값으로 만든다 (기본 요금 100,000원). 저장하지 않는다
+    public static Room generateNonReservableRoom(Accommodation accommodation) {
+        return generateRoom(accommodation, new BigDecimal("100000.00"), false);
+    }
+
+    private static Room generateRoom(Accommodation accommodation, BigDecimal basePrice, boolean isReservable) {
         return Room.builder()
                 .name("객실-" + UUID.randomUUID().toString().substring(0, 8))
                 .description("설명-" + UUID.randomUUID())
@@ -32,7 +41,7 @@ public final class RoomGenerator {
                 .bedType(BedType.DOUBLE)
                 .basePrice(basePrice)
                 .maxCapacity(2)
-                .isReservable(true)
+                .isReservable(isReservable)
                 .accommodation(accommodation)
                 .build();
     }
