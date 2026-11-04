@@ -35,7 +35,7 @@ public class ReservationController {
     @PostMapping
     public ResponseEntity<ApiResponse<ReservationResponse>> createReservation(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody ReservationRequest reserveRequest
+            @Valid @RequestBody ReservationRequest reserveRequest
     ) {
         Member member = userDetails.getMember();
         return ApiResponse.created(reservationService.reserve(reserveRequest.getRoomId(), member, reserveRequest));

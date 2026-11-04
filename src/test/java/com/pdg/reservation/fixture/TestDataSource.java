@@ -15,6 +15,12 @@ import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestCount;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestName;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestPhoneNumber;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithPeriod;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithRoomId;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithTotalPrice;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -122,6 +128,32 @@ public final class TestDataSource {
             }
         });
         return builder.build().encode().toUri();
+    }
+
+    public static Stream<Arguments> invalidReservationRequests() {
+        LocalDate checkIn = LocalDate.now().plusDays(30);
+        return Stream.of(
+                arguments(named("객실 id null", generateReservationRequestWithRoomId(null))),
+                arguments(named("체크인 null", generateReservationRequestWithPeriod(null, checkIn.plusDays(2)))),
+                arguments(named("체크인 과거", generateReservationRequestWithPeriod(LocalDate.now().minusDays(1), checkIn.plusDays(2)))),
+                arguments(named("체크아웃 null", generateReservationRequestWithPeriod(checkIn, null))),
+                arguments(named("체크아웃이 체크인 이전", generateReservationRequestWithPeriod(checkIn, checkIn.minusDays(1)))),
+                arguments(named("체크아웃이 체크인과 같은 날 (0박)", generateReservationRequestWithPeriod(checkIn, checkIn))),
+                arguments(named("인원 null", generateReservationRequestWithGuestCount(null))),
+                arguments(named("인원 최소 미만 (0명)", generateReservationRequestWithGuestCount(0))),
+                arguments(named("인원 최대 초과 (101명)", generateReservationRequestWithGuestCount(101))),
+                arguments(named("예약자 이름 null", generateReservationRequestWithGuestName(null))),
+                arguments(named("예약자 이름 빈 문자열", generateReservationRequestWithGuestName(""))),
+                arguments(named("예약자 이름 공백", generateReservationRequestWithGuestName(" "))),
+                arguments(named("예약자 이름 최대 길이 초과 (51자)", generateReservationRequestWithGuestName("가".repeat(51)))),
+                arguments(named("연락처 null", generateReservationRequestWithGuestPhoneNumber(null))),
+                arguments(named("연락처 빈 문자열", generateReservationRequestWithGuestPhoneNumber(""))),
+                arguments(named("연락처 공백", generateReservationRequestWithGuestPhoneNumber(" "))),
+                arguments(named("연락처 형식 오류 (하이픈 포함)", generateReservationRequestWithGuestPhoneNumber("010-1234-5678"))),
+                arguments(named("연락처 최소 길이 미만 (8자리)", generateReservationRequestWithGuestPhoneNumber("01234567"))),
+                arguments(named("연락처 최대 길이 초과 (12자리)", generateReservationRequestWithGuestPhoneNumber("010123456789"))),
+                arguments(named("총액 null", generateReservationRequestWithTotalPrice(null)))
+        );
     }
 
     public static Stream<Arguments> invalidRoomSearchUris() {
