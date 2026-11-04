@@ -1,5 +1,6 @@
 package com.pdg.reservation.api.v1.reviews;
 
+import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
@@ -37,6 +38,7 @@ import java.time.LocalDate;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequest;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithReservationId;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.RequestEntity.get;
 import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/reviews")
@@ -285,6 +287,47 @@ class POST_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         // 비동기로 숙소 평점이 갱신되므로 반영될 때까지 기다린 뒤 끝낸다
+        ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+    }
+
+    @Test
+    void 리뷰를_쓰면_숙소_평점이_갱신된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        BigDecimal rating = new BigDecimal("4.5");
+
+        // Act
+        reviewFixture.createReview(reservation.getReservationId(), rating);
+
+        // Assert
+        ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+    }
+
+    @Test
+    void 숙소_상세를_먼저_조회해_캐시에_담아_두어도_리뷰를_쓰면_새_평점이_보인다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        BigDecimal rating = new BigDecimal("4.5");
+        // 리뷰를 쓰기 전의 상세(평점 0)가 캐시에 담긴다
+        memberFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<ApiResponse<AccommodationDetailResponse>>() { }
+        );
+
+        // Act
+        reviewFixture.createReview(reservation.getReservationId(), rating);
+
+        // Assert
         ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
     }
 }
