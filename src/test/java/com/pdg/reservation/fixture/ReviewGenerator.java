@@ -18,6 +18,11 @@ public final class ReviewGenerator {
         return validRequestBuilder().reservationId(reservationId).rating(rating).build();
     }
 
+    // 예약 id, 평점, 내용을 모두 지정한 리뷰 요청을 만든다
+    public static ReviewCreateRequest generateReviewCreateRequest(Long reservationId, BigDecimal rating, String content) {
+        return validRequestBuilder().reservationId(reservationId).rating(rating).content(content).build();
+    }
+
     // 예약 id만 지정하고 나머지는 올바른 임의 값으로 채운 리뷰 요청을 만든다
     public static ReviewCreateRequest generateReviewCreateRequestWithReservationId(Long reservationId) {
         return validRequestBuilder().reservationId(reservationId).build();
