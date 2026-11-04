@@ -1,6 +1,7 @@
 package com.pdg.reservation.fixture;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 
@@ -15,7 +16,7 @@ public final class RoomGenerator {
     private RoomGenerator() {
     }
 
-    // 임의 이름의 예약 가능한 객실을 만든다 (최대 2명, 기본 요금 100,000원). 저장하지 않는다
+    // 임의 이름·설명·라벨의 예약 가능한 더블 객실을 만든다 (최대 2명, 기본 요금 100,000원). 저장하지 않는다
     public static Room generateRoom(Accommodation accommodation) {
         return generateRoom(accommodation, new BigDecimal("100000.00"));
     }
@@ -24,6 +25,9 @@ public final class RoomGenerator {
     public static Room generateRoom(Accommodation accommodation, BigDecimal basePrice) {
         return Room.builder()
                 .name("객실-" + UUID.randomUUID().toString().substring(0, 8))
+                .description("설명-" + UUID.randomUUID())
+                .roomLabel("라벨-" + UUID.randomUUID().toString().substring(0, 8))
+                .bedType(BedType.DOUBLE)
                 .basePrice(basePrice)
                 .maxCapacity(2)
                 .isReservable(true)
