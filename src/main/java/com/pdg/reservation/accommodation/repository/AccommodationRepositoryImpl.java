@@ -149,10 +149,11 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
                 .update(accommodation)
                 .set(accommodation.totalRatingSum, accommodation.totalRatingSum.add(rating))
                 .set(accommodation.reviewCount, accommodation.reviewCount.add(1L))
+                // MySQL의 UPDATE는 SET을 왼쪽부터 적용하고 앞에서 바꾼 값을 뒤의 식에서 쓴다. 그래서 평균은 갱신된 합계·개수로 계산한다
                 .set(accommodation.ratingAverage,
                         Expressions.numberTemplate(BigDecimal.class,
-                                "ROUND(({0} + {1}) / ({2} + 1), 1)",
-                                accommodation.totalRatingSum, rating, accommodation.reviewCount))
+                                "ROUND({0} / {1}, 1)",
+                                accommodation.totalRatingSum, accommodation.reviewCount))
                 .where(accommodation.id.eq(accommodationId))
                 .execute();
     }
@@ -163,13 +164,13 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
                 .update(accommodation)
                 .set(accommodation.totalRatingSum, accommodation.totalRatingSum.subtract(rating))
                 .set(accommodation.reviewCount, accommodation.reviewCount.subtract(1L))
+                // 갱신된 개수가 0이면(마지막 리뷰를 지운 경우) 평균은 0이다. 평균은 갱신된 합계·개수로 계산한다
                 .set(accommodation.ratingAverage,
                         Expressions.numberTemplate(
                                 BigDecimal.class,
-                                "CASE WHEN {0} > 1 THEN ROUND(({1} - {2}) / ({0} - 1), 1) ELSE 0 END",
+                                "CASE WHEN {0} > 0 THEN ROUND({1} / {0}, 1) ELSE 0 END",
                                 accommodation.reviewCount,
-                                accommodation.totalRatingSum,
-                                rating
+                                accommodation.totalRatingSum
                         ))
                 .where(
                         accommodation.id.eq(accommodationId)

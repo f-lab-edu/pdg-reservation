@@ -10,6 +10,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -23,9 +24,11 @@ import static org.springframework.http.RequestEntity.post;
 public class ReservationFixture {
 
     private final TestRestTemplate client;
+    private final JdbcTemplate jdbcTemplate;
 
-    public ReservationFixture(ApiClient apiClient) {
+    public ReservationFixture(ApiClient apiClient, JdbcTemplate jdbcTemplate) {
         this.client = apiClient.rest();
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     // 모든 Fixture와 테스트가 공유하는 클라이언트
@@ -36,6 +39,24 @@ public class ReservationFixture {
     // 기본 사용자로 객실을 기본 요금으로 예약한다. 객실의 재고는 기본 요금 그대로여야 한다. 인원은 1명이다
     public ReservationResponse createReservation(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
         return createReservation(createRequest(room, checkInDate, checkOutDate));
+    }
+
+    // 기본 사용자로 예약한 뒤 이용 완료 상태로 바꾼다. 체크아웃 후 자동으로 완료되는 기능이 없어서 상태만 SQL로 바꾼다
+    public ReservationResponse createCompletedReservation(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
+        ReservationResponse reservation = createReservation(room, checkInDate, checkOutDate);
+        markCompleted(reservation.getReservationId());
+        return reservation;
+    }
+
+    // 지정한 사용자(Authorization 헤더 값)로 예약한 뒤 이용 완료 상태로 바꾼다
+    public ReservationResponse createCompletedReservation(Room room, LocalDate checkInDate, LocalDate checkOutDate, String authorization) {
+        ReservationResponse reservation = createReservation(room, checkInDate, checkOutDate, authorization);
+        markCompleted(reservation.getReservationId());
+        return reservation;
+    }
+
+    private void markCompleted(Long reservationId) {
+        jdbcTemplate.update("UPDATE reservation SET status = 'COMPLETED' WHERE id = ?", reservationId);
     }
 
     // 지정한 사용자(Authorization 헤더 값, 예: "Bearer ...")로 객실을 기본 요금으로 예약한다
