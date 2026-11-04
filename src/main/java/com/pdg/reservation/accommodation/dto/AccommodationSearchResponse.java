@@ -2,6 +2,7 @@ package com.pdg.reservation.accommodation.dto;
 
 import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.querydsl.core.annotations.QueryProjection;
+import lombok.Builder;
 import lombok.Getter;
 @Getter
 public class AccommodationSearchResponse {
@@ -15,6 +16,7 @@ public class AccommodationSearchResponse {
     //최저가 계산 후 값 세팅
     private Long minPrice;
 
+    @Builder
     @QueryProjection
     public AccommodationSearchResponse(long id, String name, AccommodationType type, String city, String mainImage) {
         this.id = id;

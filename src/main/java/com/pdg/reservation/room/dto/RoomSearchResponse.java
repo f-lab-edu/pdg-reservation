@@ -20,6 +20,7 @@ public class RoomSearchResponse {
     private final double avgPrice;
     private final String mainImage;
 
+    @Builder
     @QueryProjection
     public RoomSearchResponse(
             long id, String name, String description, int maxCapacity,
