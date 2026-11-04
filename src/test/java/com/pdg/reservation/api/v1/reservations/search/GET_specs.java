@@ -92,18 +92,22 @@ class GET_specs {
         Room otherRoom = roomFixture.createRoomWithInventories(otherAccommodation, checkInDate, checkOutDate);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         reservationFixture.createReservation(otherRoom, checkInDate, checkOutDate);
+        // 1건이 한 페이지(size=1)를 채워 전체 건수 쿼리도 실행된다
+        int size = 1;
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
-                get("/api/v1/reservations/search?accommodationName={accommodationName}", accommodation.getName()).build(),
+                get("/api/v1/reservations/search?accommodationName={accommodationName}&size={size}", accommodation.getName(), size).build(),
                 new ParameterizedTypeReference<>() { }
         );
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().getData().getContent())
+        PageResponse<ReservationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
                 .extracting(ReservationSearchResponse::getId)
                 .containsExactly(reservation.getReservationId());
+        assertThat(page.getTotalElements()).isEqualTo(1);
     }
 
     @Test
