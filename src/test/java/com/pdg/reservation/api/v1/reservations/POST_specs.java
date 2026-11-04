@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithRoomId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.RequestEntity.get;
 import static org.springframework.http.RequestEntity.post;
@@ -430,5 +431,25 @@ class POST_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_003");
+    }
+
+    @Test
+    void 존재하지_않는_객실이면_404와_ROOM_001을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        long missingRoomId = room.getId() + 1;
+        ReservationRequest request = generateReservationRequestWithRoomId(missingRoomId);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("ROOM-001");
     }
 }
