@@ -4,6 +4,7 @@ import com.pdg.reservation.accommodation.enums.AccommodationType;
 import org.junit.jupiter.params.provider.Arguments;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -15,6 +16,10 @@ import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
+import static com.pdg.reservation.fixture.ReviewGenerator.generateContentOfLength;
+import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithContent;
+import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithRating;
+import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithReservationId;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestCount;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestName;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestPhoneNumber;
@@ -22,6 +27,7 @@ import static com.pdg.reservation.fixture.ReservationGenerator.generateReservati
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithRoomId;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithTotalPrice;
 import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public final class TestDataSource {
@@ -153,6 +159,31 @@ public final class TestDataSource {
                 arguments(named("연락처 최소 길이 미만 (8자리)", generateReservationRequestWithGuestPhoneNumber("01234567"))),
                 arguments(named("연락처 최대 길이 초과 (12자리)", generateReservationRequestWithGuestPhoneNumber("010123456789"))),
                 arguments(named("총액 null", generateReservationRequestWithTotalPrice(null)))
+        );
+    }
+
+    public static Stream<Arguments> invalidReviewCreateRequests() {
+        return Stream.of(
+                arguments(named("예약 id null", generateReviewCreateRequestWithReservationId(null))),
+                arguments(named("평점 null", generateReviewCreateRequestWithRating(null))),
+                arguments(named("평점 최소 미만 (0.4)", generateReviewCreateRequestWithRating(new BigDecimal("0.4")))),
+                arguments(named("평점 최대 초과 (5.1)", generateReviewCreateRequestWithRating(new BigDecimal("5.1")))),
+                arguments(named("평점 소수 둘째 자리 (4.55)", generateReviewCreateRequestWithRating(new BigDecimal("4.55")))),
+                arguments(named("내용 null", generateReviewCreateRequestWithContent(null))),
+                arguments(named("내용 빈 문자열", generateReviewCreateRequestWithContent(""))),
+                arguments(named("내용 공백", generateReviewCreateRequestWithContent(" "))),
+                arguments(named("내용 최소 길이 미만 (9자)", generateReviewCreateRequestWithContent(generateContentOfLength(9)))),
+                arguments(named("내용 최대 길이 초과 (301자)", generateReviewCreateRequestWithContent(generateContentOfLength(301))))
+        );
+    }
+
+    // 작성되어야 하는 평점·내용의 경계 값. 인자는 (평점, 내용)이다
+    public static Stream<Arguments> validReviewBoundaryInputs() {
+        return Stream.of(
+                argumentSet("평점 최소 0.5", new BigDecimal("0.5"), generateContentOfLength(50)),
+                argumentSet("평점 최대 5.0", new BigDecimal("5.0"), generateContentOfLength(50)),
+                argumentSet("내용 최소 길이 10자", new BigDecimal("4.0"), generateContentOfLength(10)),
+                argumentSet("내용 최대 길이 300자", new BigDecimal("4.0"), generateContentOfLength(300))
         );
     }
 

@@ -3,11 +3,15 @@ package com.pdg.reservation.api.v1.reviews;
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
+import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.ReviewFixture;
 import com.pdg.reservation.fixture.RoomFixture;
+import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
+import com.pdg.reservation.review.dto.ReviewCreateRequest;
+import com.pdg.reservation.review.dto.ReviewCreateResponse;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
@@ -20,9 +24,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequest;
+import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithReservationId;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/reviews")
 @IntegrationTest
@@ -80,5 +93,155 @@ class POST_specs {
 
         // Assert
         ratingAwaiter.awaitRatingAverage(accommodation.getId(), new BigDecimal("3.0"));
+    }
+
+    @Test
+    void 토큰_없이_리뷰를_쓰면_401과_AUTH_001을_반환한다() {
+        // Arrange
+        ReviewCreateRequest request = generateReviewCreateRequestWithReservationId(1L);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-001");
+    }
+
+    @Test
+    void 이용_완료_예약에_리뷰를_쓰면_201과_리뷰를_반환한다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        BigDecimal rating = new BigDecimal("4.5");
+        ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), rating);
+        // 기대값은 가입 정보와 보낸 요청에서 직접 채운다. 리뷰 id와 작성 시각은 서버가 정하므로 따로 확인한다
+        ReviewCreateResponse expected = ReviewCreateResponse.builder()
+                .nickName(member.getNickName())
+                .rating(rating)
+                .content(request.getContent())
+                .build();
+
+        // Act
+        ResponseEntity<ApiResponse<ReviewCreateResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        ReviewCreateResponse actual = response.getBody().getData();
+        assertThat(actual)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "createdAt")
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expected);
+        assertThat(actual.getId()).isNotNull();
+        assertThat(actual.getCreatedAt()).isNotNull();
+        // 비동기로 숙소 평점이 갱신되므로 반영될 때까지 기다린 뒤 끝낸다
+        ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+    }
+
+    @Test
+    void 이용_완료_상태가_아닌_예약이면_400과_REVIEW_001을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        // 결제 대기 상태의 예약이다
+        ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
+        ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), new BigDecimal("4.0"));
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("REVIEW_001");
+    }
+
+    @Test
+    void 이미_리뷰가_있는_예약이면_400과_REVIEW_002를_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        BigDecimal rating = new BigDecimal("4.0");
+        reviewFixture.createReview(reservation.getReservationId(), rating);
+        ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+        ReviewCreateRequest secondRequest = generateReviewCreateRequest(reservation.getReservationId(), rating);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(secondRequest),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("REVIEW_002");
+    }
+
+    @Test
+    void 남의_예약에_리뷰를_쓰면_404와_RESERVE_006을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        SignupRequest otherMember = memberFixture.createMember();
+        LoginSession otherSession = memberFixture.login(otherMember);
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        // 기본 사용자의 이용 완료 예약에 다른 회원이 리뷰를 쓴다
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), new BigDecimal("4.0"));
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").header(HttpHeaders.AUTHORIZATION, otherSession.bearer()).body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_006");
+    }
+
+    @Test
+    void 존재하지_않는_예약에_리뷰를_쓰면_404와_RESERVE_006을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        long missingReservationId = reservation.getReservationId() + 1;
+        ReviewCreateRequest request = generateReviewCreateRequest(missingReservationId, new BigDecimal("4.0"));
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_006");
     }
 }
