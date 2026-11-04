@@ -5,15 +5,18 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.lifecycle.Startables;
+import java.util.Map;
 
 @TestConfiguration
 public class TestContainersConfig {
 
     private static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("reserv")
+            .withTmpFs(Map.of("/var/lib/mysql", "rw"))
             .withCommand(
                     "--character-set-server=utf8mb4",
-                    "--collation-server=utf8mb4_general_ci"
+                    "--collation-server=utf8mb4_general_ci",
+                    "--skip-log-bin"
             );
 
     private static final GenericContainer<?> REDIS = new GenericContainer<>("redis:7.4-alpine")
