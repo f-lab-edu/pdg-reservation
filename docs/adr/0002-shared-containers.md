@@ -10,7 +10,7 @@
 ## 결정
 - 컨테이너 3개를 `static` 필드로 정의하고 `static` 블록에서 `Startables.deepStart(...)`로 한 번만 병렬 기동한다. 테스트 전체가 공유한다.
 - 접속 주소는 같은 `static` 블록에서 `System.setProperty`로 넣는다(`spring.datasource.*`, `spring.data.redis.*`, `spring.kafka.bootstrap-servers`).
-- 이미지: MySQL `mysql:8.0`(DB `reserv`, `utf8mb4`, `utf8mb4_general_ci`, `serverTimezone=Asia/Seoul`), Redis `redis:7.4-alpine`(`--notify-keyspace-events Ex`, 키 만료 리스너 때문), Kafka는 ADR 0004.
+- 이미지: MySQL `mysql:8.0`(DB `reserv`, `utf8mb4`, `utf8mb4_general_ci`, `serverTimezone=Asia/Seoul`), Redis `redis:7.4-alpine`(`--notify-keyspace-events Ex`, 키 만료 리스너 때문), Kafka는 ADR 0004. MySQL은 데이터 디렉터리를 tmpfs에 올리고 `--skip-log-bin`을 붙여 기동을 줄였다(약 15.3초에서 7.8초, `docs/test-speed.md`).
 - `application-test.yml`에는 접속 주소를 넣지 않는다.
 
 ## 검토한 대안
@@ -25,4 +25,4 @@
 - `static` 블록은 스프링이 설정 클래스를 CGLIB 프록시로 만들 때(빈 생성 전) 실행되는 것이 로그로 확인됐다. 이 시점에 기대고 있어서 설정 클래스에 `proxyBeanMethods = false`를 붙이면 실행 시점이 달라질 수 있다.
 - 컨테이너 정리는 Testcontainers의 Ryuk가 JVM 종료 후 한다.
 - 주소가 `application-test.yml`에 없으므로, 컨테이너 설정 없이 돌리면 연결 실패로 끝나고 개발 DB는 건드리지 않는다.
-- 컨테이너는 테스트 실행 한 번 동안만 산다. 다음 실행에서는 스프링 컨텍스트와 컨테이너를 처음부터 다시 띄운다(`GET_specs` 한 번 실행 약 50~60초 중 컨테이너 기동 약 15~18초, 스프링 기동 약 19초).
+- 컨테이너는 테스트 실행 한 번 동안만 산다. 다음 실행에서는 스프링 컨텍스트와 컨테이너를 처음부터 다시 띄운다(tmpfs 적용 후 스프링 기동은 컨테이너 기동을 포함해 약 25초. 측정은 `docs/test-speed.md`).
