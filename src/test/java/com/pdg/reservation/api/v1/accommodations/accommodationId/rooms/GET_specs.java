@@ -471,4 +471,31 @@ class GET_specs {
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(expected));
     }
+
+    @Test
+    void 조건에_맞는_객실이_없으면_200과_빈_목록을_반환한다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        int capacity = 1;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                capacity).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<RoomSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent()).isEmpty();
+        assertThat(page.getTotalElements()).isZero();
+        assertThat(page.getTotalPages()).isZero();
+    }
 }
