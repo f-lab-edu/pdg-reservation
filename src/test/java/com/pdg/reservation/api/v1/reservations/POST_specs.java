@@ -379,4 +379,29 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_002");
     }
+
+    @Test
+    void 투숙_기간에_재고가_소진된_밤이_있으면_409와_RESERVE_003을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
+        // 둘째 밤(체크인 다음 날)은 재고 행은 있지만 재고가 없다
+        roomFixture.createRoomInventory(room, checkInDate.plusDays(1), false);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_003");
+    }
 }
