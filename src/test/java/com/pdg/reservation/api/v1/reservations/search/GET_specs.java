@@ -432,4 +432,23 @@ class GET_specs {
         assertThat(pageResponse.getTotalPages()).isEqualTo(3);
         assertThat(pageResponse.isLast()).isTrue();
     }
+
+    @Test
+    void 예약이_없으면_200과_빈_목록을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent()).isEmpty();
+        assertThat(page.getTotalElements()).isZero();
+        assertThat(page.getTotalPages()).isZero();
+    }
 }
