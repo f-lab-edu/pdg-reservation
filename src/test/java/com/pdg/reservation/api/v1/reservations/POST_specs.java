@@ -6,6 +6,8 @@ import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.fixture.RoomFixture;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
+import com.pdg.reservation.reservation.dto.ReservationResponse;
+import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
@@ -119,5 +121,47 @@ class POST_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_008");
+    }
+
+    @Test
+    void 올바른_요청으로_예약하면_201과_예약을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        int guestCount = 2;
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, guestCount, totalPrice);
+        // 기대값은 저장한 값과 보낸 요청에서 직접 채운다. 예약 id와 생성 시각은 서버가 정하므로 따로 확인한다
+        ReservationResponse expected = ReservationResponse.builder()
+                .accommodationName(accommodation.getName())
+                .roomName(room.getName())
+                .checkInDate(checkInDate)
+                .checkOutDate(checkOutDate)
+                .guestCount(guestCount)
+                .totalPrice(totalPrice)
+                .status(ReservationStatus.PENDING_PAYMENT)
+                .guestName(request.getGuestName())
+                .guestPhoneNumber(request.getGuestPhoneNumber())
+                .build();
+
+        // Act
+        ResponseEntity<ApiResponse<ReservationResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        ReservationResponse actual = response.getBody().getData();
+        assertThat(actual)
+                .usingRecursiveComparison()
+                .ignoringFields("reservationId", "createdAt")
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expected);
+        assertThat(actual.getReservationId()).isNotNull();
+        assertThat(actual.getCreatedAt()).isNotNull();
     }
 }
