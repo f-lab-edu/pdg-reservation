@@ -5,12 +5,16 @@ import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.review.entity.Review;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewCreateRequest {
 
