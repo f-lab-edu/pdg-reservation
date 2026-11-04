@@ -123,4 +123,35 @@ public final class TestDataSource {
         });
         return builder.build().encode().toUri();
     }
+
+    public static Stream<Arguments> invalidRoomSearchUris() {
+        LocalDate checkIn = LocalDate.now().plusDays(30);
+        LocalDate checkOut = checkIn.plusDays(2);
+        return Stream.of(
+                arguments(named("체크인 null", roomSearchUri(null, checkOut, 1))),
+                arguments(named("체크인 과거", roomSearchUri(LocalDate.now().minusDays(1), checkOut, 1))),
+                arguments(named("체크아웃 null", roomSearchUri(checkIn, null, 1))),
+                arguments(named("체크아웃이 체크인 이전", roomSearchUri(checkIn, checkIn.minusDays(1), 1))),
+                arguments(named("체크아웃이 체크인과 같은 날", roomSearchUri(checkIn, checkIn, 1))),
+                arguments(named("인원 null", roomSearchUri(checkIn, checkOut, null))),
+                arguments(named("인원 최소 미만 (0명)", roomSearchUri(checkIn, checkOut, 0))),
+                arguments(named("인원 최대 초과 (101명)", roomSearchUri(checkIn, checkOut, 101)))
+        );
+    }
+
+    // 객실 검색 URI를 만든다. 값이 null인 파라미터는 URI에서 뺀다. 입력 검증이 먼저 일어나므로 숙소 id는 존재하지 않아도 된다
+    private static URI roomSearchUri(LocalDate checkIn, LocalDate checkOut, Integer capacity) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("checkInDate", checkIn);
+        parameters.put("checkOutDate", checkOut);
+        parameters.put("capacity", capacity);
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/api/v1/accommodations/1/rooms");
+        parameters.forEach((name, value) -> {
+            if (value != null) {
+                builder.queryParam(name, value);
+            }
+        });
+        return builder.build().encode().toUri();
+    }
 }

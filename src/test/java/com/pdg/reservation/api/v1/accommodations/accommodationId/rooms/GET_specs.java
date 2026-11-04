@@ -16,12 +16,15 @@ import com.pdg.reservation.support.TestContainersConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -610,5 +613,69 @@ class GET_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody().getErrorCode()).isEqualTo("ACC-001");
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.pdg.reservation.fixture.TestDataSource#invalidRoomSearchUris")
+    void 검색_조건이_없거나_유효하지_않으면_400과_COMMON_005를_반환한다(URI uri) {
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = accommodationFixture.client().exchange(
+                get(uri).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("COMMON-005");
+    }
+
+    @Test
+    void 인원이_최소_1명이면_조회된다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        int minCapacity = 1;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                minCapacity).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(RoomSearchResponse::getId)
+                .containsExactly(room.getId());
+    }
+
+    @Test
+    void 인원이_최대_100명이면_조회된다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        int maxCapacity = 100;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                maxCapacity).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 }
