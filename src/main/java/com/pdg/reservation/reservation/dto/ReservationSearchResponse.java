@@ -2,6 +2,7 @@ package com.pdg.reservation.reservation.dto;
 
 import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.querydsl.core.annotations.QueryProjection;
+import lombok.Builder;
 import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ public class ReservationSearchResponse {
     private final boolean isReviewable;        // 리뷰 작성 가능 여부
     private final boolean isCancellable;       // 취소(환불) 가능 여부
 
+    @Builder
     @QueryProjection
     public ReservationSearchResponse(Long id, String accommodationName, String roomName,
                                      String mainImage, LocalDate checkInDate, LocalDate checkOutDate,
