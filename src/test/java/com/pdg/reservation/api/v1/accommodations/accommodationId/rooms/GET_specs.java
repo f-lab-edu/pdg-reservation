@@ -207,4 +207,56 @@ class GET_specs {
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(expected));
     }
+
+    @Test
+    void 인원이_객실_최대_인원과_같으면_검색된다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        int capacity = room.getMaxCapacity();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                capacity).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(RoomSearchResponse::getId)
+                .containsExactly(room.getId());
+    }
+
+    @Test
+    void 인원이_객실_최대_인원을_한_명_초과하면_검색되지_않는다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        int capacityOverMax = room.getMaxCapacity() + 1;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                capacityOverMax).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent()).isEmpty();
+    }
 }
