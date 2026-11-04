@@ -32,7 +32,11 @@ public class MemberFixture {
 
     // 가입 API로 회원을 만들고, 가입에 쓴 값을 돌려준다
     public SignupRequest createMember() {
-        SignupRequest request = generateSignupRequest();
+        return createMember(generateSignupRequest());
+    }
+
+    // 지정한 가입 값으로 가입 API를 호출해 회원을 만들고, 가입에 쓴 값을 돌려준다
+    public SignupRequest createMember(SignupRequest request) {
         ResponseEntity<Void> response = client.postForEntity("/api/v1/members", request, Void.class);
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new IllegalStateException("회원 가입 실패: " + response.getStatusCode());
@@ -110,7 +114,12 @@ public class MemberFixture {
 
     // 회원을 만들고 로그인해서, 이후 클라이언트의 모든 요청에 그 회원의 토큰이 붙게 한다
     public SignupRequest createMemberThenSetAsDefaultUser() {
-        SignupRequest member = createMember();
+        return createMemberThenSetAsDefaultUser(generateSignupRequest());
+    }
+
+    // 지정한 가입 값으로 회원을 만들고 로그인해서, 이후 클라이언트의 모든 요청에 그 회원의 토큰이 붙게 한다
+    public SignupRequest createMemberThenSetAsDefaultUser(SignupRequest request) {
+        SignupRequest member = createMember(request);
         apiClient.authenticate(login(member).bearer());
         return member;
     }

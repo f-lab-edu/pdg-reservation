@@ -177,6 +177,29 @@ public final class TestDataSource {
         );
     }
 
+    public static Stream<Arguments> invalidMyReviewSearchUris() {
+        return Stream.of(
+                arguments(named("최소 평점 최소 미만 (-1)", reviewSearchUri("/api/v1/reviews/my", -1, null))),
+                arguments(named("최소 평점 최대 초과 (6)", reviewSearchUri("/api/v1/reviews/my", 6, null))),
+                arguments(named("정렬 값 오류", reviewSearchUri("/api/v1/reviews/my", null, "INVALID")))
+        );
+    }
+
+    // 리뷰 검색 URI를 만든다. 값이 null인 파라미터는 URI에서 뺀다. 입력 검증이 먼저 일어나므로 경로의 숙소 id는 존재하지 않아도 된다
+    public static URI reviewSearchUri(String path, Integer minRating, String sortType) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("minRating", minRating);
+        parameters.put("sortType", sortType);
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath(path);
+        parameters.forEach((name, value) -> {
+            if (value != null) {
+                builder.queryParam(name, value);
+            }
+        });
+        return builder.build().encode().toUri();
+    }
+
     // 작성되어야 하는 평점·내용의 경계 값. 인자는 (평점, 내용)이다
     public static Stream<Arguments> validReviewBoundaryInputs() {
         return Stream.of(

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
 import static org.springframework.http.RequestEntity.post;
@@ -53,6 +55,13 @@ public class ReservationFixture {
         ReservationResponse reservation = createReservation(room, checkInDate, checkOutDate, authorization);
         markCompleted(reservation.getReservationId());
         return reservation;
+    }
+
+    // 기본 사용자로 하룻밤씩 겹치지 않게(첫날, 첫날+2일, ...) 이용 완료 예약을 개수만큼 만든다. 객실 재고는 첫날부터 개수×2일 이상이어야 한다
+    public List<ReservationResponse> createCompletedReservations(Room room, LocalDate firstDay, int count) {
+        return IntStream.range(0, count)
+                .mapToObj(i -> createCompletedReservation(room, firstDay.plusDays(2L * i), firstDay.plusDays(2L * i + 1)))
+                .toList();
     }
 
     private void markCompleted(Long reservationId) {
