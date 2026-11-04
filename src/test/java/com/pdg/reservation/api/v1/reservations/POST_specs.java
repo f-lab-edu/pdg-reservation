@@ -2,12 +2,14 @@ package com.pdg.reservation.api.v1.reservations;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.fixture.MemberFixture;
 import com.pdg.reservation.fixture.RoomFixture;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
+import com.pdg.reservation.room.dto.RoomSearchResponse;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
@@ -27,9 +29,11 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.RequestEntity.get;
 import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/reservations")
@@ -163,5 +167,46 @@ class POST_specs {
                 .isEqualTo(expected);
         assertThat(actual.getReservationId()).isNotNull();
         assertThat(actual.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void 예약하면_예약한_밤의_재고만_소진된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstNight = LocalDate.now().plusDays(30);
+        LocalDate secondNight = firstNight.plusDays(1);
+        LocalDate thirdNight = firstNight.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 세 밤의 재고를 만들고 첫째·둘째 밤만 예약한다
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstNight, thirdNight.plusDays(1));
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        ReservationRequest request = generateReservationRequest(room, firstNight, thirdNight, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<ReservationResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(searchRoomIds(accommodation, firstNight, room.getMaxCapacity())).isEmpty();
+        assertThat(searchRoomIds(accommodation, secondNight, room.getMaxCapacity())).isEmpty();
+        assertThat(searchRoomIds(accommodation, thirdNight, room.getMaxCapacity())).containsExactly(room.getId());
+    }
+
+    // 하룻밤(해당 날짜 체크인, 다음 날 체크아웃)을 객실 검색 API로 조회해 나온 객실 id를 돌려준다
+    private List<Long> searchRoomIds(Accommodation accommodation, LocalDate night, int capacity) {
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                        accommodation.getId(),
+                        night,
+                        night.plusDays(1),
+                        capacity).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+        return response.getBody().getData().getContent().stream()
+                .map(RoomSearchResponse::getId)
+                .toList();
     }
 }
