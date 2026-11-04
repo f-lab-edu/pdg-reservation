@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
@@ -208,5 +209,57 @@ class POST_specs {
         return response.getBody().getData().getContent().stream()
                 .map(RoomSearchResponse::getId)
                 .toList();
+    }
+
+    @Test
+    void 총액은_밤_가격의_합이다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(3);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 기본 요금과 밤 가격이 모두 다르고, 합·평균·최대가 서로 다르게 고른다
+        long basePrice = 50_000L;
+        List<Long> nightlyPrices = List.of(100_000L, 200_000L, 600_000L);
+        BigDecimal expectedTotalPrice = BigDecimal.valueOf(900_000L);
+        Room room = roomFixture.createRoom(accommodation, basePrice);
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, expectedTotalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<ReservationResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().getData().getTotalPrice()).isEqualByComparingTo(expectedTotalPrice);
+    }
+
+    @Test
+    void 날짜별_가격이_없는_밤은_객실_기본_요금으로_계산한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(3);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 둘째 밤은 가격이 없어(null) 기본 요금 50,000원으로 계산된다
+        long basePrice = 50_000L;
+        List<Long> nightlyPrices = Arrays.asList(100_000L, null, 600_000L);
+        BigDecimal expectedTotalPrice = BigDecimal.valueOf(750_000L);
+        Room room = roomFixture.createRoom(accommodation, basePrice);
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, expectedTotalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<ReservationResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().getData().getTotalPrice()).isEqualByComparingTo(expectedTotalPrice);
     }
 }
