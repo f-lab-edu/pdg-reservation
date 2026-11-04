@@ -1,6 +1,7 @@
 package com.pdg.reservation.api.v1.reservations.search;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
@@ -29,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -297,5 +299,63 @@ class GET_specs {
         assertThat(response.getBody().getData().getContent())
                 .extracting(ReservationSearchResponse::getId)
                 .containsExactly(middle.getReservationId());
+    }
+
+    @Test
+    void 객실에_대표_이미지가_있으면_객실_대표_이미지가_mainImage로_나온다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        // 숙소와 객실 모두 대표 이미지가 있다
+        Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
+        Room room = roomFixture.createRoomWithImages(accommodation);
+        roomFixture.createRoomInventories(room, checkInDate, checkOutDate);
+        String roomMainImageUrl = room.getImages().stream()
+                .filter(AccommodationImage::isMain)
+                .findFirst()
+                .orElseThrow()
+                .getUrl();
+        reservationFixture.createReservation(room, checkInDate, checkOutDate);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(ReservationSearchResponse::getMainImage)
+                .containsExactly(roomMainImageUrl);
+    }
+
+    @Test
+    void 객실에_이미지가_없으면_숙소_대표_이미지가_mainImage로_나온다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        String accommodationMainImageUrl = accommodation.getImages().stream()
+                .filter(AccommodationImage::isMain)
+                .findFirst()
+                .orElseThrow()
+                .getUrl();
+        reservationFixture.createReservation(room, checkInDate, checkOutDate);
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(ReservationSearchResponse::getMainImage)
+                .containsExactly(accommodationMainImageUrl);
     }
 }
