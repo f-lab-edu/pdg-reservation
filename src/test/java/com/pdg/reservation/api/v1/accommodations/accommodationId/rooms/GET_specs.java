@@ -120,4 +120,47 @@ class GET_specs {
                 .extracting(RoomSearchResponse::getId)
                 .containsExactly(third.getId(), second.getId(), first.getId());
     }
+
+    @Test
+    void 총액은_밤_가격의_합이고_평균가는_밤_가격의_평균이다() {
+        // Arrange
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(3);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        // 기본 요금과 밤 가격이 모두 다르고, 합·평균·중앙값·최소·최대가 서로 다르게 고른다
+        long basePrice = 50_000L;
+        List<Long> nightlyPrices = List.of(100_000L, 200_000L, 600_000L);
+        long expectedTotalPrice = 900_000L;
+        double expectedAvgPrice = 300_000.0;
+        Room room = roomFixture.createRoom(accommodation, basePrice);
+        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
+        RoomSearchResponse expected = RoomSearchResponse.builder()
+                .id(room.getId())
+                .name(room.getName())
+                .description(room.getDescription())
+                .maxCapacity(room.getMaxCapacity())
+                .roomLabel(room.getRoomLabel())
+                .bedType(room.getBedType())
+                .totalPrice(expectedTotalPrice)
+                .avgPrice(expectedAvgPrice)
+                .mainImage(null)
+                .build();
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> response =
+                accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{accommodationId}/rooms?checkInDate={checkIn}&checkOutDate={checkOut}&capacity={capacity}",
+                                accommodation.getId(),
+                                checkInDate,
+                                checkOutDate,
+                                room.getMaxCapacity()).build(),
+                        new ParameterizedTypeReference<>() { }
+                );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(expected));
+    }
 }
