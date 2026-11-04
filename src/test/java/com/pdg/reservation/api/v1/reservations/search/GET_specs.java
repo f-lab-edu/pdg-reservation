@@ -100,4 +100,38 @@ class GET_specs {
                 .extracting(ReservationSearchResponse::getId)
                 .containsExactly(reservation.getReservationId());
     }
+
+    @Test
+    void 조건으로_걸러진_예약의_수가_전체_건수로_나온다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        // 하룻밤씩 겹치지 않게 예약 3건을 만든다
+        ReservationResponse first = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(1));
+        ReservationResponse second = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(3));
+        reservationFixture.createReservation(room, firstDay.plusDays(4), firstDay.plusDays(5));
+        // 날짜 조건에는 앞의 2건만 들어맞는다. 목록이 한 페이지(size=2)를 가득 채워도 전체 건수는 2여야 한다
+        LocalDate startDate = firstDay;
+        LocalDate endDate = firstDay.plusDays(3);
+        int size = 2;
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?checkInDate={start}&checkOutDate={end}&page=0&size={size}",
+                        startDate, endDate, size).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactlyInAnyOrder(first.getReservationId(), second.getReservationId());
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getTotalPages()).isEqualTo(1);
+        assertThat(page.isLast()).isTrue();
+    }
 }

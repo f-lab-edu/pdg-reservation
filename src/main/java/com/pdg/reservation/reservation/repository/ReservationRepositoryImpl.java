@@ -86,9 +86,14 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
         return jpaQueryFactory
                 .select(reservation.count())
                 .from(reservation)
+                .leftJoin(reservation.room, room)
+                .leftJoin(room.accommodation, accommodation)
                 .where(
                         reservation.member.id.eq(memberId),
-                        statusEq(condition.getStatus())
+                        statusEq(condition.getStatus()),
+                        roomNameLike(condition.getRoomName()),
+                        accommodationNameLike(condition.getAccommodationName()),
+                        dateBetween(condition.getCheckInDate(), condition.getCheckOutDate())
                 );
     }
 
