@@ -69,6 +69,7 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
                         reservation.member.id.eq(memberId),
                         statusEq(condition.getStatus()),
                         roomNameLike(condition.getRoomName()),
+                        accommodationNameLike(condition.getAccommodationName()),
                         dateBetween(condition.getCheckInDate(), condition.getCheckOutDate())
                 )
                 .offset(pageable.getOffset())
@@ -124,6 +125,10 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
 
     private BooleanExpression roomNameLike(String roomName) {
         return StringUtils.hasText(roomName) ? room.name.contains(roomName) : null;
+    }
+
+    private BooleanExpression accommodationNameLike(String accommodationName) {
+        return StringUtils.hasText(accommodationName) ? accommodation.name.contains(accommodationName) : null;
     }
 
     private BooleanExpression dateBetween(LocalDate start, LocalDate end) {
