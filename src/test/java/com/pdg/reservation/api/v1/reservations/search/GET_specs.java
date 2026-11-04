@@ -181,4 +181,33 @@ class GET_specs {
                 .isEqualTo(List.of(expected));
         assertThat(content.get(0).getCreatedAt()).isNotNull();
     }
+
+    @Test
+    void 다른_회원의_예약은_검색되지_않는다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        SignupRequest otherMember = memberFixture.createMember();
+        LoginSession otherSession = memberFixture.login(otherMember);
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room otherRoom = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        ReservationResponse myReservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
+        reservationFixture.createReservation(otherRoom, checkInDate, checkOutDate, otherSession.bearer());
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactly(myReservation.getReservationId());
+        assertThat(page.getTotalElements()).isEqualTo(1);
+    }
 }
