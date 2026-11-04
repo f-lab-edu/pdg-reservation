@@ -17,6 +17,8 @@ import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesWithNightlyPrices;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventory;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithImages;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithNonMainImage;
 
 @Component
 public class RoomFixture {
@@ -41,6 +43,16 @@ public class RoomFixture {
     // 숙소에 속한 객실을 저장하고 돌려준다
     public Room createRoom(Accommodation accommodation) {
         return roomRepository.save(generateRoom(accommodation));
+    }
+
+    // 이미지(대표 1개 포함)를 가진 객실을 저장하고 돌려준다
+    public Room createRoomWithImages(Accommodation accommodation) {
+        return roomRepository.save(generateRoomWithImages(accommodation));
+    }
+
+    // 대표가 아닌 이미지 1개만 가진 객실을 저장하고 돌려준다
+    public Room createRoomWithNonMainImage(Accommodation accommodation) {
+        return roomRepository.save(generateRoomWithNonMainImage(accommodation));
     }
 
     // 숙소에 속한 객실을 저장하고, 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고도 저장한 뒤 객실을 돌려준다

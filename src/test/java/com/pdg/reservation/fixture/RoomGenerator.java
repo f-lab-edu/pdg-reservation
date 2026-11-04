@@ -1,7 +1,9 @@
 package com.pdg.reservation.fixture;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
+import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.accommodation.enums.BedType;
+import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 
@@ -32,6 +34,31 @@ public final class RoomGenerator {
                 .maxCapacity(2)
                 .isReservable(true)
                 .accommodation(accommodation)
+                .build();
+    }
+
+    // 이미지 3개를 정렬 순서가 섞인 채(2, 0, 1) 붙인 객실을 만든다. sortOrder 0이 대표 이미지다. 저장하지 않는다
+    public static Room generateRoomWithImages(Accommodation accommodation) {
+        Room room = generateRoom(accommodation);
+        room.addImage(generateImage(2, false));
+        room.addImage(generateImage(0, true));
+        room.addImage(generateImage(1, false));
+        return room;
+    }
+
+    // 대표가 아닌 이미지 1개만 붙인 객실을 만든다. 저장하지 않는다
+    public static Room generateRoomWithNonMainImage(Accommodation accommodation) {
+        Room room = generateRoom(accommodation);
+        room.addImage(generateImage(0, false));
+        return room;
+    }
+
+    private static AccommodationImage generateImage(int sortOrder, boolean main) {
+        return AccommodationImage.builder()
+                .imageType(ImageType.ROOM)
+                .url("https://example.com/" + UUID.randomUUID() + ".jpg")
+                .isMain(main)
+                .sortOrder(sortOrder)
                 .build();
     }
 
