@@ -74,7 +74,10 @@ src/test/java/com/pdg/reservation/
   - 성공 경계 테스트는 구현 전에도 통과하는 회귀 방지용이라, 한계를 일부러 한 칸 어긋나게 만들어 실패하는지 확인한다.
 - 잘못된 값 목록은 `fixture/TestDataSource`에 값의 종류별로 한곳에 모은다(`invalidEmails()` 등). 새 목록을 만들기 전에 이 파일을 먼저 확인한다. 도메인마다 정책이 다른 값은 메서드 이름에 도메인을 붙인다.
 - 필드 하나만 바꾼 요청은 `MemberGenerator`의 `generateSignupRequestWithNickName(값)`처럼 값 하나를 받아 나머지는 임의 값으로 채운 요청을 돌려주는 메서드로 만든다. 필드 이름이 바뀌면 `MemberGenerator` 한 곳만 고치면 되고, 규칙 하나가 필드 여러 개를 묶을 때는 필드 수가 아니라 개념 이름으로 메서드를 만든다(예: `generateReserveRequestWithPeriod(체크인, 체크아웃)`). 운영 DTO에 `toBuilder`를 추가하지 않는다.
-- 이름은 부작용으로 나눈다. 객체를 만들어 돌려주기만 하는 메서드는 `generate`로 시작하고 `MemberGenerator`의 정적 메서드로 둔다(`generateSignupRequest()`). API를 호출해서 서버에 실제로 데이터를 만드는 메서드는 `create`로 시작하고 `MemberFixture`에 둔다(`createMember()`).
+- 이름은 부작용으로 나눈다.
+  - 객체를 만들어 돌려주기만 하는 메서드는 `generate`로 시작하고 `xxxGenerator`의 정적 메서드로 둔다(`MemberGenerator.generateSignupRequest()`). 서버와 DB를 건드리지 않는다.
+  - 서버나 DB의 상태를 실제로 바꿔서 테스트의 전제를 만드는 메서드는 `create`로 시작하고 `xxxFixture`에 둔다(`MemberFixture.createMember()`). API가 있는 데이터는 API를 호출하고, 없는 데이터는 리포지터리로 저장한다.
+- 어떤 호출을 Fixture에 두는가: 이 테스트가 검증하려는 동작이 아니라 다른 테스트의 전제로 반복해서 쓰이는 호출(가입, 로그인, 데이터 저장)이다. 검증 대상 호출은 Fixture로 빼지 않고 테스트의 Act에 둔다.
 - 인증이 필요한 API 호출이 필요한 인증 테스트(토큰 거부·블랙리스트 등)는 `/members/logout`을 호출 대상으로 쓴다. `/logout`은 `permitAll`이 아니라 인증이 필요하고 인증 도메인 안에 있어서, 무관한 다른 도메인 URL이 바뀌어도 인증 테스트가 깨지지 않는다.
 - 신원을 쓰는 보호 API(예약, 리뷰 등)의 명세에는 "토큰 없이 호출하면 401" 케이스를 하나씩 둔다. 공개 API는 각 명세가 토큰 없이 호출하므로 접근이 막히면 그 명세가 잡는다.
 - 테스트 본문은 AAA 패턴으로 작성하고 `// Arrange`, `// Act`, `// Assert` 주석으로 구분한다.
@@ -84,6 +87,7 @@ src/test/java/com/pdg/reservation/
   - Act에는 이 테스트가 검증하려는 동작을 드러낸다. 전제 조건은 Arrange에 두고 Fixture로 묶어도 된다. 같은 동작(예: 로그인)이 어떤 테스트에서는 Act, 다른 테스트에서는 Arrange일 수 있다.
 - 검증을 여러 줄 쓸 때는 `assertThat`을 나열하는 것이 기본이다. 서로 독립적인 결과를 한꺼번에 보고 싶을 때만 `assertSoftly`를 쓴다(예: 저장된 필드 여러 개). 상태 코드가 틀리면 에러 코드도 의미가 없는 것처럼 서로 이어진 검증에는 쓰지 않는다.
 - 응답을 비교할 때 **기대값은 운영의 매핑 코드(`from` 등)로 만들지 않고, 저장한 값에서 필드를 하나씩 직접 채운다.** 운영 매핑으로 기대값을 만들면 매핑이 틀리거나 바뀌어도 양쪽이 같은 코드를 거쳐 항상 일치해서 아무것도 검증하지 못하고, 매핑을 교체하는 리팩토링(R3-1)에서 테스트가 `from`에 묶여 함께 깨진다. 필드를 하나씩 채우는 중복은 독립된 정답지를 얻는 대가다. 응답이 여러 필드를 가지면 기대 객체를 만들어 `usingRecursiveComparison()`으로 통째로 비교하고, 스케일이 달라질 수 있는 `BigDecimal`은 `withComparatorForType(BigDecimal::compareTo, BigDecimal.class)`로 비교한다.
+- 기대 객체는 응답 DTO의 빌더로 만든다. 직접 채우는 과정에서 실수하면 정답지 자체가 틀리는데, 위치로 넘기는 생성자는 같은 타입 인자(예: `String` 여러 개)의 순서 실수를 컴파일러가 잡지 못한다. 빌더가 없는 DTO(`@QueryProjection` 생성자만 있는 검색 응답 등)는 생성자에 `@Builder`를 붙인다.
 - 검증은 AssertJ(`assertThat`)로 통일한다. JUnit의 `Assertions`(`assertEquals`, `assertAll` 등)는 쓰지 않고, JUnit은 `@Test`, `@AfterEach` 같은 구조용으로만 쓴다.
   - 같은 이름의 `Assertions` 클래스가 AssertJ(`org.assertj.core.api`)와 JUnit(`org.junit.jupiter.api`)에 둘 다 있어서, 섞어 쓰면 import를 보지 않고는 어느 쪽인지 알 수 없고 와일드카드 import에서 같은 이름 메서드가 충돌할 수 있다.
   - 인자 순서가 반대다. JUnit의 `assertEquals(expected, actual)`은 기대값이 앞이고, AssertJ의 `assertThat(actual).isEqualTo(expected)`는 실제값이 앞이다. 섞으면 순서를 실수해서 실패 메시지가 거꾸로 보인다.

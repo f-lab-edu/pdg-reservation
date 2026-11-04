@@ -71,13 +71,13 @@ class GET_specs {
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
         // 기대값은 저장한 값에서 직접 채운다. 대표 이미지는 없고, 최저가는 객실 기본 요금이다
-        AccommodationSearchResponse expected = new AccommodationSearchResponse(
-                accommodation.getId(),
-                accommodation.getName(),
-                accommodation.getType(),
-                accommodation.getAddress().getCity(),
-                null
-        );
+        AccommodationSearchResponse expected = AccommodationSearchResponse.builder()
+                .id(accommodation.getId())
+                .name(accommodation.getName())
+                .type(accommodation.getType())
+                .city(accommodation.getAddress().getCity())
+                .mainImage(null)
+                .build();
         expected.updateMinPrice(room.getBasePrice().longValue());
 
         // Act
