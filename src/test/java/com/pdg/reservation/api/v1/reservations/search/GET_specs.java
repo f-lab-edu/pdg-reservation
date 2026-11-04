@@ -210,4 +210,29 @@ class GET_specs {
                 .containsExactly(myReservation.getReservationId());
         assertThat(page.getTotalElements()).isEqualTo(1);
     }
+
+    @Test
+    void 예약은_최근에_생성한_순서로_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        // 하룻밤씩 겹치지 않게 순서대로 예약 3건을 만든다
+        ReservationResponse first = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(1));
+        ReservationResponse second = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(3));
+        ReservationResponse third = reservationFixture.createReservation(room, firstDay.plusDays(4), firstDay.plusDays(5));
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getData().getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactly(third.getReservationId(), second.getReservationId(), first.getReservationId());
+    }
 }
