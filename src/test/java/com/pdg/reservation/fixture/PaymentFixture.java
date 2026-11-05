@@ -32,14 +32,6 @@ public class PaymentFixture {
         return client;
     }
 
-    // 기본 사용자로 결제 API를 호출하고 응답을 그대로 돌려준다. 성공·실패를 가리지 않는다
-    public ResponseEntity<ApiResponse<PaymentResponse>> requestPayment(PaymentRequest request) {
-        return client.exchange(
-                post("/api/v1/payments").body(request),
-                new ParameterizedTypeReference<>() { }
-        );
-    }
-
     // 기본 사용자가 예약을 카드로 결제하고, Kafka 소비자가 결제 대기 타이머를 지울 때까지 기다린 뒤 응답을 돌려준다
     // 소비가 끝나기 전에 테스트가 끝나 다음 테스트로 넘어가지 않게 하려는 것이다
     public PaymentResponse createPayment(Long reservationId, BigDecimal amount) {

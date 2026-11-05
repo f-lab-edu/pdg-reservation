@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -486,7 +487,12 @@ class POST_specs {
         // Act
         List<ResponseEntity<ApiResponse<ReservationResponse>>> responses = ConcurrentRunner.runAtOnce(
                 authorizations,
-                authorization -> reservationFixture.requestReservation(authorization, request)
+                authorization -> memberFixture.client().exchange(
+                        post("/api/v1/reservations")
+                                .header(HttpHeaders.AUTHORIZATION, authorization)
+                                .body(request),
+                        new ParameterizedTypeReference<>() { }
+                )
         );
 
         // Assert
@@ -519,7 +525,12 @@ class POST_specs {
         // Act
         List<ResponseEntity<ApiResponse<ReservationResponse>>> responses = ConcurrentRunner.runAtOnce(
                 attempts,
-                attempt -> reservationFixture.requestReservation(attempt.authorization(), attempt.request())
+                attempt -> memberFixture.client().exchange(
+                        post("/api/v1/reservations")
+                                .header(HttpHeaders.AUTHORIZATION, attempt.authorization())
+                                .body(attempt.request()),
+                        new ParameterizedTypeReference<>() { }
+                )
         );
 
         // Assert
@@ -552,7 +563,12 @@ class POST_specs {
         // Act
         List<ResponseEntity<ApiResponse<ReservationResponse>>> responses = ConcurrentRunner.runAtOnce(
                 attempts,
-                attempt -> reservationFixture.requestReservation(attempt.authorization(), attempt.request())
+                attempt -> memberFixture.client().exchange(
+                        post("/api/v1/reservations")
+                                .header(HttpHeaders.AUTHORIZATION, attempt.authorization())
+                                .body(attempt.request()),
+                        new ParameterizedTypeReference<>() { }
+                )
         );
 
         // Assert
@@ -579,7 +595,12 @@ class POST_specs {
         // Act
         List<ResponseEntity<ApiResponse<ReservationResponse>>> responses = ConcurrentRunner.runAtOnce(
                 attempts,
-                attempt -> reservationFixture.requestReservation(attempt.authorization(), attempt.request())
+                attempt -> memberFixture.client().exchange(
+                        post("/api/v1/reservations")
+                                .header(HttpHeaders.AUTHORIZATION, attempt.authorization())
+                                .body(attempt.request()),
+                        new ParameterizedTypeReference<>() { }
+                )
         );
 
         // Assert

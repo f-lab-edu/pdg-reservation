@@ -413,7 +413,10 @@ class POST_specs {
         // Act
         List<ResponseEntity<ApiResponse<PaymentResponse>>> responses = ConcurrentRunner.runAtOnce(
                 requests,
-                paymentFixture::requestPayment
+                paymentRequest -> memberFixture.client().exchange(
+                        post("/api/v1/payments").body(paymentRequest),
+                        new ParameterizedTypeReference<>() { }
+                )
         );
 
         // Assert

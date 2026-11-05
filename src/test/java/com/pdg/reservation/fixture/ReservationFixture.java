@@ -103,16 +103,6 @@ public class ReservationFixture {
         return extractCreated(response);
     }
 
-    // 지정한 사용자(Authorization 헤더 값)로 예약 API를 호출하고 응답을 그대로 돌려준다. 성공·실패를 가리지 않는다
-    public ResponseEntity<ApiResponse<ReservationResponse>> requestReservation(String authorization, ReservationRequest request) {
-        return client.exchange(
-                post("/api/v1/reservations")
-                        .header(HttpHeaders.AUTHORIZATION, authorization)
-                        .body(request),
-                new ParameterizedTypeReference<>() { }
-        );
-    }
-
     // 기본 사용자의 예약 검색 결과에서 예약 상태 목록을 돌려준다
     public List<ReservationStatus> searchReservationStatuses() {
         ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = client.exchange(
