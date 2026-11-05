@@ -3,6 +3,7 @@ package com.pdg.reservation.fixture;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.payment.dto.PaymentRequest;
 import com.pdg.reservation.payment.dto.PaymentResponse;
+import com.pdg.reservation.payment.repository.PaymentRepository;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.ReservationTimerAwaiter;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -21,10 +22,17 @@ public class PaymentFixture {
 
     private final TestRestTemplate client;
     private final ReservationTimerAwaiter timerAwaiter;
+    private final PaymentRepository paymentRepository;
 
-    public PaymentFixture(ApiClient apiClient, ReservationTimerAwaiter timerAwaiter) {
+    public PaymentFixture(ApiClient apiClient, ReservationTimerAwaiter timerAwaiter, PaymentRepository paymentRepository) {
         this.client = apiClient.rest();
         this.timerAwaiter = timerAwaiter;
+        this.paymentRepository = paymentRepository;
+    }
+
+    // 저장된 결제 행의 개수. API로는 보이지 않는 결과(롤백 여부)를 확인할 때 쓴다
+    public long countPayments() {
+        return paymentRepository.count();
     }
 
     // 모든 Fixture와 테스트가 공유하는 클라이언트

@@ -9,12 +9,15 @@ import com.pdg.reservation.fixture.PaymentFixture;
 import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.RoomFixture;
 import com.pdg.reservation.member.dto.SignupRequest;
+import com.pdg.reservation.payment.client.PgClient;
 import com.pdg.reservation.payment.dto.PaymentRequest;
 import com.pdg.reservation.payment.dto.PaymentResponse;
+import com.pdg.reservation.payment.enums.CancelType;
 import com.pdg.reservation.payment.enums.PaymentMethod;
 import com.pdg.reservation.payment.enums.PaymentStatus;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
+import com.pdg.reservation.reservation.service.ReservationService;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.ConcurrentRunner;
@@ -34,6 +37,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,6 +49,11 @@ import static com.pdg.reservation.fixture.PaymentGenerator.generateEasyPaymentRe
 import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequest;
 import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequestWithReservationId;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/payments")
@@ -68,6 +77,12 @@ class POST_specs {
 
     @Autowired
     FakePgClient fakePgClient;
+
+    @MockitoSpyBean
+    PgClient pgClient;
+
+    @MockitoSpyBean
+    ReservationService reservationService;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -399,6 +414,29 @@ class POST_specs {
         );
         assertThat(retried.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
+    }
+
+    @Test
+    void 승인_뒤_예약_확정이_실패하면_500을_반환하고_결제_저장은_롤백되며_보상_취소가_나간다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+        // 예약 확정 단계만 실패시킨다. 이 단계는 결제 저장 뒤에 실행되므로 저장이 롤백되는지 볼 수 있다
+        doThrow(new IllegalStateException("확정 실패"))
+                .when(reservationService).updateConfirmStatus(any());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/payments").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.PENDING_PAYMENT);
+        verify(pgClient).cancel(anyString(), eq(CancelType.COMPENSATION));
+        assertThat(paymentFixture.countPayments()).isZero();
     }
 
     @Test
