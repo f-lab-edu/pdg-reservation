@@ -7,6 +7,7 @@ import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
+import com.pdg.reservation.fixture.PaymentFixture;
 import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.RoomFixture;
 import com.pdg.reservation.member.dto.SignupRequest;
@@ -53,6 +54,9 @@ class GET_specs {
 
     @Autowired
     ReservationFixture reservationFixture;
+
+    @Autowired
+    PaymentFixture paymentFixture;
 
     @Autowired
     ApiClient apiClient;
@@ -499,5 +503,57 @@ class GET_specs {
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void 상태로_검색하면_그_상태의_예약만_나온다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
+        ReservationResponse paid = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(2));
+        reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(4));
+        paymentFixture.createPayment(paid.getReservationId(), paid.getTotalPrice());
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search?status={status}", ReservationStatus.CONFIRMED).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        PageResponse<ReservationSearchResponse> page = response.getBody().getData();
+        assertThat(page.getContent())
+                .extracting(ReservationSearchResponse::getId)
+                .containsExactly(paid.getReservationId());
+        assertThat(page.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void 결제한_예약은_취소할_수_있고_결제_대기_예약은_취소할_수_없다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate firstDay = LocalDate.now().plusDays(30);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
+        ReservationResponse paid = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(2));
+        ReservationResponse pending = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(4));
+        paymentFixture.createPayment(paid.getReservationId(), paid.getTotalPrice());
+
+        // Act
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<ReservationSearchResponse> content = response.getBody().getData().getContent();
+        assertThat(content).filteredOn(r -> r.getId().equals(paid.getReservationId()))
+                .extracting(ReservationSearchResponse::isCancellable).containsExactly(true);
+        assertThat(content).filteredOn(r -> r.getId().equals(pending.getReservationId()))
+                .extracting(ReservationSearchResponse::isCancellable).containsExactly(false);
     }
 }

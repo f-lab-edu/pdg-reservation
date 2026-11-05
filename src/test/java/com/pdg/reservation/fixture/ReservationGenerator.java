@@ -1,5 +1,6 @@
 package com.pdg.reservation.fixture;
 
+import com.pdg.reservation.reservation.dto.ReservationCancelRequest;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.room.entity.Room;
 
@@ -25,6 +26,14 @@ public final class ReservationGenerator {
                 .checkOutDate(checkOutDate)
                 .guestCount(guestCount)
                 .totalPrice(totalPrice)
+                .build();
+    }
+
+    // 예약 id를 지정하고 취소 사유는 임의 값으로 채운 올바른 예약 취소 요청을 만든다
+    public static ReservationCancelRequest generateReservationCancelRequest(Long reservationId) {
+        return ReservationCancelRequest.builder()
+                .reservationId(reservationId)
+                .cancelReason("사유-" + UUID.randomUUID().toString().substring(0, 8))
                 .build();
     }
 

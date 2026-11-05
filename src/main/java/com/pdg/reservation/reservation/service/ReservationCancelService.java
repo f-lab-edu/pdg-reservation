@@ -30,7 +30,7 @@ public class ReservationCancelService {
     @Transactional
     public ReservationCancelResponse processCancel(Long memberId, Long reservationId, ReservationCancelRequest cancelRequest) {
         Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_INVALID_REQUEST));
+                .orElseThrow(() -> new CustomException(ErrorCode.RESERVE_NOT_FOUND));
 
         Payment payment = reservation.getPayment();
         paymentService.cancelPayment(payment, cancelRequest.getCancelReason());
