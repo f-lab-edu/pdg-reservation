@@ -122,6 +122,10 @@ public class Reservation extends BaseEntity {
         if (this.status != ReservationStatus.CONFIRMED) {
             throw new CustomException(ErrorCode.PAYMENT_INVALID_CANCEL_STATUS);
         }
+        //2. 체크인 전날까지만 취소할 수 있다 (예약 검색의 cancellable과 같은 기준)
+        if (!this.checkInDate.isAfter(LocalDate.now())) {
+            throw new CustomException(ErrorCode.RESERVE_CANCEL_PERIOD_PASSED);
+        }
     }
 
     public void validateReviewEligibility(){

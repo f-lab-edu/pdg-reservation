@@ -12,6 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ReservationGenerator {
 
     private static final long UNSAVED_ROOM_ID = 1L;
+    private static final long UNSAVED_RESERVATION_ID = 1L;
     private static final BigDecimal DEFAULT_TOTAL_PRICE = new BigDecimal("200000");
 
     private ReservationGenerator() {
@@ -35,6 +36,24 @@ public final class ReservationGenerator {
                 .reservationId(reservationId)
                 .cancelReason("사유-" + UUID.randomUUID().toString().substring(0, 8))
                 .build();
+    }
+
+    // 예약 id만 지정하고 나머지는 올바른 임의 값으로 채운 예약 취소 요청을 만든다 (null 허용)
+    public static ReservationCancelRequest generateReservationCancelRequestWithReservationId(Long reservationId) {
+        return generateReservationCancelRequest(reservationId);
+    }
+
+    // 취소 사유만 지정하고 예약 id는 저장하지 않은 값으로 채운 예약 취소 요청을 만든다
+    public static ReservationCancelRequest generateReservationCancelRequestWithCancelReason(String cancelReason) {
+        return ReservationCancelRequest.builder()
+                .reservationId(UNSAVED_RESERVATION_ID)
+                .cancelReason(cancelReason)
+                .build();
+    }
+
+    // 지정한 길이의 취소 사유를 만든다
+    public static String generateCancelReasonOfLength(int length) {
+        return "가".repeat(length);
     }
 
     // 객실 id만 지정하고 나머지는 올바른 임의 값으로 채운 예약 요청을 만든다

@@ -23,6 +23,9 @@ import static com.pdg.reservation.fixture.ReviewGenerator.generateContentOfLengt
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithContent;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithRating;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithReservationId;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateCancelReasonOfLength;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequestWithCancelReason;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequestWithReservationId;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestCount;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestName;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequestWithGuestPhoneNumber;
@@ -171,6 +174,17 @@ public final class TestDataSource {
                 arguments(named("결제 수단 null", generatePaymentRequestWithMethod(null))),
                 arguments(named("금액 null", generatePaymentRequestWithAmount(null))),
                 arguments(named("금액 최소 미만 (99원)", generatePaymentRequestWithAmount(new BigDecimal("99"))))
+        );
+    }
+
+    public static Stream<Arguments> invalidReservationCancelRequests() {
+        return Stream.of(
+                arguments(named("예약 id null", generateReservationCancelRequestWithReservationId(null))),
+                arguments(named("사유 null", generateReservationCancelRequestWithCancelReason(null))),
+                arguments(named("사유 빈 문자열", generateReservationCancelRequestWithCancelReason(""))),
+                arguments(named("사유 공백", generateReservationCancelRequestWithCancelReason(" "))),
+                arguments(named("사유 최대 길이 초과 (51자)",
+                        generateReservationCancelRequestWithCancelReason(generateCancelReasonOfLength(51))))
         );
     }
 

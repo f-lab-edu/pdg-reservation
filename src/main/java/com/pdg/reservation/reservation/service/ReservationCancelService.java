@@ -32,10 +32,11 @@ public class ReservationCancelService {
         Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVE_NOT_FOUND));
 
+        // 취소할 수 없는 예약에는 PG 취소를 보내지 않도록 검증을 먼저 한다
+        reservation.validateCancelable();
+
         Payment payment = reservation.getPayment();
         paymentService.cancelPayment(payment, cancelRequest.getCancelReason());
-
-        reservation.validateCancelable();
 
         reservationService.updateCancelStatus(reservation);
         roomInventoryService.restoreStock(

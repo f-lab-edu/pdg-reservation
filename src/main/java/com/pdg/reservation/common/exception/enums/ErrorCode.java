@@ -42,6 +42,7 @@ public enum ErrorCode {
     RESERVE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVE_006", "해당 예약을 찾을 수 없습니다."),
     RESERVE_INVALID_STATUS(HttpStatus.BAD_REQUEST, "RESERVE_007", "현재 예약 상태에서는 요청하신 작업을 수행할 수 없습니다."),
     RESERVE_UNAVAILABLE_ROOM(HttpStatus.CONFLICT, "RESERVE_008", "현재 예약할 수 없는 객실입니다."),
+    RESERVE_CANCEL_PERIOD_PASSED(HttpStatus.BAD_REQUEST, "RESERVE_009", "체크인 당일이거나 체크인이 지난 예약은 취소할 수 없습니다."),
 
     PAYMENT_INVALID_REQUEST(HttpStatus.NOT_FOUND, "PAYMENT_001", "유효하지 않은 결제 요청입니다."),
     PAYMENT_MISSING_CARD_COMPANY(HttpStatus.BAD_REQUEST, "PAYMENT_002", "카드 결제 시 카드사 정보는 필수입니다."),
