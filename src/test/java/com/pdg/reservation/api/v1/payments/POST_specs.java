@@ -17,6 +17,7 @@ import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
+import com.pdg.reservation.support.ConcurrentRunner;
 import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.FakePgClient;
 import com.pdg.reservation.support.IntegrationTest;
@@ -36,6 +37,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 
 import static com.pdg.reservation.fixture.PaymentGenerator.generateCardPaymentRequestWithoutCardCompany;
 import static com.pdg.reservation.fixture.PaymentGenerator.generateEasyPaymentRequest;
@@ -395,6 +398,38 @@ class POST_specs {
                 new ParameterizedTypeReference<>() { }
         );
         assertThat(retried.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
+    }
+
+    @Test
+    void 같은_예약을_동시에_결제하면_한_번만_승인되고_나머지는_거절된다() {
+        // Arrange
+        int requesterCount = 5;
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+        List<PaymentRequest> requests = Collections.nCopies(requesterCount, request);
+
+        // Act
+        List<ResponseEntity<ApiResponse<PaymentResponse>>> responses = ConcurrentRunner.runAtOnce(
+                requests,
+                paymentFixture::requestPayment
+        );
+
+        // Assert
+        assertThat(responses)
+                .filteredOn(response -> response.getStatusCode() == HttpStatus.CREATED)
+                .hasSize(1);
+        assertThat(responses)
+                .filteredOn(response -> response.getStatusCode() != HttpStatus.CREATED)
+                .hasSize(requesterCount - 1)
+                .allSatisfy(response -> {
+                    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(response.getBody().getErrorCode()).isEqualTo("PAYMENT_003");
+                });
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.CONFIRMED);
+        // 승인 뒤 저장 실패로 보상 취소가 나가지 않았다
+        assertThat(fakePgClient.cancelledTransactionNumbers()).isEmpty();
         timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
     }
 
