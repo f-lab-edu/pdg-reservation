@@ -6,6 +6,7 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.kafka.event.ReviewKafkaEvent;
 import com.pdg.reservation.accommodation.service.AccommodationAtomicReader;
+import com.pdg.reservation.accommodation.service.AccommodationCacheVersionService;
 import com.pdg.reservation.accommodation.service.AccommodationRatingService;
 import com.pdg.reservation.common.enums.EventType;
 import com.pdg.reservation.common.dto.ApiResponse;
@@ -64,6 +65,9 @@ class GET_specs {
 
     @MockitoSpyBean
     AccommodationAtomicReader accommodationAtomicReader;
+
+    @MockitoSpyBean
+    AccommodationCacheVersionService accommodationCacheVersionService;
 
     @AfterEach
     void tearDown() {
@@ -214,6 +218,36 @@ class GET_specs {
         accommodationRatingService.updateAccommodationRating(reviewCreated);
         ratingUpdated.countDown();
         interruptedRead.get(5, TimeUnit.SECONDS);
+        ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getBody().getData().getRatingAverage()).isEqualByComparingTo(newRating);
+    }
+
+    @Test
+    void 평점_갱신이_커밋되기_전에_들어온_조회가_옛_평점을_새_버전의_캐시에_남기지_않는다() {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        BigDecimal newRating = new BigDecimal("4.0");
+        ReviewKafkaEvent reviewCreated = new ReviewKafkaEvent(
+                UUID.randomUUID().toString(), accommodation.getId(), 1L, newRating,
+                EventType.REVIEW_CREATED.name(), LocalDateTime.now());
+        // 버전이 올라간 바로 그 순간에 상세를 한 번 조회한다.
+        // 트랜잭션이 커밋되기 전에 버전을 올리면 이 조회는 아직 보이지 않는 새 평점 대신 옛 평점(0.0)을 읽는다
+        doAnswer(invocation -> {
+            invocation.callRealMethod();
+            accommodationFixture.client().exchange(
+                    get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                    new ParameterizedTypeReference<ApiResponse<AccommodationDetailResponse>>() { }
+            );
+            return null;
+        }).when(accommodationCacheVersionService).increaseVersion(eq(accommodation.getId()));
+
+        // Act
+        accommodationRatingService.updateAccommodationRating(reviewCreated);
         ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
                 get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
                 new ParameterizedTypeReference<>() { }

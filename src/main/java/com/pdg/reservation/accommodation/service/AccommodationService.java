@@ -8,7 +8,6 @@ import com.pdg.reservation.common.cache.bloom.AccommodationBloomFilter;
 import com.pdg.reservation.common.constant.RedisKeyNames;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
-import com.pdg.reservation.review.service.ReviewCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -26,7 +25,7 @@ public class AccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AccommodationCacheService accommodationCacheService;
     private final AccommodationBloomFilter bloomFilter;
-    private final ReviewCacheService reviewCacheService;
+    private final AccommodationCacheVersionService accommodationCacheVersionService;
 
     public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
         return accommodationRepository.search(condition, pageable);
@@ -36,7 +35,7 @@ public class AccommodationService {
         validateExists(accommodationId);
 
         // 평점이 바뀌면 소비자가 이 버전을 올린다. 버전이 키에 들어가므로 옛 상세가 새 버전의 키에 남지 않는다
-        int version = reviewCacheService.getVersion(accommodationId);
+        int version = accommodationCacheVersionService.getVersion(accommodationId);
         return accommodationCacheService.getAccommodationDetail(accommodationId, version);
     }
 

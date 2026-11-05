@@ -5,11 +5,12 @@ import com.pdg.reservation.accommodation.repository.AccommodationRepository;
 import com.pdg.reservation.common.enums.EventType;
 import com.pdg.reservation.common.repository.EventLogRepository;
 import com.pdg.reservation.common.service.IdempotencyService;
-import com.pdg.reservation.review.service.ReviewCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +19,7 @@ public class AccommodationRatingService {
 
     private final AccommodationRepository accommodationRepository;
     private final EventLogRepository eventLogRepository;
-    private final ReviewCacheService reviewCacheService;
+    private final AccommodationCacheVersionService accommodationCacheVersionService;
     private final IdempotencyService idempotencyService;
     @Transactional
     public void updateAccommodationRating(ReviewKafkaEvent event) {
@@ -42,9 +43,24 @@ public class AccommodationRatingService {
             return;
         }
 
-        // 4. 후처리 (캐시 만료): 버전을 올리면 리뷰 목록과 숙소 상세 캐시가 모두 새 키로 바뀐다 (ADR 0011)
-        reviewCacheService.increaseVersion(event.getAccommodationId());
+        // 4. 후처리 (캐시 만료): 버전을 올리면 리뷰 목록과 숙소 상세 캐시가 모두 새 키로 바뀐다
+        // 버전은 커밋이 끝난 뒤에 올린다. 커밋 전에 올리면 그 사이 들어온 조회가 아직 보이지 않는 옛 평점을 읽어 새 버전 키에 캐시한다 (ADR 0011)
+        increaseVersionAfterCommit(event.getAccommodationId());
 
         log.info("[Rating Service] 평점 업데이트 성공: {}", event.getEventId());
+    }
+
+    private void increaseVersionAfterCommit(Long accommodationId) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    accommodationCacheVersionService.increaseVersion(accommodationId);
+                } catch (Exception e) {
+                    // 이미 커밋된 뒤라 되돌릴 수 없다. 캐시는 TTL이 지나면 갱신된다
+                    log.error("커밋 뒤 캐시 버전 증가 실패 - 숙소 ID: {}", accommodationId, e);
+                }
+            }
+        });
     }
 }

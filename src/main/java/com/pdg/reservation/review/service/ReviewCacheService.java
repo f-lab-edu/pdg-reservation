@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ReviewCacheService {
 
-    private final StringRedisTemplate redisTemplate;
     private final ReviewAtomicReader reviewAtomicReader;
 
     /**
@@ -42,29 +40,6 @@ public class ReviewCacheService {
         }
 
         return reviewAtomicReader.getReviewsWithNoLock(accommodationId, version, condition, pageable);
-    }
-
-    // 2. 버전 조회 (setIfAbsent로 원자적 처리)
-    public int getVersion(Long accommodationId) {
-        String key = RedisKeyNames.REVIEW_VERSION_PREFIX + accommodationId;
-        String version = redisTemplate.opsForValue().get(key);
-
-        if (version == null) {
-            // 1. 일단 내가 1로 초기화를 시도해봄 (SETNX)
-            redisTemplate.opsForValue().setIfAbsent(key, "1");
-
-            // 2. [핵심] 성공하든 실패하든, 그 '직후'에 다시 읽어옴
-            // 그 사이에 누군가 INCR(버전업)을 했을 수도 있기 때문!
-            version = redisTemplate.opsForValue().get(key);
-        }
-
-        // 만약 여전히 null이라면 (Redis 일시 장애 등) 기본값 1 반환
-        return (version == null) ? 1 : Integer.parseInt(version);
-    }
-
-    // 3. 버전 증가
-    public void increaseVersion(Long accommodationId) {
-        redisTemplate.opsForValue().increment(RedisKeyNames.REVIEW_VERSION_PREFIX + accommodationId);
     }
 
 }
