@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +27,13 @@ import static org.springframework.http.RequestEntity.post;
 public class ReviewFixture {
 
     // 만들 리뷰. authorization이 null이면 기본 사용자로 쓴다
-    public record NewReview(Long reservationId, BigDecimal rating, String authorization) {
+    public record NewReview(UUID reservationId, BigDecimal rating, String authorization) {
 
-        public static NewReview of(Long reservationId, String rating) {
+        public static NewReview of(UUID reservationId, String rating) {
             return new NewReview(reservationId, new BigDecimal(rating), null);
         }
 
-        public static NewReview of(Long reservationId, String rating, String authorization) {
+        public static NewReview of(UUID reservationId, String rating, String authorization) {
             return new NewReview(reservationId, new BigDecimal(rating), authorization);
         }
     }
@@ -51,7 +52,7 @@ public class ReviewFixture {
     }
 
     // 기본 사용자로 리뷰 API를 호출해 리뷰를 만들고 응답을 돌려준다. 숙소 평점 갱신은 기다리지 않는다
-    public ReviewCreateResponse createReview(Long reservationId, BigDecimal rating) {
+    public ReviewCreateResponse createReview(UUID reservationId, BigDecimal rating) {
         ResponseEntity<ApiResponse<ReviewCreateResponse>> response = client.exchange(
                 post("/api/v1/reviews").body(generateReviewCreateRequest(reservationId, rating)),
                 new ParameterizedTypeReference<>() { }
@@ -60,7 +61,7 @@ public class ReviewFixture {
     }
 
     // 지정한 사용자(Authorization 헤더 값)로 리뷰를 만들고 응답을 돌려준다. 숙소 평점 갱신은 기다리지 않는다
-    public ReviewCreateResponse createReview(Long reservationId, BigDecimal rating, String authorization) {
+    public ReviewCreateResponse createReview(UUID reservationId, BigDecimal rating, String authorization) {
         ReviewCreateRequest request = generateReviewCreateRequest(reservationId, rating);
         ResponseEntity<ApiResponse<ReviewCreateResponse>> response = client.exchange(
                 post("/api/v1/reviews").header(HttpHeaders.AUTHORIZATION, authorization).body(request),

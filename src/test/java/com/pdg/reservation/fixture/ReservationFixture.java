@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
@@ -74,13 +75,13 @@ public class ReservationFixture {
             Room room, LocalDate apiCheckInDate, LocalDate apiCheckOutDate,
             LocalDate stayCheckInDate, LocalDate stayCheckOutDate) {
         ReservationResponse reservation = createReservation(room, apiCheckInDate, apiCheckOutDate);
-        jdbcTemplate.update("UPDATE reservation SET check_in_date = ?, check_out_date = ? WHERE id = ?",
-                stayCheckInDate, stayCheckOutDate, reservation.getReservationId());
+        jdbcTemplate.update("UPDATE reservation SET check_in_date = ?, check_out_date = ? WHERE public_id = UUID_TO_BIN(?)",
+                stayCheckInDate, stayCheckOutDate, reservation.getReservationId().toString());
         return reservation;
     }
 
-    private void markCompleted(Long reservationId) {
-        jdbcTemplate.update("UPDATE reservation SET status = 'COMPLETED' WHERE id = ?", reservationId);
+    private void markCompleted(UUID reservationId) {
+        jdbcTemplate.update("UPDATE reservation SET status = 'COMPLETED' WHERE public_id = UUID_TO_BIN(?)", reservationId.toString());
     }
 
     // 지정한 사용자(Authorization 헤더 값, 예: "Bearer ...")로 객실을 기본 요금으로 예약한다

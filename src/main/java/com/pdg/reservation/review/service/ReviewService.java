@@ -39,7 +39,7 @@ public class ReviewService {
 
     @Transactional
     public ReviewCreateResponse createReview(Member member, ReviewCreateRequest reviewCreateRequest) {
-        Reservation reservation = reservationRepository.findByIdAndMemberId(reviewCreateRequest.getReservationId(), member.getId())
+        Reservation reservation = reservationRepository.findByPublicIdAndMemberId(reviewCreateRequest.getReservationId(), member.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVE_NOT_FOUND));
 
         reservation.validateReviewEligibility();

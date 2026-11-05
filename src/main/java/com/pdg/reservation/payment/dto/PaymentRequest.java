@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 @Getter
@@ -27,7 +28,7 @@ import java.time.LocalDateTime;
 public class PaymentRequest {
 
     @NotNull(message = "예약 ID는 필수입니다.")
-    private Long reservationId;
+    private UUID reservationId;
 
     private CardCompany cardCompany;
 

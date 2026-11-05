@@ -38,7 +38,7 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
 
         List<ReservationSearchResponse> content = jpaQueryFactory
                 .select(new QReservationSearchResponse(
-                        reservation.id,
+                        reservation.publicId,
                         accommodation.name,
                         room.name,
                         roomImage.url.coalesce(accImage.url), // 객실 메인 우선, 없으면 숙소 메인

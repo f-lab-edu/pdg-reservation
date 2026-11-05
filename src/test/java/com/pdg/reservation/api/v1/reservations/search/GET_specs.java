@@ -32,8 +32,10 @@ import org.springframework.http.ResponseEntity;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -378,11 +380,11 @@ class GET_specs {
         int page = 0;
         int size = 2;
         // 최근에 만든 예약부터 보이므로 가장 나중에 만든 size개가 첫 페이지다
-        List<Long> expectedIds = reservations.stream()
+        List<UUID> newestFirst = reservations.stream()
                 .map(ReservationResponse::getReservationId)
-                .sorted(Comparator.reverseOrder())
-                .limit(size)
-                .toList();
+                .collect(Collectors.toList());
+        Collections.reverse(newestFirst);
+        List<UUID> expectedIds = newestFirst.stream().limit(size).toList();
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
@@ -414,11 +416,11 @@ class GET_specs {
         int lastPage = 2;
         int size = 2;
         // 최근에 만든 예약부터 보이므로 마지막 페이지는 가장 먼저 만든 1건이다
-        List<Long> expectedIds = reservations.stream()
+        List<UUID> newestFirst = reservations.stream()
                 .map(ReservationResponse::getReservationId)
-                .sorted(Comparator.reverseOrder())
-                .skip(4)
-                .toList();
+                .collect(Collectors.toList());
+        Collections.reverse(newestFirst);
+        List<UUID> expectedIds = newestFirst.stream().skip(4).toList();
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(

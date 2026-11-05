@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,8 +30,8 @@ public class ReservationCancelService {
 
     @DistributedLock(key = "'reserveCancel:reservationId:' + #reservationId")
     @Transactional
-    public ReservationCancelResponse processCancel(Long memberId, Long reservationId, ReservationCancelRequest cancelRequest) {
-        Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+    public ReservationCancelResponse processCancel(Long memberId, UUID reservationId, ReservationCancelRequest cancelRequest) {
+        Reservation reservation = reservationRepository.findByPublicIdAndMemberId(reservationId, memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVE_NOT_FOUND));
 
         // 취소할 수 없는 예약에는 PG 취소를 보내지 않도록 검증을 먼저 한다

@@ -10,13 +10,14 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReservationResponse {
 
-    private final Long reservationId;
+    private final UUID reservationId;
 
     // 숙소 및 객실 정보 (사용자 확인용)
     private final String accommodationName;
@@ -40,7 +41,7 @@ public class ReservationResponse {
 
     public static ReservationResponse from(Reservation reservation) {
         return ReservationResponse.builder()
-                .reservationId(reservation.getId())
+                .reservationId(reservation.getPublicId())
                 .accommodationName(reservation.getAccommodation().getName())
                 .roomName(reservation.getRoom().getName())
                 .checkInDate(reservation.getCheckInDate())

@@ -13,7 +13,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ReservationGenerator {
 
     private static final long UNSAVED_ROOM_ID = 1L;
-    private static final long UNSAVED_RESERVATION_ID = 1L;
     private static final BigDecimal DEFAULT_TOTAL_PRICE = new BigDecimal("200000");
 
     private ReservationGenerator() {
@@ -39,7 +38,7 @@ public final class ReservationGenerator {
     }
 
     // 예약 id를 지정하고 취소 사유는 임의 값으로 채운 올바른 예약 취소 요청을 만든다
-    public static ReservationCancelRequest generateReservationCancelRequest(Long reservationId) {
+    public static ReservationCancelRequest generateReservationCancelRequest(UUID reservationId) {
         return ReservationCancelRequest.builder()
                 .reservationId(reservationId)
                 .cancelReason("사유-" + UUID.randomUUID().toString().substring(0, 8))
@@ -47,14 +46,14 @@ public final class ReservationGenerator {
     }
 
     // 예약 id만 지정하고 나머지는 올바른 임의 값으로 채운 예약 취소 요청을 만든다 (null 허용)
-    public static ReservationCancelRequest generateReservationCancelRequestWithReservationId(Long reservationId) {
+    public static ReservationCancelRequest generateReservationCancelRequestWithReservationId(UUID reservationId) {
         return generateReservationCancelRequest(reservationId);
     }
 
     // 취소 사유만 지정하고 예약 id는 저장하지 않은 값으로 채운 예약 취소 요청을 만든다
     public static ReservationCancelRequest generateReservationCancelRequestWithCancelReason(String cancelReason) {
         return ReservationCancelRequest.builder()
-                .reservationId(UNSAVED_RESERVATION_ID)
+                .reservationId(UUID.randomUUID())
                 .cancelReason(cancelReason)
                 .build();
     }

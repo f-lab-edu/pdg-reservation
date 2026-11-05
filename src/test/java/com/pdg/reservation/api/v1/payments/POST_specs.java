@@ -41,6 +41,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.UUID;
 import java.util.Collections;
 import java.util.List;
 
@@ -110,7 +112,7 @@ class POST_specs {
     @Test
     void 토큰_없이_결제하면_401과_AUTH_001을_반환한다() {
         // Arrange
-        PaymentRequest request = generatePaymentRequestWithReservationId(1L);
+        PaymentRequest request = generatePaymentRequestWithReservationId(UUID.randomUUID());
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
@@ -132,7 +134,7 @@ class POST_specs {
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
-        long missingReservationId = reservation.getReservationId() + 1;
+        UUID missingReservationId = UUID.randomUUID();
         PaymentRequest request = generatePaymentRequest(missingReservationId, reservation.getTotalPrice());
 
         // Act
@@ -192,7 +194,8 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         // 카드사는 응답에 나오지 않아 DB를 직접 읽는다. 간편결제는 카드사가 없으므로 비어 있어야 한다
         String storedCardCompany = jdbcTemplate.queryForObject(
-                "SELECT card_company FROM payment WHERE reservation_id = ?", String.class, reservation.getReservationId());
+                "SELECT p.card_company FROM payment p JOIN reservation r ON p.reservation_id = r.id WHERE r.public_id = UUID_TO_BIN(?)",
+                String.class, reservation.getReservationId().toString());
         assertThat(storedCardCompany).isNull();
         // 비동기로 결제 대기 타이머가 지워지므로 끝날 때까지 기다린 뒤 끝낸다
         timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
@@ -472,6 +475,29 @@ class POST_specs {
         // 승인 뒤 저장 실패로 보상 취소가 나가지 않았다
         assertThat(fakePgClient.cancelledTransactionNumbers()).isEmpty();
         timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
+    }
+
+    @Test
+    void 예약_id를_숫자로_보내면_400과_REQUEST_001을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        // 예약 id는 UUID(public_id)여야 하고 내부 PK 같은 숫자는 받지 않는다
+        Map<String, Object> request = Map.of(
+                "reservationId", 1,
+                "method", "CARD",
+                "cardCompany", "KB",
+                "amount", 100000
+        );
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/payments").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("REQUEST-001");
     }
 
     // 이미 세팅된 기본 사용자로 결제 대기 예약 하나를 만든다 (객실 기본 요금으로 2박)

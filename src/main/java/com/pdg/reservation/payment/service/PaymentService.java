@@ -39,11 +39,11 @@ public class PaymentService {
     private final ApplicationEventPublisher eventPublisher;
 
     @DistributedLock(key = "'payment:reservationId:' + #reservationId")
-    public PaymentResponse processPayment(Long memberId, Long reservationId ,PaymentRequest paymentRequest) {
+    public PaymentResponse processPayment(Long memberId, UUID reservationId, PaymentRequest paymentRequest) {
 
         paymentRequest.validatePayMethodPolicy();
 
-        Reservation reservation = reservationRepository.findByIdAndMemberId(paymentRequest.getReservationId(), memberId)
+        Reservation reservation = reservationRepository.findByPublicIdAndMemberId(reservationId, memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_INVALID_REQUEST));
 
         reservation.validatePayable(paymentRequest.getAmount());
@@ -52,7 +52,7 @@ public class PaymentService {
         PaymentResponse response = null;
 
         try {
-            response = paymentCommandService.pay(memberId, reservationId, pgTransactionNumber, paymentRequest);
+            response = paymentCommandService.pay(memberId, reservation.getId(), pgTransactionNumber, paymentRequest);
         } catch (Exception e) {
             log.error("DB 영속화 실패로 인한 보상 트랜잭션 실행. 예약ID: {}", reservationId, e);
             executeCompensation(pgTransactionNumber);
@@ -61,7 +61,7 @@ public class PaymentService {
         eventPublisher.publishEvent(
                 new PaymentConfirmedEvent(
                     memberId,
-                    reservationId,
+                    reservation.getId(),
                     UUID.randomUUID().toString(),
                     LocalDateTime.now())
                 );

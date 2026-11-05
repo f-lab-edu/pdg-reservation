@@ -32,6 +32,8 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequest;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithReservationId;
@@ -99,7 +101,7 @@ class POST_specs {
     @Test
     void 토큰_없이_리뷰를_쓰면_401과_AUTH_001을_반환한다() {
         // Arrange
-        ReviewCreateRequest request = generateReviewCreateRequestWithReservationId(1L);
+        ReviewCreateRequest request = generateReviewCreateRequestWithReservationId(UUID.randomUUID());
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
@@ -232,7 +234,7 @@ class POST_specs {
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
-        long missingReservationId = reservation.getReservationId() + 1;
+        UUID missingReservationId = UUID.randomUUID();
         ReviewCreateRequest request = generateReviewCreateRequest(missingReservationId, new BigDecimal("4.0"));
 
         // Act
@@ -303,6 +305,28 @@ class POST_specs {
 
         // Assert
         ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+    }
+
+    @Test
+    void 예약_id를_숫자로_보내면_400과_REQUEST_001을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        // 예약 id는 UUID(public_id)여야 하고 내부 PK 같은 숫자는 받지 않는다
+        Map<String, Object> request = Map.of(
+                "reservationId", 1,
+                "rating", 4.0,
+                "content", "숫자 id로는 리뷰를 쓸 수 없다고 알려 줍니다"
+        );
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("REQUEST-001");
     }
 
     @Test

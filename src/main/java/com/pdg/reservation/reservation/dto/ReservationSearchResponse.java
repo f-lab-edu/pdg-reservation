@@ -7,10 +7,11 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 public class ReservationSearchResponse {
-    private final Long id;
+    private final UUID id;
     private final String accommodationName;
     private final String roomName;
     private final String mainImage;
@@ -26,7 +27,7 @@ public class ReservationSearchResponse {
 
     @Builder
     @QueryProjection
-    public ReservationSearchResponse(Long id, String accommodationName, String roomName,
+    public ReservationSearchResponse(UUID id, String accommodationName, String roomName,
                                      String mainImage, LocalDate checkInDate, LocalDate checkOutDate,
                                      String guestName, String guestPhoneNumber,
                                      ReservationStatus status, BigDecimal totalPrice, LocalDateTime createdAt,

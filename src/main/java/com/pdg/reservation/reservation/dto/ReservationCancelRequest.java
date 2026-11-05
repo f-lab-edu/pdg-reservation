@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -16,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class ReservationCancelRequest {
 
     @NotNull(message = "취소할 예약 ID는 필수입니다.")
-    private Long reservationId;
+    private UUID reservationId;
 
     @NotBlank(message = "취소 사유를 입력해야 합니다.")
     @Size(min = 1, max = 50, message = "취소 사유는 1자 이상 50자 이하입니다.")

@@ -7,13 +7,14 @@ import lombok.Builder;
 import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Builder
 public class PaymentResponse {
 
     private Long paymentId;             // 결제 고유 ID
-    private Long reservationId;         // 예약 ID
+    private UUID reservationId;         // 예약의 외부 식별자(public_id)
     private BigDecimal amount;          // 실제 결제된 금액
     private PaymentMethod method;       // 결제 수단
     private String pgTransactionNumber; // PG사 승인 번호 (영수증 조회/환불 시 필수) 가상의 UUID
@@ -23,7 +24,7 @@ public class PaymentResponse {
     public static PaymentResponse from(Payment payment) {
         return PaymentResponse.builder()
                 .paymentId(payment.getId())
-                .reservationId(payment.getReservation().getId())
+                .reservationId(payment.getReservation().getPublicId())
                 .amount(payment.getAmount())
                 .method(payment.getMethod())
                 .pgTransactionNumber(payment.getPgTransactionNumber())

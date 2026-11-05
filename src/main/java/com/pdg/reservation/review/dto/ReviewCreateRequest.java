@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Builder
@@ -29,7 +30,7 @@ public class ReviewCreateRequest {
     private String content;
 
     @NotNull(message = "예약 ID는 필수입니다.")
-    private Long reservationId;
+    private UUID reservationId;
 
     public Review toEntity(Member member, Reservation reservation) {
         return Review.builder()

@@ -17,6 +17,7 @@ import org.hibernate.annotations.DynamicInsert;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name="reservation")
@@ -30,6 +31,10 @@ public class Reservation extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, updatable = false, unique = true)
+    @Builder.Default
+    private UUID publicId = UUID.randomUUID();
 
     @Column(nullable = false)
     private LocalDate checkInDate;
