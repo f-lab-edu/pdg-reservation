@@ -97,6 +97,44 @@ src/test/java/com/pdg/reservation/
   - Assert: 결과를 검증한다.
   - Act에는 이 테스트가 검증하려는 동작을 드러낸다. 전제 조건은 Arrange에 두고 Fixture로 묶어도 된다. 같은 동작(예: 로그인)이 어떤 테스트에서는 Act, 다른 테스트에서는 Arrange일 수 있다.
 - 검증을 여러 줄 쓸 때는 `assertThat`을 나열하는 것이 기본이다. 서로 독립적인 결과를 한꺼번에 보고 싶을 때만 `assertSoftly`를 쓴다(예: 저장된 필드 여러 개). 상태 코드가 틀리면 에러 코드도 의미가 없는 것처럼 서로 이어진 검증에는 쓰지 않는다.
+- 목록에서 조건에 맞는 요소를 확인할 때, 개수만 보면 되면 `stream().filter().count()`를 써도 된다. 실패했을 때 어떤 요소가 문제인지 알아야 하는 경우에는 AssertJ의 `filteredOn(...).hasSize(n)`이 낫다. `count()`는 실패 메시지에 개수만 나오지만, `filteredOn`은 조건에 걸러진 요소의 내용까지 보여 주기 때문이다.
+  - 락이 없어서 5명 중 3명이 예약에 성공한 경우(메시지는 대략적인 모양이다):
+
+    ```java
+    // count(): 개수만 나온다
+    long created = responses.stream().filter(r -> r.getStatusCode() == HttpStatus.CREATED).count();
+    assertThat(created).isEqualTo(1);
+    ```
+    ```
+    expected: 1L
+     but was: 3L
+    ```
+
+    ```java
+    // filteredOn: 걸러진 요소가 나온다
+    assertThat(responses).filteredOn(r -> r.getStatusCode() == HttpStatus.CREATED).hasSize(1);
+    ```
+    ```
+    Expected size: 1 but was: 3 in:
+    [<201 CREATED Created,{...reservationId=11...}>,
+     <201 CREATED Created,{...reservationId=12...}>,
+     <201 CREATED Created,{...reservationId=13...}>]
+    ```
+    성공한 3건의 응답이 보여서, 락이 아예 안 걸린 것인지 일부만 뚫린 것인지 바로 추측할 수 있다.
+  - 거절된 응답이 모두 409여야 하는데 한 건이 500인 경우:
+
+    ```java
+    assertThat(responses).filteredOn(r -> r.getStatusCode() != HttpStatus.CREATED)
+            .hasSize(4)
+            .allSatisfy(r -> assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+    ```
+    ```
+    Expecting actual: <500 INTERNAL_SERVER_ERROR ...>
+    to be equal to: <409 CONFLICT ...>
+    ```
+    어느 응답이 예상과 달랐는지 바로 알 수 있다.
+  - `filteredOn`이 적절한 경우: 동시성 테스트처럼 같은 결과가 재현되지 않아서 한 번의 실패에서 정보를 최대한 남겨야 할 때, 그리고 "결과 중 `CONFIRMED`인 것만 남기면 2건이다"처럼 어떤 요소가 섞였는지 알아야 할 때.
+  - 남은 요소 모두가 조건을 만족해야 할 때는 `allSatisfy`를 쓴다. 목록이 비어 있으면 아무것도 검사하지 않고 통과하므로 `hasSize`를 먼저 걸어 비어 있는 경우를 막는다.
 - 응답을 비교할 때 **기대값은 운영의 매핑 코드(`from` 등)로 만들지 않고, 저장한 값에서 필드를 하나씩 직접 채운다.** 운영 매핑으로 기대값을 만들면 매핑이 틀리거나 바뀌어도 양쪽이 같은 코드를 거쳐 항상 일치해서 아무것도 검증하지 못하고, 매핑을 교체하는 리팩토링(R3-1)에서 테스트가 `from`에 묶여 함께 깨진다. 필드를 하나씩 채우는 중복은 독립된 정답지를 얻는 대가다. 응답이 여러 필드를 가지면 기대 객체를 만들어 `usingRecursiveComparison()`으로 통째로 비교하고, 스케일이 달라질 수 있는 `BigDecimal`은 `withComparatorForType(BigDecimal::compareTo, BigDecimal.class)`로 비교한다.
 - 기대 객체는 응답 DTO의 빌더로 만든다. 직접 채우는 과정에서 실수하면 정답지 자체가 틀리는데, 위치로 넘기는 생성자는 같은 타입 인자(예: `String` 여러 개)의 순서 실수를 컴파일러가 잡지 못한다. 빌더가 없는 DTO(`@QueryProjection` 생성자만 있는 검색 응답 등)는 생성자에 `@Builder`를 붙인다.
 - 검증은 AssertJ(`assertThat`)로 통일한다. JUnit의 `Assertions`(`assertEquals`, `assertAll` 등)는 쓰지 않고, JUnit은 `@Test`, `@AfterEach` 같은 구조용으로만 쓴다.
