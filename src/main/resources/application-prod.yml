@@ -20,9 +20,9 @@ spring:
   # 2-2. JPA (ORM) 설정
   jpa:
     hibernate:
-      #ddl-auto: create
-      ddl-auto: validate
-        # [매우 중요] 절대 'create'나 'update' 금지!, 토이프로젝트라 구동 시에는 create 최초 사용
+      ddl-auto: create
+        # [임시] public_id 도입(ADR 0012) 동안 스키마 변경 수단이 없어 create로 둔다. 서버를 켤 때마다 테이블을 모두 지우고 새로 만든다.
+        # 운영 DB에 지켜야 할 데이터가 없음을 확인했다. Flyway를 도입하면(R3-5) 반드시 validate로 되돌린다.
         # validate: 엔티티와 실제 테이블 스펙이 맞는지 검사만 함 (다르면 실행 안 됨)
         # none: 아예 아무것도 안 함 (가장 안전)
     properties:

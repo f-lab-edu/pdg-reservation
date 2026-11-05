@@ -42,7 +42,7 @@ spring:
   # 2-3. 초기 데이터(SQL) 실행 설정
   sql:
     init:
-      mode: always                                  # 내장 DB가 아니더라도(MySQL) 항상 초기화 SQL을 실행
+      mode: never                                   # [임시] 샘플 데이터에 public_id가 없어 삽입이 실패하므로 끈다. Flyway 도입 때(R3-5) public_id를 채워서 always로 되돌린다
       data-locations: classpath:/initSql/data.sql   # 실행할 SQL 파일 경로 (resources/initSql/data.sql)
 
   # 2-4. Redis 연결 설정
