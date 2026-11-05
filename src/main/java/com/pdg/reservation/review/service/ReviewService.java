@@ -1,6 +1,6 @@
 package com.pdg.reservation.review.service;
 
-import com.pdg.reservation.accommodation.service.AccommodationCacheVersionService;
+import com.pdg.reservation.accommodation.service.AccommodationCacheGenerationService;
 import com.pdg.reservation.accommodation.service.AccommodationService;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.common.exception.CustomException;
@@ -33,7 +33,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReservationRepository reservationRepository;
     private final ReviewCacheService reviewCacheService;
-    private final AccommodationCacheVersionService accommodationCacheVersionService;
+    private final AccommodationCacheGenerationService accommodationCacheGenerationService;
     private final ApplicationEventPublisher eventPublisher;
     private final AccommodationService accommodationService;
 
@@ -74,10 +74,10 @@ public class ReviewService {
 
         accommodationService.validateExists(accommodationId);
 
-        // 1. 버전 조회
-        int version = accommodationCacheVersionService.getVersion(accommodationId);
+        // 1. 세대 조회
+        int generation = accommodationCacheGenerationService.getGeneration(accommodationId);
         // 2. 캐시 서비스 호출
-        return reviewCacheService.getReviewsWithCache(accommodationId, version, condition, pageable);
+        return reviewCacheService.getReviewsWithCache(accommodationId, generation, condition, pageable);
     }
 
     @Transactional

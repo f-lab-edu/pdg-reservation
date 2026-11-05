@@ -13,7 +13,7 @@ public class RedisKeyNames {
 
     // 직접 사용하는 키 접두사 (RedisTemplate용)
     // 직접 관리하는 캐시를 알아보기 쉽게 하기 위해 : 하나만 붙혀서 구분
-    public static final String ACCOMMODATION_VERSION_PREFIX = "accommodation:version:";
+    public static final String ACCOMMODATION_GENERATION_PREFIX = "accommodation:generation:";
 
 
 }

@@ -27,19 +27,19 @@ public class ReviewCacheService {
     @Cacheable(
             value = RedisKeyNames.REVIEW_FIRST_PAGE,
             // 모든 항목에 접두어(acc, v, sz)를 붙여 가독성 향상
-            // 결과 예시: review:firstpage::acc:1:v:3:r:0:s:LATEST:sz:10
-            key = "'acc:' + #accommodationId + ':v:' + #version + ':' + #condition.toCacheKey() + ':sz:' + #pageable.pageSize",
+            // 결과 예시: review:firstpage::acc:1:gen:3:r:0:s:LATEST:sz:10
+            key = "'acc:' + #accommodationId + ':gen:' + #generation + ':' + #condition.toCacheKey() + ':sz:' + #pageable.pageSize",
             condition = "#pageable.pageNumber == 0"
     )
     public PageResponse<ReviewResponse> getReviewsWithCache(
-            Long accommodationId, int version, ReviewSearchCondition condition, Pageable pageable) {
+            Long accommodationId, int generation, ReviewSearchCondition condition, Pageable pageable) {
 
         if(pageable.getPageNumber() == 0){
-            log.info("[Cache Miss] DB에서 리뷰 조회 - 숙소 ID: {}, 버전: {}", accommodationId, version);
-            return reviewAtomicReader.getReviewsWithLock(accommodationId, version, condition, pageable);
+            log.info("[Cache Miss] DB에서 리뷰 조회 - 숙소 ID: {}, 세대: {}", accommodationId, generation);
+            return reviewAtomicReader.getReviewsWithLock(accommodationId, generation, condition, pageable);
         }
 
-        return reviewAtomicReader.getReviewsWithNoLock(accommodationId, version, condition, pageable);
+        return reviewAtomicReader.getReviewsWithNoLock(accommodationId, generation, condition, pageable);
     }
 
 }

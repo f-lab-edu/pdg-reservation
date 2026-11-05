@@ -25,7 +25,7 @@ public class AccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AccommodationCacheService accommodationCacheService;
     private final AccommodationBloomFilter bloomFilter;
-    private final AccommodationCacheVersionService accommodationCacheVersionService;
+    private final AccommodationCacheGenerationService accommodationCacheGenerationService;
 
     public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
         return accommodationRepository.search(condition, pageable);
@@ -34,9 +34,9 @@ public class AccommodationService {
     public AccommodationDetailResponse getAccommodationDetail(Long accommodationId) {
         validateExists(accommodationId);
 
-        // 평점이 바뀌면 소비자가 이 버전을 올린다. 버전이 키에 들어가므로 옛 상세가 새 버전의 키에 남지 않는다
-        int version = accommodationCacheVersionService.getVersion(accommodationId);
-        return accommodationCacheService.getAccommodationDetail(accommodationId, version);
+        // 평점이 바뀌면 소비자가 이 세대를 올린다. 세대가 키에 들어가므로 옛 상세가 새 세대의 키에 남지 않는다
+        int generation = accommodationCacheGenerationService.getGeneration(accommodationId);
+        return accommodationCacheService.getAccommodationDetail(accommodationId, generation);
     }
 
     public void validateExists(Long accommodationId){

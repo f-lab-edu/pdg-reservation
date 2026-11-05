@@ -18,12 +18,12 @@ public class AccommodationAtomicReader {
     private final AccommodationRepository accommodationRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @DistributedLock(key = "'acc:' + #id + ':' + #version", throwExceptionOnFailure = false)
-    public AccommodationDetailResponse getAccommodationDetailWithLock(Long id, int version) {
+    @DistributedLock(key = "'acc:' + #id + ':' + #generation", throwExceptionOnFailure = false)
+    public AccommodationDetailResponse getAccommodationDetailWithLock(Long id, int generation) {
 
         // [Double-Check] 락 획득 성공 후, 다시 한번 캐시 확인, 락을 획득하는 사이에 누군가 DB를 갔다와 캐시를 채웠을 수 있음
         // 키는 AccommodationCacheService의 @Cacheable 키와 같은 형식이어야 한다
-        String cacheKey = RedisKeyNames.ACCOMMODATION_DETAIL + "::" + id + ":v:" + version;
+        String cacheKey = RedisKeyNames.ACCOMMODATION_DETAIL + "::" + id + ":gen:" + generation;
         Object cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) return (AccommodationDetailResponse) cached;
 
