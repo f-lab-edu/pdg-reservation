@@ -16,6 +16,9 @@ import static com.pdg.reservation.fixture.MemberGenerator.generateEmailOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generateNickNameOfLength;
 import static com.pdg.reservation.fixture.MemberGenerator.generatePasswordOfLength;
+import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequestWithAmount;
+import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequestWithMethod;
+import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequestWithReservationId;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateContentOfLength;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithContent;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithRating;
@@ -159,6 +162,15 @@ public final class TestDataSource {
                 arguments(named("연락처 최소 길이 미만 (8자리)", generateReservationRequestWithGuestPhoneNumber("01234567"))),
                 arguments(named("연락처 최대 길이 초과 (12자리)", generateReservationRequestWithGuestPhoneNumber("010123456789"))),
                 arguments(named("총액 null", generateReservationRequestWithTotalPrice(null)))
+        );
+    }
+
+    public static Stream<Arguments> invalidPaymentRequests() {
+        return Stream.of(
+                arguments(named("예약 id null", generatePaymentRequestWithReservationId(null))),
+                arguments(named("결제 수단 null", generatePaymentRequestWithMethod(null))),
+                arguments(named("금액 null", generatePaymentRequestWithAmount(null))),
+                arguments(named("금액 최소 미만 (99원)", generatePaymentRequestWithAmount(new BigDecimal("99"))))
         );
     }
 
