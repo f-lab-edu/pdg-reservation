@@ -48,7 +48,8 @@ public class Payment {
     @Builder.Default
     private PaymentMethod method = PaymentMethod.CARD;
 
-    @Column(nullable = false, length = 20)
+    // 간편결제는 카드사가 없다. NOT NULL이면 INSERT에서 빠진 컬럼에 DB가 임의의 첫 값을 채운다
+    @Column(length = 20)
     @Enumerated(EnumType.STRING)
     private CardCompany cardCompany;
 
