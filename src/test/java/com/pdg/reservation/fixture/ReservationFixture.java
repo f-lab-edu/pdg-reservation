@@ -3,6 +3,7 @@ package com.pdg.reservation.fixture;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
+import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.room.entity.Room;
@@ -110,6 +111,17 @@ public class ReservationFixture {
                         .body(request),
                 new ParameterizedTypeReference<>() { }
         );
+    }
+
+    // 기본 사용자의 예약 검색 결과에서 예약 상태 목록을 돌려준다
+    public List<ReservationStatus> searchReservationStatuses() {
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = client.exchange(
+                get("/api/v1/reservations/search").build(),
+                new ParameterizedTypeReference<>() { }
+        );
+        return response.getBody().getData().getContent().stream()
+                .map(ReservationSearchResponse::getStatus)
+                .toList();
     }
 
     // 지정한 사용자들(Authorization 헤더 값)이 각자 가진 예약 건수의 합을 예약 검색으로 구한다

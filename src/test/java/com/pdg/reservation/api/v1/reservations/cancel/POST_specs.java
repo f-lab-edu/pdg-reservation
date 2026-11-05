@@ -2,7 +2,6 @@ package com.pdg.reservation.api.v1.reservations.cancel;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.common.dto.ApiResponse;
-import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
@@ -16,7 +15,6 @@ import com.pdg.reservation.payment.enums.PaymentStatus;
 import com.pdg.reservation.reservation.dto.ReservationCancelRequest;
 import com.pdg.reservation.reservation.dto.ReservationCancelResponse;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
-import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
@@ -38,13 +36,11 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateCancelReasonOfLength;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequest;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequestWithCancelReason;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.RequestEntity.get;
 import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/reservations/cancel")
@@ -105,6 +101,7 @@ class POST_specs {
     @Test
     void 존재하지_않는_예약을_취소하면_404와_RESERVE_006을_반환한다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         long missingReservationId = paid.reservation().getReservationId() + 1;
         ReservationCancelRequest request = generateReservationCancelRequest(missingReservationId);
@@ -123,6 +120,7 @@ class POST_specs {
     @Test
     void 남의_예약을_취소하면_404와_RESERVE_006을_반환한다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         SignupRequest otherMember = memberFixture.createMember();
         LoginSession otherSession = memberFixture.login(otherMember);
@@ -145,6 +143,7 @@ class POST_specs {
     @Test
     void 결제한_예약을_취소하면_200과_취소_결과를_반환한다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
         // 기대값은 결제 응답에서 직접 채운다. 취소 시각은 서버가 정하므로 따로 확인한다
@@ -177,6 +176,7 @@ class POST_specs {
     @Test
     void 취소하면_예약이_CANCELED가_된다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
 
@@ -188,12 +188,13 @@ class POST_specs {
 
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(searchReservationStatuses()).containsExactly(ReservationStatus.CANCELED);
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.CANCELED);
     }
 
     @Test
     void 취소하면_결제_때_받은_승인_번호로_PG_취소가_한_번_나간다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
 
@@ -212,6 +213,7 @@ class POST_specs {
     @Test
     void 취소하면_재고가_복구되어_같은_기간을_다시_예약할_수_있다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
 
@@ -233,6 +235,7 @@ class POST_specs {
     @ValueSource(ints = {1, 50})
     void 취소_사유가_최소_1자와_최대_50자이면_취소된다(int length) {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequestWithCancelReason(
                 generateCancelReasonOfLength(length));
@@ -294,6 +297,7 @@ class POST_specs {
     @Test
     void 이미_취소된_예약을_다시_취소하면_400과_PAYMENT_006을_반환하고_PG_취소는_다시_나가지_않는다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
         ResponseEntity<ApiResponse<ReservationCancelResponse>> first = memberFixture.client().exchange(
@@ -318,6 +322,7 @@ class POST_specs {
     void 체크인이_지난_예약을_취소하면_400과_RESERVE_009를_반환하고_PG_취소는_나가지_않는다() {
         // Arrange
         LocalDate today = LocalDate.now();
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservationStayingFrom(today.minusDays(3), today.minusDays(1));
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
 
@@ -337,6 +342,7 @@ class POST_specs {
     void 체크인이_오늘인_예약을_취소하면_400과_RESERVE_009를_반환한다() {
         // Arrange
         LocalDate today = LocalDate.now();
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservationStayingFrom(today, today.plusDays(1));
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
 
@@ -355,6 +361,7 @@ class POST_specs {
     void 체크인이_내일인_예약은_취소된다() {
         // Arrange
         LocalDate tomorrow = LocalDate.now().plusDays(1);
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservationStayingFrom(tomorrow, tomorrow.plusDays(1));
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
 
@@ -371,6 +378,7 @@ class POST_specs {
     @Test
     void PG_취소가_실패하면_502와_PAYMENT_007을_반환하고_예약은_확정으로_남아_다시_취소할_수_있다() {
         // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
         ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
         fakePgClient.failNextCancel();
@@ -384,7 +392,7 @@ class POST_specs {
         // Assert
         assertThat(failed.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
         assertThat(failed.getBody().getErrorCode()).isEqualTo("PAYMENT_007");
-        assertThat(searchReservationStatuses()).containsExactly(ReservationStatus.CONFIRMED);
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.CONFIRMED);
         // 같은 예약을 다시 취소하면 성공한다
         ResponseEntity<ApiResponse<ReservationCancelResponse>> retried = memberFixture.client().exchange(
                 post("/api/v1/reservations/cancel").body(request),
@@ -399,9 +407,8 @@ class POST_specs {
             ReservationResponse reservation, PaymentResponse payment) {
     }
 
-    // 기본 사용자로 30일 뒤 2박 예약을 만들어 카드로 결제한다
+    // 이미 세팅된 기본 사용자로 30일 뒤 2박 예약을 만들어 카드로 결제한다
     private PaidReservation createPaidReservation() {
-        memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
@@ -411,9 +418,8 @@ class POST_specs {
         return new PaidReservation(room, checkInDate, checkOutDate, reservation, payment);
     }
 
-    // 기본 사용자의 결제 완료 예약을 만들고 숙박 기간을 지정한 값으로 바꾼다
+    // 이미 세팅된 기본 사용자의 결제 완료 예약을 만들고 숙박 기간을 지정한 값으로 바꾼다
     private PaidReservation createPaidReservationStayingFrom(LocalDate stayCheckInDate, LocalDate stayCheckOutDate) {
-        memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
@@ -422,16 +428,5 @@ class POST_specs {
                 room, checkInDate, checkOutDate, stayCheckInDate, stayCheckOutDate);
         PaymentResponse payment = paymentFixture.createPayment(reservation.getReservationId(), reservation.getTotalPrice());
         return new PaidReservation(room, stayCheckInDate, stayCheckOutDate, reservation, payment);
-    }
-
-    // 기본 사용자의 예약 검색 결과에서 예약 상태 목록을 돌려준다
-    private List<ReservationStatus> searchReservationStatuses() {
-        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = memberFixture.client().exchange(
-                get("/api/v1/reservations/search").build(),
-                new ParameterizedTypeReference<>() { }
-        );
-        return response.getBody().getData().getContent().stream()
-                .map(ReservationSearchResponse::getStatus)
-                .toList();
     }
 }
