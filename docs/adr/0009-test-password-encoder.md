@@ -9,7 +9,7 @@
 
 ## 결정
 - 테스트에서는 `BCryptPasswordEncoder`의 강도를 허용되는 최소값 4로 낮춘 `PasswordEncoder`를
-  `@Primary` 테스트 빈으로 등록한다(`TestPasswordEncoderConfig`, `@IntegrationTest`가 가져온다).
+  `@Primary` 테스트 빈으로 등록한다(`TestBeanConfig`, `@IntegrationTest`가 가져온다).
 - 알고리즘은 운영과 같은 BCrypt로 유지하고 강도만 낮춘다. 운영 코드는 바꾸지 않는다.
 
 ## 검토한 대안

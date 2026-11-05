@@ -63,7 +63,7 @@ new MySQLContainer<>("mysql:8.0")
 
 ### 4. 가입·로그인의 BCrypt 강도 낮추기
 
-거의 모든 API 테스트가 회원 가입과 로그인을 거친다. 가입은 `encode`, 로그인은 `matches`를 한 번씩 부르는데, 운영의 `BCryptPasswordEncoder`는 기본 강도가 10이라 한 번에 약 54ms가 든다(회원 한 명 준비에 약 108ms). 테스트에서는 허용되는 최소 강도 4로 낮춘 인코더를 `@Primary`로 끼운다(`TestPasswordEncoderConfig`, ADR 0009).
+거의 모든 API 테스트가 회원 가입과 로그인을 거친다. 가입은 `encode`, 로그인은 `matches`를 한 번씩 부르는데, 운영의 `BCryptPasswordEncoder`는 기본 강도가 10이라 한 번에 약 54ms가 든다(회원 한 명 준비에 약 108ms). 테스트에서는 허용되는 최소 강도 4로 낮춘 인코더를 `@Primary`로 끼운다(`TestBeanConfig`, ADR 0009).
 
 Spring 없이 `BCryptPasswordEncoder`의 `encode`와 `matches`를 워밍업 10회 뒤 50회 평균으로 쟀다(2026-11-05, 같은 PC).
 

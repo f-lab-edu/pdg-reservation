@@ -16,6 +16,8 @@
 
 - DB(MySQL), Redis, Kafka는 Testcontainers로 실제 컨테이너를 띄운다. 컨테이너는 테스트 전체가 한 번만 띄워서 공유하고, 테스트마다 새로 띄우지 않는다.
 - 테스트는 `test` 프로필로 돌린다. 개발용 샘플 데이터(`data.sql`)는 테스트에서 실행하지 않는다(`spring.sql.init.mode: never`).
+- 통합 테스트 클래스에는 `@IntegrationTest` 하나만 붙인다. 컨테이너 설정(`TestContainersConfig`)과 운영 빈을 바꾸는 테스트 빈(`TestBeanConfig`)이 모두 들어 있다(ADR 0003). 스파이(`@MockitoSpyBean`)를 쓰는 클래스만 별도 스프링 컨텍스트가 된다.
+- 외부 PG는 운영의 `MockPgClient`(지연과 무작위 실패) 대신 `FakePgClient`로 바꿔 쓴다. 즉시 응답하고 실패는 `failNextConfirm()` 같은 스위치로만 일으킨다. 상태가 있으므로 이 Fake를 쓰는 테스트는 `@AfterEach`에서 `reset()`을 부른다.
 - API 호출은 모든 Fixture와 테스트가 공유하는 `ApiClient`의 클라이언트로 한다(`memberFixture.client()`). 테스트 클래스에서 `TestRestTemplate`을 직접 주입받지 않는다. 이유와 전제는 ADR 0010.
 - 테스트는 순차 실행을 전제로 한다. JUnit 병렬 실행은 쓰지 않는다(공유 `ApiClient`와 `TRUNCATE` 정리 방식이 모두 순차 실행을 전제로 한다).
 - 테스트 실행에는 Docker가 실행 중이어야 한다.
@@ -63,7 +65,7 @@ src/test/java/com/pdg/reservation/
 ├── api/v1/members/POST_specs.java        # POST /api/v1/members
 ├── api/v1/members/login/POST_specs.java  # POST /api/v1/members/login
 ├── member/entity/MemberTest.java         # 엔티티 단위 테스트(로직이 생기면)
-├── support/                              # IntegrationTest, TestContainersConfig, DatabaseCleanUp, RedisCleanUp
+├── support/                              # IntegrationTest, TestBeanConfig(운영 빈을 바꾸는 테스트 빈), FakePgClient, TestContainersConfig, DatabaseCleanUp, RedisCleanUp
 └── fixture/                              # xxxFixture, MemberGenerator(임의 값·요청 생성), TestDataSource(잘못된 값 목록)
 ```
 
