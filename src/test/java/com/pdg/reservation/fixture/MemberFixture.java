@@ -10,6 +10,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static com.pdg.reservation.fixture.MemberGenerator.generateLoginRequest;
 import static com.pdg.reservation.fixture.MemberGenerator.generateSignupRequest;
 import static org.springframework.http.RequestEntity.post;
@@ -110,6 +113,13 @@ public class MemberFixture {
                 .map(cookie -> cookie.substring("refreshToken=".length(), cookie.indexOf(';')))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("리프레시 토큰 쿠키가 없습니다."));
+    }
+
+    // 회원을 count명 만들어 로그인하고, 회원마다 Authorization 헤더 값("Bearer ...")을 돌려준다. 기본 사용자는 바꾸지 않는다
+    public List<String> createLoggedInMembers(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(i -> login(createMember()).bearer())
+                .toList();
     }
 
     // 회원을 만들고 로그인해서, 이후 클라이언트의 모든 요청에 그 회원의 토큰이 붙게 한다

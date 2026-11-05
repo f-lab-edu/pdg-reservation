@@ -6,6 +6,7 @@ import com.pdg.reservation.room.entity.Room;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,6 +29,13 @@ public final class ReservationGenerator {
                 .guestCount(guestCount)
                 .totalPrice(totalPrice)
                 .build();
+    }
+
+    // 객실과 기간을 지정하고 인원은 1명, 총액은 객실 기본 요금 × 숙박일수인 올바른 예약 요청을 만든다
+    public static ReservationRequest generateReservationRequest(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
+        long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+        return generateReservationRequest(room, checkInDate, checkOutDate, 1,
+                room.getBasePrice().multiply(BigDecimal.valueOf(nights)));
     }
 
     // 예약 id를 지정하고 취소 사유는 임의 값으로 채운 올바른 예약 취소 요청을 만든다

@@ -1,6 +1,8 @@
 package com.pdg.reservation.fixture;
 
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageResponse;
+import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.room.entity.Room;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
+import static org.springframework.http.RequestEntity.get;
 import static org.springframework.http.RequestEntity.post;
 
 @Component
@@ -97,6 +100,33 @@ public class ReservationFixture {
                 new ParameterizedTypeReference<>() { }
         );
         return extractCreated(response);
+    }
+
+    // 지정한 사용자(Authorization 헤더 값)로 예약 API를 호출하고 응답을 그대로 돌려준다. 성공·실패를 가리지 않는다
+    public ResponseEntity<ApiResponse<ReservationResponse>> requestReservation(String authorization, ReservationRequest request) {
+        return client.exchange(
+                post("/api/v1/reservations")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+    }
+
+    // 지정한 사용자들(Authorization 헤더 값)이 각자 가진 예약 건수의 합을 예약 검색으로 구한다
+    public long countReservations(List<String> authorizations) {
+        return authorizations.stream()
+                .mapToLong(this::countReservationsOf)
+                .sum();
+    }
+
+    private long countReservationsOf(String authorization) {
+        ResponseEntity<ApiResponse<PageResponse<ReservationSearchResponse>>> response = client.exchange(
+                get("/api/v1/reservations/search")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+        return response.getBody().getData().getTotalElements();
     }
 
     private ReservationRequest createRequest(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
