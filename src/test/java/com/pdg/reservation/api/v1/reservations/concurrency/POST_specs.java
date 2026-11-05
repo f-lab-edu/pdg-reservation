@@ -98,9 +98,9 @@ class POST_specs {
         Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(3));
         List<String> authorizations = memberFixture.createLoggedInMembers(2);
         // 둘째 날 밤이 겹친다: (1~3일), (2~4일)
-        List<Attempt> attempts = List.of(
-                new Attempt(authorizations.get(0), generateReservationRequest(room, firstDay, firstDay.plusDays(2))),
-                new Attempt(authorizations.get(1), generateReservationRequest(room, firstDay.plusDays(1), firstDay.plusDays(3)))
+        List<ReservationAttempt> attempts = List.of(
+                new ReservationAttempt(authorizations.get(0), generateReservationRequest(room, firstDay, firstDay.plusDays(2))),
+                new ReservationAttempt(authorizations.get(1), generateReservationRequest(room, firstDay.plusDays(1), firstDay.plusDays(3)))
         );
 
         // Act
@@ -131,9 +131,9 @@ class POST_specs {
         Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(3));
         List<String> authorizations = memberFixture.createLoggedInMembers(2);
         // 하룻밤씩 겹치지 않는다: (1~2일), (3~4일)
-        List<Attempt> attempts = List.of(
-                new Attempt(authorizations.get(0), generateReservationRequest(room, firstDay, firstDay.plusDays(1))),
-                new Attempt(authorizations.get(1), generateReservationRequest(room, firstDay.plusDays(2), firstDay.plusDays(3)))
+        List<ReservationAttempt> attempts = List.of(
+                new ReservationAttempt(authorizations.get(0), generateReservationRequest(room, firstDay, firstDay.plusDays(1))),
+                new ReservationAttempt(authorizations.get(1), generateReservationRequest(room, firstDay.plusDays(2), firstDay.plusDays(3)))
         );
 
         // Act
@@ -158,9 +158,9 @@ class POST_specs {
         Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
         Room otherRoom = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
         List<String> authorizations = memberFixture.createLoggedInMembers(2);
-        List<Attempt> attempts = List.of(
-                new Attempt(authorizations.get(0), generateReservationRequest(room, checkInDate, checkOutDate)),
-                new Attempt(authorizations.get(1), generateReservationRequest(otherRoom, checkInDate, checkOutDate))
+        List<ReservationAttempt> attempts = List.of(
+                new ReservationAttempt(authorizations.get(0), generateReservationRequest(room, checkInDate, checkOutDate)),
+                new ReservationAttempt(authorizations.get(1), generateReservationRequest(otherRoom, checkInDate, checkOutDate))
         );
 
         // Act
@@ -177,6 +177,6 @@ class POST_specs {
     }
 
     // 요청자(Authorization 헤더 값)와 그가 보낼 예약 요청
-    private record Attempt(String authorization, ReservationRequest request) {
+    private record ReservationAttempt(String authorization, ReservationRequest request) {
     }
 }
