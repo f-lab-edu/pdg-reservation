@@ -18,6 +18,7 @@ import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
+import com.pdg.reservation.support.ConcurrentRunner;
 import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.FakePgClient;
 import com.pdg.reservation.support.IntegrationTest;
@@ -36,6 +37,8 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateCancelReasonOfLength;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequest;
@@ -399,6 +402,40 @@ class POST_specs {
                 new ParameterizedTypeReference<>() { }
         );
         assertThat(retried.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void 같은_예약을_동시에_취소하면_한_번만_취소되고_나머지는_거절된다() {
+        // Arrange
+        int requesterCount = 5;
+        memberFixture.createMemberThenSetAsDefaultUser();
+        PaidReservation paid = createPaidReservation();
+        ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
+        List<ReservationCancelRequest> requests = Collections.nCopies(requesterCount, request);
+
+        // Act
+        List<ResponseEntity<ApiResponse<ReservationCancelResponse>>> responses = ConcurrentRunner.runAtOnce(
+                requests,
+                cancelRequest -> memberFixture.client().exchange(
+                        post("/api/v1/reservations/cancel").body(cancelRequest),
+                        new ParameterizedTypeReference<>() { }
+                )
+        );
+
+        // Assert
+        assertThat(responses)
+                .filteredOn(response -> response.getStatusCode() == HttpStatus.OK)
+                .hasSize(1);
+        assertThat(responses)
+                .filteredOn(response -> response.getStatusCode() != HttpStatus.OK)
+                .hasSize(requesterCount - 1)
+                .allSatisfy(response -> {
+                    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(response.getBody().getErrorCode()).isEqualTo("PAYMENT_006");
+                });
+        assertThat(fakePgClient.cancelledTransactionNumbers())
+                .containsExactly(paid.payment().getPgTransactionNumber());
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.CANCELED);
     }
 
     // 결제까지 끝난 예약과 그 예약의 객실, 기간, 결제 결과
