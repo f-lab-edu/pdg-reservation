@@ -19,14 +19,12 @@ import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.IntegrationTest;
 import com.pdg.reservation.support.RatingAwaiter;
 import com.pdg.reservation.support.RedisCleanUp;
-import com.pdg.reservation.support.TestContainersConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -43,7 +41,6 @@ import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/reviews")
 @IntegrationTest
-@Import(TestContainersConfig.class)
 class POST_specs {
 
     @Autowired

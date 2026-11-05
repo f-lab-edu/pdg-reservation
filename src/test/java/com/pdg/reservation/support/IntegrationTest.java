@@ -14,6 +14,6 @@ import org.springframework.test.context.ActiveProfiles;
 @Retention(RetentionPolicy.RUNTIME)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(TestPasswordEncoderConfig.class)
+@Import({TestBeanConfig.class, TestContainersConfig.class})
 public @interface IntegrationTest {
 }
