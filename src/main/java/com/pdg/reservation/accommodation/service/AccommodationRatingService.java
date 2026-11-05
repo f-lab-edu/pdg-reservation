@@ -42,9 +42,8 @@ public class AccommodationRatingService {
             return;
         }
 
-        // 4. 후처리 (캐시 만료)
+        // 4. 후처리 (캐시 만료): 버전을 올리면 리뷰 목록과 숙소 상세 캐시가 모두 새 키로 바뀐다 (ADR 0011)
         reviewCacheService.increaseVersion(event.getAccommodationId());
-        reviewCacheService.evictAccommodationDetail(event.getAccommodationId());
 
         log.info("[Rating Service] 평점 업데이트 성공: {}", event.getEventId());
     }

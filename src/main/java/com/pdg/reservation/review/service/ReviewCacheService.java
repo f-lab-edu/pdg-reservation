@@ -6,7 +6,6 @@ import com.pdg.reservation.review.dto.ReviewResponse;
 import com.pdg.reservation.review.dto.ReviewSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -68,9 +67,4 @@ public class ReviewCacheService {
         redisTemplate.opsForValue().increment(RedisKeyNames.REVIEW_VERSION_PREFIX + accommodationId);
     }
 
-    // 4. 숙소 상세 캐시 삭제
-    @CacheEvict(value = RedisKeyNames.ACCOMMODATION_DETAIL, key = "#accommodationId")
-    public void evictAccommodationDetail(Long accommodationId) {
-        log.info("[Cache Evict] 숙소 상세 캐시 제거");
-    }
 }

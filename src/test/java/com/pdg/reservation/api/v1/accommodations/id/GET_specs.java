@@ -4,8 +4,10 @@ import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
 import com.pdg.reservation.accommodation.dto.ImageResponse;
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.accommodation.entity.AccommodationImage;
+import com.pdg.kafka.event.ReviewKafkaEvent;
 import com.pdg.reservation.accommodation.service.AccommodationAtomicReader;
-import com.pdg.reservation.common.constant.RedisKeyNames;
+import com.pdg.reservation.accommodation.service.AccommodationRatingService;
+import com.pdg.reservation.common.enums.EventType;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.support.ApiClient;
@@ -17,7 +19,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -25,10 +26,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.RequestEntity.get;
@@ -51,7 +60,7 @@ class GET_specs {
     RedisCleanUp redisCleanUp;
 
     @Autowired
-    CacheManager cacheManager;
+    AccommodationRatingService accommodationRatingService;
 
     @MockitoSpyBean
     AccommodationAtomicReader accommodationAtomicReader;
@@ -141,22 +150,6 @@ class GET_specs {
     }
 
     @Test
-    void 처음_조회하면_상세가_캐시에_저장된다() {
-        // Arrange
-        Accommodation accommodation = accommodationFixture.createAccommodation();
-
-        // Act
-        accommodationFixture.client().exchange(
-                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
-                new ParameterizedTypeReference<ApiResponse<AccommodationDetailResponse>>() { }
-        );
-
-        // Assert
-        assertThat(cacheManager.getCache(RedisKeyNames.ACCOMMODATION_DETAIL).get(accommodation.getId()))
-                .isNotNull();
-    }
-
-    @Test
     void 같은_숙소를_다시_조회하면_DB를_거치지_않고_캐시된_상세를_반환한다() {
         // Arrange
         Accommodation accommodation = accommodationFixture.createAccommodation();
@@ -173,7 +166,7 @@ class GET_specs {
 
         // Assert
         assertThat(second.getBody().getData()).usingRecursiveComparison().isEqualTo(first.getBody().getData());
-        verify(accommodationAtomicReader, times(1)).getAccommodationDetailWithLock(accommodation.getId());
+        verify(accommodationAtomicReader, times(1)).getAccommodationDetailWithLock(eq(accommodation.getId()), anyInt());
     }
 
     @Test
@@ -190,5 +183,43 @@ class GET_specs {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody().getErrorCode()).isEqualTo("ACC-001");
+    }
+
+    @Test
+    void 평점이_갱신되는_도중에_끝난_조회가_옛_평점을_캐시에_남기지_않는다() throws Exception {
+        // Arrange
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        CountDownLatch dbRead = new CountDownLatch(1);
+        CountDownLatch ratingUpdated = new CountDownLatch(1);
+        // 조회가 DB에서 옛 평점(0.0)을 읽은 뒤에는 평점 갱신이 끝날 때까지 응답과 캐시 저장을 미룬다
+        doAnswer(invocation -> {
+            Object detail = invocation.callRealMethod();
+            dbRead.countDown();
+            ratingUpdated.await(5, TimeUnit.SECONDS);
+            return detail;
+        }).when(accommodationAtomicReader).getAccommodationDetailWithLock(eq(accommodation.getId()), anyInt());
+        BigDecimal newRating = new BigDecimal("4.0");
+        ReviewKafkaEvent reviewCreated = new ReviewKafkaEvent(
+                UUID.randomUUID().toString(), accommodation.getId(), 1L, newRating,
+                EventType.REVIEW_CREATED.name(), LocalDateTime.now());
+
+        // Act
+        // 조회 하나가 DB를 읽은 직후 멈춰 있는 동안 소비자가 평점을 갱신하고 캐시를 정리한다
+        CompletableFuture<ResponseEntity<ApiResponse<AccommodationDetailResponse>>> interruptedRead =
+                CompletableFuture.supplyAsync(() -> accommodationFixture.client().exchange(
+                        get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                        new ParameterizedTypeReference<>() { }
+                ));
+        dbRead.await(5, TimeUnit.SECONDS);
+        accommodationRatingService.updateAccommodationRating(reviewCreated);
+        ratingUpdated.countDown();
+        interruptedRead.get(5, TimeUnit.SECONDS);
+        ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
+                get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getBody().getData().getRatingAverage()).isEqualByComparingTo(newRating);
     }
 }
