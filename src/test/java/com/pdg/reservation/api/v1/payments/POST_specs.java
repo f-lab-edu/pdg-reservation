@@ -478,6 +478,28 @@ class POST_specs {
     }
 
     @Test
+    void 결제_응답의_paymentId는_숫자가_아니라_UUID이다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+
+        // Act
+        ResponseEntity<ApiResponse<Map<String, Object>>> response = memberFixture.client().exchange(
+                post("/api/v1/payments").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        // 내부 PK(숫자)가 아니라 외부 식별자(UUID 문자열)가 나온다
+        Object paymentId = response.getBody().getData().get("paymentId");
+        assertThat(paymentId).isInstanceOf(String.class);
+        assertThat(UUID.fromString((String) paymentId)).isNotNull();
+        timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
+    }
+
+    @Test
     void 예약_id를_숫자로_보내면_400과_REQUEST_001을_반환한다() {
         // Arrange
         memberFixture.createMemberThenSetAsDefaultUser();

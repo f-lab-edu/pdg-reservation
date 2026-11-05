@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 public class ReservationCancelResponse {
 
-    private Long paymentId;             // 결제 고유 ID
+    private UUID paymentId;             // 결제의 외부 식별자(public_id)
     private UUID reservationId;         // 예약의 외부 식별자(public_id)
     private BigDecimal amount;          // 실제 환불된 금액
     private PaymentMethod method;       // 결제 수단
@@ -24,7 +24,7 @@ public class ReservationCancelResponse {
 
     public static ReservationCancelResponse from(Payment payment) {
         return ReservationCancelResponse.builder()
-                .paymentId(payment.getId())
+                .paymentId(payment.getPublicId())
                 .reservationId(payment.getReservation().getPublicId())
                 .amount(payment.getAmount())
                 .method(payment.getMethod())

@@ -13,7 +13,7 @@ import java.util.UUID;
 @Builder
 public class PaymentResponse {
 
-    private Long paymentId;             // 결제 고유 ID
+    private UUID paymentId;             // 결제의 외부 식별자(public_id)
     private UUID reservationId;         // 예약의 외부 식별자(public_id)
     private BigDecimal amount;          // 실제 결제된 금액
     private PaymentMethod method;       // 결제 수단
@@ -23,7 +23,7 @@ public class PaymentResponse {
 
     public static PaymentResponse from(Payment payment) {
         return PaymentResponse.builder()
-                .paymentId(payment.getId())
+                .paymentId(payment.getPublicId())
                 .reservationId(payment.getReservation().getPublicId())
                 .amount(payment.getAmount())
                 .method(payment.getMethod())

@@ -15,6 +15,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -32,6 +33,10 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, updatable = false, unique = true)
+    @Builder.Default
+    private UUID publicId = UUID.randomUUID();
 
     //가상의 결제번호 UUID 사용
     @Column(nullable = false)
