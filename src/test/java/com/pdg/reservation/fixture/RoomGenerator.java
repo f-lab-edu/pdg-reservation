@@ -6,7 +6,7 @@ import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
-import com.pdg.reservation.room.entity.RoomPrice;
+import com.pdg.reservation.room.entity.RoomSpecialPrice;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -79,7 +79,7 @@ public final class RoomGenerator {
                 .toList();
     }
 
-    // 하루치 재고 행을 만든다. 재고 여부를 지정한다. 가격은 재고 행이 아니라 room_price에 둔다
+    // 하루치 재고 행을 만든다. 재고 여부를 지정한다. 가격은 재고 행이 아니라 room_special_price에 둔다
     public static RoomInventory generateRoomInventory(Room room, LocalDate date, boolean isStocked) {
         return RoomInventory.builder()
                 .inventoryDate(date)
@@ -88,18 +88,18 @@ public final class RoomGenerator {
                 .build();
     }
 
-    // 첫날부터 하루씩 prices의 개수만큼 재고가 있는 상태의 재고 행을 만든다. 가격은 room_price가 맡는다
+    // 첫날부터 하루씩 prices의 개수만큼 재고가 있는 상태의 재고 행을 만든다. 가격은 room_special_price가 맡는다
     public static List<RoomInventory> generateRoomInventoriesForNights(Room room, LocalDate firstDate, int nights) {
         return IntStream.range(0, nights)
                 .mapToObj(i -> generateRoomInventory(room, firstDate.plusDays(i), true))
                 .toList();
     }
 
-    // 첫날부터 하루씩, 지정한 가격의 예외 요금 행을 만든다. 목록의 null은 예외가 없는(기본 요금인) 밤이라 행을 만들지 않는다
-    public static List<RoomPrice> generateRoomPrices(Room room, LocalDate firstDate, List<Long> prices) {
+    // 첫날부터 하루씩, 지정한 가격의 특별 요금 행을 만든다. 목록의 null은 예외가 없는(기본 요금인) 밤이라 행을 만들지 않는다
+    public static List<RoomSpecialPrice> generateRoomSpecialPrices(Room room, LocalDate firstDate, List<Long> prices) {
         return IntStream.range(0, prices.size())
                 .filter(i -> prices.get(i) != null)
-                .mapToObj(i -> RoomPrice.builder()
+                .mapToObj(i -> RoomSpecialPrice.builder()
                         .room(room)
                         .priceDate(firstDate.plusDays(i))
                         .price(toPrice(prices.get(i)))

@@ -2,10 +2,10 @@ package com.pdg.reservation.room.service;
 
 import com.pdg.reservation.room.dto.AvailableRoom;
 import com.pdg.reservation.room.entity.Room;
-import com.pdg.reservation.room.entity.RoomPrice;
+import com.pdg.reservation.room.entity.RoomSpecialPrice;
 import com.pdg.reservation.room.price.StayPrice;
 import com.pdg.reservation.room.price.StayPriceCalculator;
-import com.pdg.reservation.room.repository.RoomPriceRepository;
+import com.pdg.reservation.room.repository.RoomSpecialPriceRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// 날짜별 예외 요금(room_price)을 읽어 StayPriceCalculator로 가격을 계산한다.
+// 날짜별 특별 요금(room_special_price)을 읽어 StayPriceCalculator로 가격을 계산한다.
 // 예약 검증, 객실 목록, 숙소 검색이 모두 이 서비스를 거쳐 같은 계산 규칙을 쓴다.
 @Service
 @RequiredArgsConstructor
@@ -28,18 +28,18 @@ import java.util.stream.Collectors;
 public class RoomPriceService {
 
     private final RoomRepository roomRepository;
-    private final RoomPriceRepository roomPriceRepository;
+    private final RoomSpecialPriceRepository roomSpecialPriceRepository;
 
     // 객실 하나의 투숙 가격(날짜별 가격과 합계, 등급 할인 전)
     public StayPrice calculateStayPrice(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
-        Map<LocalDate, BigDecimal> specialPrices = roomPriceRepository
+        Map<LocalDate, BigDecimal> specialPrices = roomSpecialPriceRepository
                 .findInStay(room.getId(), checkInDate, checkOutDate)
                 .stream()
-                .collect(Collectors.toMap(RoomPrice::getPriceDate, RoomPrice::getPrice));
+                .collect(Collectors.toMap(RoomSpecialPrice::getPriceDate, RoomSpecialPrice::getPrice));
         return StayPriceCalculator.calculate(room.getBasePrice(), checkInDate, checkOutDate, specialPrices);
     }
 
-    // 객실 여러 개의 투숙 가격. 예외 요금은 한 번의 조회로 가져온다
+    // 객실 여러 개의 투숙 가격. 특별 요금은 한 번의 조회로 가져온다
     public Map<Long, StayPrice> calculateStayPrices(Collection<Long> roomIds, LocalDate checkInDate, LocalDate checkOutDate) {
         if (roomIds.isEmpty()) {
             return Map.of();
@@ -73,12 +73,12 @@ public class RoomPriceService {
         if (basePrices.isEmpty()) {
             return Map.of();
         }
-        Map<Long, Map<LocalDate, BigDecimal>> specialPricesByRoom = roomPriceRepository
+        Map<Long, Map<LocalDate, BigDecimal>> specialPricesByRoom = roomSpecialPriceRepository
                 .findInStay(basePrices.keySet(), checkInDate, checkOutDate)
                 .stream()
                 .collect(Collectors.groupingBy(
-                        roomPrice -> roomPrice.getRoom().getId(),
-                        Collectors.toMap(RoomPrice::getPriceDate, RoomPrice::getPrice)));
+                        roomSpecialPrice -> roomSpecialPrice.getRoom().getId(),
+                        Collectors.toMap(RoomSpecialPrice::getPriceDate, RoomSpecialPrice::getPrice)));
 
         return basePrices.entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,

@@ -15,7 +15,7 @@ class StayPriceCalculatorTest {
     private static final LocalDate CHECK_IN = LocalDate.of(2026, 12, 21);
 
     @Test
-    void 예외_요금이_없으면_모든_밤이_기본_요금이다() {
+    void 특별_요금이_없으면_모든_밤이_기본_요금이다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
 
@@ -31,7 +31,7 @@ class StayPriceCalculatorTest {
     }
 
     @Test
-    void 예외_요금이_있는_밤은_예외_요금이고_나머지는_기본_요금이다() {
+    void 특별_요금이_있는_밤은_특별_요금이고_나머지는_기본_요금이다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
         Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
@@ -51,7 +51,7 @@ class StayPriceCalculatorTest {
     }
 
     @Test
-    void 첫날과_마지막_밤의_예외_요금도_반영한다() {
+    void 첫날과_마지막_밤의_특별_요금도_반영한다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
         Map<LocalDate, BigDecimal> specialPrices = Map.of(
@@ -70,7 +70,7 @@ class StayPriceCalculatorTest {
     }
 
     @Test
-    void 체크아웃_날의_예외_요금은_계산에_포함하지_않는다() {
+    void 체크아웃_날의_특별_요금은_계산에_포함하지_않는다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(2);
         // 체크아웃 날은 밤이 아니다
@@ -85,7 +85,7 @@ class StayPriceCalculatorTest {
     }
 
     @Test
-    void 체크인_전날의_예외_요금은_계산에_포함하지_않는다() {
+    void 체크인_전날의_특별_요금은_계산에_포함하지_않는다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(2);
         Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.minusDays(1), new BigDecimal("999999"));

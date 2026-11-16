@@ -4,7 +4,7 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 import com.pdg.reservation.room.repository.RoomInventoryRepository;
-import com.pdg.reservation.room.repository.RoomPriceRepository;
+import com.pdg.reservation.room.repository.RoomSpecialPriceRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
 import com.pdg.reservation.support.ApiClient;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -18,7 +18,7 @@ import static com.pdg.reservation.fixture.RoomGenerator.generateNonReservableRoo
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesForNights;
-import static com.pdg.reservation.fixture.RoomGenerator.generateRoomPrices;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomSpecialPrices;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventory;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithImages;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithNonMainImage;
@@ -29,16 +29,16 @@ public class RoomFixture {
     private final TestRestTemplate client;
     private final RoomRepository roomRepository;
     private final RoomInventoryRepository roomInventoryRepository;
-    private final RoomPriceRepository roomPriceRepository;
+    private final RoomSpecialPriceRepository roomSpecialPriceRepository;
 
     public RoomFixture(ApiClient apiClient,
                        RoomRepository roomRepository,
                        RoomInventoryRepository roomInventoryRepository,
-                       RoomPriceRepository roomPriceRepository) {
+                       RoomSpecialPriceRepository roomSpecialPriceRepository) {
         this.client = apiClient.rest();
         this.roomRepository = roomRepository;
         this.roomInventoryRepository = roomInventoryRepository;
-        this.roomPriceRepository = roomPriceRepository;
+        this.roomSpecialPriceRepository = roomSpecialPriceRepository;
     }
 
     // 모든 Fixture와 테스트가 공유하는 클라이언트
@@ -85,10 +85,10 @@ public class RoomFixture {
         return roomRepository.save(generateRoom(accommodation, BigDecimal.valueOf(basePrice)));
     }
 
-    // 객실의 첫날부터 하루씩 prices의 개수만큼 재고를 저장하고, 가격이 있는 밤은 예외 요금(room_price)도 저장한다.
-    // 목록의 null은 예외 요금이 없는(기본 요금인) 밤이다
+    // 객실의 첫날부터 하루씩 prices의 개수만큼 재고를 저장하고, 가격이 있는 밤은 특별 요금(room_special_price)도 저장한다.
+    // 목록의 null은 특별 요금이 없는(기본 요금인) 밤이다
     public List<RoomInventory> createRoomInventoriesWithNightlyPrices(Room room, LocalDate checkInDate, List<Long> prices) {
-        roomPriceRepository.saveAll(generateRoomPrices(room, checkInDate, prices));
+        roomSpecialPriceRepository.saveAll(generateRoomSpecialPrices(room, checkInDate, prices));
         return roomInventoryRepository.saveAll(generateRoomInventoriesForNights(room, checkInDate, prices.size()));
     }
 
