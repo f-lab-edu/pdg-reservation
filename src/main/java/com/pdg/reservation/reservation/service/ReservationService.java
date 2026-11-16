@@ -17,7 +17,9 @@ import com.pdg.reservation.reservation.validator.ReservationValidator;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 import com.pdg.reservation.room.repository.RoomRepository;
+import com.pdg.reservation.room.price.StayPrice;
 import com.pdg.reservation.room.service.RoomInventoryService;
+import com.pdg.reservation.room.service.RoomPriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,6 +42,7 @@ public class ReservationService {
     private final ReservationValidator reservationValidator;
     private final ApplicationEventPublisher eventPublisher;
     private final RoomInventoryService roomInventoryService;
+    private final RoomPriceService roomPriceService;
 
     @DistributedLock(key = "'room:' + #roomId")
     @Transactional
@@ -52,7 +55,9 @@ public class ReservationService {
                 reserveRequest.getCheckInDate(),
                 reserveRequest.getCheckOutDate()
         );
-        reservationValidator.validate(member, reserveRequest, room, inventories);
+        StayPrice stayPrice = roomPriceService.calculateStayPrice(
+                room, reserveRequest.getCheckInDate(), reserveRequest.getCheckOutDate());
+        reservationValidator.validate(member, reserveRequest, room, inventories, stayPrice);
 
         roomInventoryService.reduceStock(
                 reserveRequest.getRoomId(),

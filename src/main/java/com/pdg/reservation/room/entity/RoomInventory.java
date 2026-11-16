@@ -6,7 +6,6 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -32,8 +31,6 @@ public class RoomInventory extends BaseEntity {
     @Column(nullable = false)
     private LocalDate inventoryDate;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price;
 
     @Column(nullable = false)
     @ColumnDefault("false")

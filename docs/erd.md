@@ -2,7 +2,7 @@
 
 엔티티(JPA)의 테이블 구조와 관계를 Mermaid로 그린 것이다. 엔티티 구조가 바뀌면 이 문서를 함께 갱신한다([CLAUDE.md](../CLAUDE.md) 참고).
 
-- 기준: `main`이 아니라 `develop`의 엔티티. 마지막 갱신: 2026-11-06 (`Reservation`, `Payment`에 `public_id` 추가, ADR 0012).
+- 기준: `main`이 아니라 `develop`의 엔티티. 마지막 갱신: 2026-11-16 (`ROOM_PRICE` 추가, `ROOM_INVENTORY.price` 제거, ADR 0013 사이클 2). 이전: 2026-11-06 (`Reservation`, `Payment`에 `public_id` 추가, ADR 0012).
 - 공통: `BaseEntity`를 상속한 테이블은 `created_at`, `updated_at`을 갖는다(아래 그림에서는 생략).
 - `PK` 기본키, `FK` 외래키, `UK` 유니크. 따옴표 안은 설명이다.
 
@@ -16,6 +16,7 @@ erDiagram
     ACCOMMODATION ||--o{ ACCOMMODATION_IMAGE : "이미지(숙소)"
     ROOM ||--o{ ACCOMMODATION_IMAGE : "이미지(객실)"
     ROOM ||--o{ ROOM_INVENTORY : "날짜별 재고"
+    ROOM ||--o{ ROOM_PRICE : "날짜별 예외 요금"
     ROOM ||--o{ RESERVATION : "예약 대상"
     RESERVATION ||--o| PAYMENT : "결제(1:1)"
     RESERVATION ||--o| REVIEW : "리뷰(1:1)"
@@ -63,9 +64,14 @@ erDiagram
         bigint id PK
         bigint room_id FK "NOT NULL"
         date inventory_date "room_id와 함께 유니크"
-        decimal price "NULL이면 room.base_price"
         boolean is_stocked
         bigint version "낙관적 락"
+    }
+    ROOM_PRICE {
+        bigint id PK
+        bigint room_id FK "NOT NULL"
+        date price_date "room_id와 함께 유니크, 기본 요금과 다른 날짜만"
+        decimal price "0보다 큼, 행이 없는 날은 room.base_price"
     }
     ACCOMMODATION_IMAGE {
         bigint id PK
@@ -133,6 +139,7 @@ erDiagram
 
 ## 관계 메모
 
-- 재고(`ROOM_INVENTORY`)는 객실에 종속되고 `(room_id, inventory_date)`가 유니크다. 예약은 재고를 가리키는 FK 없이 `room_id`와 `check_in_date`~`check_out_date`로 해당 날짜의 재고를 찾는다.
+- 재고(`ROOM_INVENTORY`)는 객실에 종속되고 `(room_id, inventory_date)`가 유니크다. 예약은 재고를 가리키는 FK 없이 `room_id`와 `check_in_date`~`check_out_date`로 해당 날짜의 재고를 찾는다. (ADR 0013에 따라 사이클 3~4에서 `reservation_night`와 `room_blocked_date`로 대체된다.)
+- 날짜별 가격은 `ROOM_PRICE`의 예외 행만 두고, 행이 없는 날은 `ROOM.base_price`다. 합계와 평균은 `StayPriceCalculator`가 계산한다(ADR 0013).
 - `EVENT_LOG.aggregate_id`는 FK가 없는 `Long`이다(멱등성 확인에 쓰는 이벤트 기록).
 - `PAYMENT`와 `PAYMENT_CANCEL_HISTORY`는 현재 1:1이다.

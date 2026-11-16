@@ -8,6 +8,7 @@ import com.pdg.reservation.common.cache.bloom.AccommodationBloomFilter;
 import com.pdg.reservation.common.constant.RedisKeyNames;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
+import com.pdg.reservation.room.service.RoomPriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -26,9 +30,20 @@ public class AccommodationService {
     private final AccommodationCacheService accommodationCacheService;
     private final AccommodationBloomFilter bloomFilter;
     private final AccommodationCacheGenerationService accommodationCacheGenerationService;
+    private final RoomPriceService roomPriceService;
 
     public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
-        return accommodationRepository.search(condition, pageable);
+        Page<AccommodationSearchResponse> page = accommodationRepository.search(condition, pageable);
+        fillMinPrices(page, condition);
+        return page;
+    }
+
+    // 숙소마다 예약 가능한 객실의 1박 평균가 중 최저가를 채운다. 계산은 RoomPriceService 한 곳에서 한다
+    private void fillMinPrices(Page<AccommodationSearchResponse> page, AccommodationSearchCondition condition) {
+        List<Long> accommodationIds = page.getContent().stream().map(AccommodationSearchResponse::getId).toList();
+        Map<Long, Long> minPrices = roomPriceService.minAveragePriceByAccommodation(
+                accommodationIds, condition.getCheckInDate(), condition.getCheckOutDate(), condition.getCapacity());
+        page.getContent().forEach(accommodation -> accommodation.updateMinPrice(minPrices.get(accommodation.getId())));
     }
 
     public AccommodationDetailResponse getAccommodationDetail(Long accommodationId) {

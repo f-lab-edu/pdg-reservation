@@ -4,6 +4,7 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
 import com.pdg.reservation.room.repository.RoomInventoryRepository;
+import com.pdg.reservation.room.repository.RoomPriceRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
 import com.pdg.reservation.support.ApiClient;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -16,7 +17,8 @@ import java.util.List;
 import static com.pdg.reservation.fixture.RoomGenerator.generateNonReservableRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
-import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesWithNightlyPrices;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesForNights;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomPrices;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventory;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithImages;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithNonMainImage;
@@ -27,13 +29,16 @@ public class RoomFixture {
     private final TestRestTemplate client;
     private final RoomRepository roomRepository;
     private final RoomInventoryRepository roomInventoryRepository;
+    private final RoomPriceRepository roomPriceRepository;
 
     public RoomFixture(ApiClient apiClient,
                        RoomRepository roomRepository,
-                       RoomInventoryRepository roomInventoryRepository) {
+                       RoomInventoryRepository roomInventoryRepository,
+                       RoomPriceRepository roomPriceRepository) {
         this.client = apiClient.rest();
         this.roomRepository = roomRepository;
         this.roomInventoryRepository = roomInventoryRepository;
+        this.roomPriceRepository = roomPriceRepository;
     }
 
     // 모든 Fixture와 테스트가 공유하는 클라이언트
@@ -80,9 +85,11 @@ public class RoomFixture {
         return roomRepository.save(generateRoom(accommodation, BigDecimal.valueOf(basePrice)));
     }
 
-    // 객실의 체크인부터 하루씩, 지정한 가격으로 재고를 저장하고 돌려준다. 목록의 null은 가격이 없는 밤이다
+    // 객실의 첫날부터 하루씩 prices의 개수만큼 재고를 저장하고, 가격이 있는 밤은 예외 요금(room_price)도 저장한다.
+    // 목록의 null은 예외 요금이 없는(기본 요금인) 밤이다
     public List<RoomInventory> createRoomInventoriesWithNightlyPrices(Room room, LocalDate checkInDate, List<Long> prices) {
-        return roomInventoryRepository.saveAll(generateRoomInventoriesWithNightlyPrices(room, checkInDate, prices));
+        roomPriceRepository.saveAll(generateRoomPrices(room, checkInDate, prices));
+        return roomInventoryRepository.saveAll(generateRoomInventoriesForNights(room, checkInDate, prices.size()));
     }
 
     // 객실의 하루치 재고 행을 재고 여부를 지정해 저장하고 돌려준다

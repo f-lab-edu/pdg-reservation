@@ -6,24 +6,24 @@ import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.entity.RoomInventory;
+import com.pdg.reservation.room.price.StayPrice;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Component
 public class ReservationValidator {
 
-    public void validate(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories) {
+    public void validate(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories, StayPrice stayPrice) {
 
         validateReservable(room);
         validateGuestCountCapacity(request, room);
         vakudatePeriod(request, room, inventories);
-        validateStockAndPrice(member, request, room, inventories);
+        validateStockAndPrice(member, request, room, inventories, stayPrice);
     }
 
     private void validateReservable(Room room) {
@@ -35,20 +35,17 @@ public class ReservationValidator {
         }
     }
 
-    private void validateStockAndPrice(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories) {
-        BigDecimal basePrice = room.getBasePrice();
-        
-        // [검증] 품절 및 가격 합산
-        BigDecimal calculatedTotal = BigDecimal.ZERO;
+    private void validateStockAndPrice(Member member, ReservationRequest request, Room room, List<RoomInventory> inventories, StayPrice stayPrice) {
+        // [검증] 품절
         for (RoomInventory inv : inventories) {
             if (!inv.isStocked()) {
                 log.warn("이미 예약된 객실 존재 : roomId={}, inventoryDate={}", room.getId(), inv.getInventoryDate());
                 throw new CustomException(ErrorCode.RESERVE_ALREADY_BOOKED);
             }
-            calculatedTotal = calculatedTotal.add(Optional.ofNullable(inv.getPrice()).orElse(basePrice));
         }
 
-        BigDecimal finalCalculatedTotal = member.getGrade().calculateDiscountRate(calculatedTotal);
+        // [검증] 날짜별 가격 합계(StayPriceCalculator가 계산)에 등급 할인을 적용한다
+        BigDecimal finalCalculatedTotal = member.getGrade().calculateDiscountRate(stayPrice.total());
 
         // [검증] 요청 가격과 서버 계산 가격 대조
         if (finalCalculatedTotal.compareTo(request.getTotalPrice()) != 0) {
