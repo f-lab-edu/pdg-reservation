@@ -34,10 +34,10 @@ class StayPriceCalculatorTest {
     void 예외_요금이_있는_밤은_예외_요금이고_나머지는_기본_요금이다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
-        Map<LocalDate, BigDecimal> overrides = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.nights())
@@ -54,12 +54,12 @@ class StayPriceCalculatorTest {
     void 첫날과_마지막_밤의_예외_요금도_반영한다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
-        Map<LocalDate, BigDecimal> overrides = Map.of(
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(
                 CHECK_IN, new BigDecimal("120000"),
                 CHECK_IN.plusDays(2), new BigDecimal("80000"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.total()).isEqualByComparingTo("300000");
@@ -74,10 +74,10 @@ class StayPriceCalculatorTest {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(2);
         // 체크아웃 날은 밤이 아니다
-        Map<LocalDate, BigDecimal> overrides = Map.of(checkOut, new BigDecimal("999999"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(checkOut, new BigDecimal("999999"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.nights()).hasSize(2);
@@ -88,10 +88,10 @@ class StayPriceCalculatorTest {
     void 체크인_전날의_예외_요금은_계산에_포함하지_않는다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(2);
-        Map<LocalDate, BigDecimal> overrides = Map.of(CHECK_IN.minusDays(1), new BigDecimal("999999"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.minusDays(1), new BigDecimal("999999"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.total()).isEqualByComparingTo("200000");
@@ -101,10 +101,10 @@ class StayPriceCalculatorTest {
     void 하룻밤도_계산한다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(1);
-        Map<LocalDate, BigDecimal> overrides = Map.of(CHECK_IN, new BigDecimal("130000"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN, new BigDecimal("130000"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.nights()).hasSize(1);
@@ -116,10 +116,10 @@ class StayPriceCalculatorTest {
     void 평균은_총액을_박수로_나눈_값이다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
-        Map<LocalDate, BigDecimal> overrides = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         // 350000 / 3 = 116666.666...
@@ -130,10 +130,10 @@ class StayPriceCalculatorTest {
     void 원_단위로_바꿀_때는_반올림한다() {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(3);
-        Map<LocalDate, BigDecimal> overrides = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.plusDays(1), new BigDecimal("150000"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.totalWon()).isEqualTo(350000L);
@@ -146,10 +146,10 @@ class StayPriceCalculatorTest {
         // Arrange
         LocalDate checkOut = CHECK_IN.plusDays(2);
         // (100000 + 100001) / 2 = 100000.5
-        Map<LocalDate, BigDecimal> overrides = Map.of(CHECK_IN.plusDays(1), new BigDecimal("100001"));
+        Map<LocalDate, BigDecimal> specialPrices = Map.of(CHECK_IN.plusDays(1), new BigDecimal("100001"));
 
         // Act
-        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, overrides);
+        StayPrice stayPrice = StayPriceCalculator.calculate(BASE_PRICE, CHECK_IN, checkOut, specialPrices);
 
         // Assert
         assertThat(stayPrice.averageWon()).isEqualTo(100001L);

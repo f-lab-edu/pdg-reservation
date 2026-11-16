@@ -32,11 +32,11 @@ public class RoomPriceService {
 
     // 객실 하나의 투숙 가격(날짜별 가격과 합계, 등급 할인 전)
     public StayPrice calculateStayPrice(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
-        Map<LocalDate, BigDecimal> overrides = roomPriceRepository
-                .findByRoomIdAndPriceDateGreaterThanEqualAndPriceDateLessThan(room.getId(), checkInDate, checkOutDate)
+        Map<LocalDate, BigDecimal> specialPrices = roomPriceRepository
+                .findInStay(room.getId(), checkInDate, checkOutDate)
                 .stream()
                 .collect(Collectors.toMap(RoomPrice::getPriceDate, RoomPrice::getPrice));
-        return StayPriceCalculator.calculate(room.getBasePrice(), checkInDate, checkOutDate, overrides);
+        return StayPriceCalculator.calculate(room.getBasePrice(), checkInDate, checkOutDate, specialPrices);
     }
 
     // 객실 여러 개의 투숙 가격. 예외 요금은 한 번의 조회로 가져온다
@@ -73,8 +73,8 @@ public class RoomPriceService {
         if (basePrices.isEmpty()) {
             return Map.of();
         }
-        Map<Long, Map<LocalDate, BigDecimal>> overridesByRoom = roomPriceRepository
-                .findByRoomIdInAndPriceDateGreaterThanEqualAndPriceDateLessThan(basePrices.keySet(), checkInDate, checkOutDate)
+        Map<Long, Map<LocalDate, BigDecimal>> specialPricesByRoom = roomPriceRepository
+                .findInStay(basePrices.keySet(), checkInDate, checkOutDate)
                 .stream()
                 .collect(Collectors.groupingBy(
                         roomPrice -> roomPrice.getRoom().getId(),
@@ -84,6 +84,6 @@ public class RoomPriceService {
                 Map.Entry::getKey,
                 entry -> StayPriceCalculator.calculate(
                         entry.getValue(), checkInDate, checkOutDate,
-                        overridesByRoom.getOrDefault(entry.getKey(), Map.of()))));
+                        specialPricesByRoom.getOrDefault(entry.getKey(), Map.of()))));
     }
 }

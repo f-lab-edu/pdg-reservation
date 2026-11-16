@@ -5,6 +5,7 @@ import com.pdg.reservation.room.dto.QRoomSearchResponse;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
 import com.pdg.reservation.room.dto.RoomSearchResponse;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,8 @@ public class RoomRepositoryImpl implements RoomRepositoryCustom {
                         room.maxCapacity,
                         room.roomLabel,
                         room.bedType,
+                        Expressions.constant(0L),                    // 총액: 서비스가 계산해서 채운다
+                        Expressions.constant(0.0),                   // 평균가: 서비스가 계산해서 채운다
                         accommodationImage.url                       // 메인 이미지
                 ))
                 .from(room)
