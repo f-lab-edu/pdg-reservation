@@ -2,10 +2,10 @@ package com.pdg.reservation.fixture;
 
 import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.room.entity.Room;
-import com.pdg.reservation.room.entity.RoomInventory;
-import com.pdg.reservation.room.repository.RoomInventoryRepository;
-import com.pdg.reservation.room.repository.RoomSpecialPriceRepository;
+import com.pdg.reservation.room.entity.RoomBlockedDate;
+import com.pdg.reservation.room.repository.RoomBlockedDateRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
+import com.pdg.reservation.room.repository.RoomSpecialPriceRepository;
 import com.pdg.reservation.support.ApiClient;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.stereotype.Component;
@@ -16,10 +16,8 @@ import java.util.List;
 
 import static com.pdg.reservation.fixture.RoomGenerator.generateNonReservableRoom;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoom;
-import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventories;
-import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventoriesForNights;
+import static com.pdg.reservation.fixture.RoomGenerator.generateRoomBlockedDate;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomSpecialPrices;
-import static com.pdg.reservation.fixture.RoomGenerator.generateRoomInventory;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithImages;
 import static com.pdg.reservation.fixture.RoomGenerator.generateRoomWithNonMainImage;
 
@@ -28,16 +26,16 @@ public class RoomFixture {
 
     private final TestRestTemplate client;
     private final RoomRepository roomRepository;
-    private final RoomInventoryRepository roomInventoryRepository;
+    private final RoomBlockedDateRepository roomBlockedDateRepository;
     private final RoomSpecialPriceRepository roomSpecialPriceRepository;
 
     public RoomFixture(ApiClient apiClient,
                        RoomRepository roomRepository,
-                       RoomInventoryRepository roomInventoryRepository,
+                       RoomBlockedDateRepository roomBlockedDateRepository,
                        RoomSpecialPriceRepository roomSpecialPriceRepository) {
         this.client = apiClient.rest();
         this.roomRepository = roomRepository;
-        this.roomInventoryRepository = roomInventoryRepository;
+        this.roomBlockedDateRepository = roomBlockedDateRepository;
         this.roomSpecialPriceRepository = roomSpecialPriceRepository;
     }
 
@@ -51,11 +49,9 @@ public class RoomFixture {
         return roomRepository.save(generateRoom(accommodation));
     }
 
-    // 예약 불가능한 객실을 저장하고, 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고도 저장한 뒤 객실을 돌려준다
-    public Room createNonReservableRoomWithInventories(Accommodation accommodation, LocalDate checkInDate, LocalDate checkOutDate) {
-        Room room = roomRepository.save(generateNonReservableRoom(accommodation));
-        createRoomInventories(room, checkInDate, checkOutDate);
-        return room;
+    // 예약 불가능한 객실을 저장하고 돌려준다
+    public Room createNonReservableRoom(Accommodation accommodation) {
+        return roomRepository.save(generateNonReservableRoom(accommodation));
     }
 
     // 이미지(대표 1개 포함)를 가진 객실을 저장하고 돌려준다
@@ -68,32 +64,19 @@ public class RoomFixture {
         return roomRepository.save(generateRoomWithNonMainImage(accommodation));
     }
 
-    // 숙소에 속한 객실을 저장하고, 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고도 저장한 뒤 객실을 돌려준다
-    public Room createRoomWithInventories(Accommodation accommodation, LocalDate checkInDate, LocalDate checkOutDate) {
-        Room room = createRoom(accommodation);
-        createRoomInventories(room, checkInDate, checkOutDate);
-        return room;
-    }
-
-    // 객실의 체크인~체크아웃 전날까지 재고가 있는 날짜별 재고를 저장하고 돌려준다
-    public List<RoomInventory> createRoomInventories(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
-        return roomInventoryRepository.saveAll(generateRoomInventories(room, checkInDate, checkOutDate));
-    }
-
     // 기본 요금을 지정한 객실을 저장하고 돌려준다
     public Room createRoom(Accommodation accommodation, long basePrice) {
         return roomRepository.save(generateRoom(accommodation, BigDecimal.valueOf(basePrice)));
     }
 
-    // 객실의 첫날부터 하루씩 prices의 개수만큼 재고를 저장하고, 가격이 있는 밤은 특별 요금(room_special_price)도 저장한다.
+    // 객실의 첫날부터 하루씩 prices의 개수만큼 특별 요금(room_special_price)을 저장한다.
     // 목록의 null은 특별 요금이 없는(기본 요금인) 밤이다
-    public List<RoomInventory> createRoomInventoriesWithNightlyPrices(Room room, LocalDate checkInDate, List<Long> prices) {
-        roomSpecialPriceRepository.saveAll(generateRoomSpecialPrices(room, checkInDate, prices));
-        return roomInventoryRepository.saveAll(generateRoomInventoriesForNights(room, checkInDate, prices.size()));
+    public void createSpecialPrices(Room room, LocalDate firstDate, List<Long> prices) {
+        roomSpecialPriceRepository.saveAll(generateRoomSpecialPrices(room, firstDate, prices));
     }
 
-    // 객실의 하루치 재고 행을 재고 여부를 지정해 저장하고 돌려준다
-    public RoomInventory createRoomInventory(Room room, LocalDate date, boolean isStocked) {
-        return roomInventoryRepository.save(generateRoomInventory(room, date, isStocked));
+    // 운영자가 객실의 하루를 막은 상태로 저장한다
+    public RoomBlockedDate createBlockedDate(Room room, LocalDate date) {
+        return roomBlockedDateRepository.save(generateRoomBlockedDate(room, date));
     }
 }

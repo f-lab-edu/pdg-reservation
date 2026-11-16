@@ -5,7 +5,7 @@ import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.room.entity.Room;
-import com.pdg.reservation.room.entity.RoomInventory;
+import com.pdg.reservation.room.entity.RoomBlockedDate;
 import com.pdg.reservation.room.entity.RoomSpecialPrice;
 
 import java.math.BigDecimal;
@@ -72,27 +72,9 @@ public final class RoomGenerator {
                 .build();
     }
 
-    // 체크인부터 체크아웃 전날까지, 날짜마다 재고가 있는 상태의 재고 행을 만든다
-    public static List<RoomInventory> generateRoomInventories(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
-        return checkInDate.datesUntil(checkOutDate)
-                .map(date -> generateRoomInventory(room, date, true))
-                .toList();
-    }
-
-    // 하루치 재고 행을 만든다. 재고 여부를 지정한다. 가격은 재고 행이 아니라 room_special_price에 둔다
-    public static RoomInventory generateRoomInventory(Room room, LocalDate date, boolean isStocked) {
-        return RoomInventory.builder()
-                .inventoryDate(date)
-                .isStocked(isStocked)
-                .room(room)
-                .build();
-    }
-
-    // 첫날부터 하루씩 prices의 개수만큼 재고가 있는 상태의 재고 행을 만든다. 가격은 room_special_price가 맡는다
-    public static List<RoomInventory> generateRoomInventoriesForNights(Room room, LocalDate firstDate, int nights) {
-        return IntStream.range(0, nights)
-                .mapToObj(i -> generateRoomInventory(room, firstDate.plusDays(i), true))
-                .toList();
+    // 객실이 막힌 날짜 행을 만든다
+    public static RoomBlockedDate generateRoomBlockedDate(Room room, LocalDate date) {
+        return RoomBlockedDate.builder().room(room).blockedDate(date).build();
     }
 
     // 첫날부터 하루씩, 지정한 가격의 특별 요금 행을 만든다. 목록의 null은 예외가 없는(기본 요금인) 밤이라 행을 만들지 않는다

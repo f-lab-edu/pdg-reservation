@@ -93,7 +93,7 @@ class DELETE_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateResponse review = reviewFixture.createReviewsAndAwaitRating(
                 accommodation.getId(), List.of(NewReview.of(reservation.getReservationId(), "4.0"))).get(0);
@@ -120,7 +120,7 @@ class DELETE_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateResponse review = reviewFixture.createReviewsAndAwaitRating(
                 accommodation.getId(), List.of(NewReview.of(reservation.getReservationId(), "4.0"))).get(0);
@@ -144,7 +144,7 @@ class DELETE_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateResponse review = reviewFixture.createReviewsAndAwaitRating(
                 accommodation.getId(), List.of(NewReview.of(reservation.getReservationId(), "4.0"))).get(0);
@@ -171,7 +171,7 @@ class DELETE_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateResponse review = reviewFixture.createReviewsAndAwaitRating(
                 accommodation.getId(), List.of(NewReview.of(reservation.getReservationId(), "4.0"))).get(0);
@@ -195,7 +195,7 @@ class DELETE_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 2);
         // 평점 4.0, 2.0이면 평균 3.0이다. 둘째를 지우면 4.0으로 돌아온다
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(

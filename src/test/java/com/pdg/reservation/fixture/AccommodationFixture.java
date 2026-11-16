@@ -61,13 +61,13 @@ public class AccommodationFixture {
         return accommodation;
     }
 
-    // 같은 임의 도시, 호텔 유형의 숙소를 개수만큼 만들고, 숙소마다 체크인~체크아웃 전날까지 재고가 있는 객실을 하나씩 붙인다. 만든 순서대로 돌려준다
-    public List<Accommodation> createAccommodationsWithInventories(int count, LocalDate checkInDate, LocalDate checkOutDate) {
+    // 같은 임의 도시, 호텔 유형의 숙소를 개수만큼 만들고, 숙소마다 객실을 하나씩 붙인다. 만든 순서대로 돌려준다
+    public List<Accommodation> createAccommodations(int count) {
         String city = generateCity();
         return IntStream.range(0, count)
                 .mapToObj(i -> {
                     Accommodation accommodation = createAccommodation(city, AccommodationType.HOTEL);
-                    roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+                    roomFixture.createRoom(accommodation);
                     return accommodation;
                 })
                 .toList();

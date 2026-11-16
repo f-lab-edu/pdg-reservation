@@ -95,7 +95,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createNonReservableRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createNonReservableRoom(accommodation);
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
 
@@ -117,7 +117,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createNonOperationalAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
 
@@ -139,7 +139,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         int guestCount = 2;
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, guestCount, totalPrice);
@@ -175,15 +175,15 @@ class POST_specs {
     }
 
     @Test
-    void 예약하면_예약한_밤의_재고만_소진된다() {
+    void 예약하면_예약한_밤만_검색에서_빠진다() {
         // Arrange
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstNight = LocalDate.now().plusDays(30);
         LocalDate secondNight = firstNight.plusDays(1);
         LocalDate thirdNight = firstNight.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        // 세 밤의 재고를 만들고 첫째·둘째 밤만 예약한다
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstNight, thirdNight.plusDays(1));
+        // 세 밤 중 첫째·둘째 밤만 예약한다
+        Room room = roomFixture.createRoom(accommodation);
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, firstNight, thirdNight, 1, totalPrice);
 
@@ -227,7 +227,7 @@ class POST_specs {
         List<Long> nightlyPrices = List.of(100_000L, 200_000L, 600_000L);
         BigDecimal expectedTotalPrice = BigDecimal.valueOf(900_000L);
         Room room = roomFixture.createRoom(accommodation, basePrice);
-        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
+        roomFixture.createSpecialPrices(room, checkInDate, nightlyPrices);
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, expectedTotalPrice);
 
         // Act
@@ -253,7 +253,7 @@ class POST_specs {
         List<Long> nightlyPrices = Arrays.asList(100_000L, null, 600_000L);
         BigDecimal expectedTotalPrice = BigDecimal.valueOf(750_000L);
         Room room = roomFixture.createRoom(accommodation, basePrice);
-        roomFixture.createRoomInventoriesWithNightlyPrices(room, checkInDate, nightlyPrices);
+        roomFixture.createSpecialPrices(room, checkInDate, nightlyPrices);
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, expectedTotalPrice);
 
         // Act
@@ -274,7 +274,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 서버가 계산하는 총액(기본 요금 2박)보다 1원 많은 금액을 보낸다
         BigDecimal serverTotalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         BigDecimal wrongTotalPrice = serverTotalPrice.add(BigDecimal.ONE);
@@ -298,7 +298,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 서버가 계산하는 총액(기본 요금 2박)보다 1원 적은 금액을 보낸다
         BigDecimal serverTotalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         BigDecimal lowerTotalPrice = serverTotalPrice.subtract(BigDecimal.ONE);
@@ -322,7 +322,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         int guestCount = room.getMaxCapacity();
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, guestCount, totalPrice);
@@ -344,7 +344,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         int guestCountOverMax = room.getMaxCapacity() + 1;
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, guestCountOverMax, totalPrice);
@@ -361,15 +361,15 @@ class POST_specs {
     }
 
     @Test
-    void 투숙_기간에_재고가_등록되지_않은_밤이_있으면_400과_RESERVE_002를_반환한다() {
+    void 투숙_기간에_운영자가_막은_날짜가_있으면_400과_RESERVE_002를_반환한다() {
         // Arrange
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoom(accommodation);
-        // 첫째 밤 재고만 저장한다. 둘째 밤(체크인 다음 날)은 재고 행이 없다
-        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
+        // 둘째 밤(체크인 다음 날)을 운영자가 막았다
+        roomFixture.createBlockedDate(room, checkInDate.plusDays(1));
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
 
@@ -383,18 +383,84 @@ class POST_specs {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_002");
     }
-
     @Test
-    void 투숙_기간에_재고가_소진된_밤이_있으면_409와_RESERVE_003을_반환한다() {
+    void 막힌_날짜가_체크아웃_날이면_예약된다() {
         // Arrange
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoom(accommodation);
-        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
-        // 둘째 밤(체크인 다음 날)은 재고 행은 있지만 재고가 없다
-        roomFixture.createRoomInventory(room, checkInDate.plusDays(1), false);
+        // 체크아웃 날은 밤이 아니라서 막혀 있어도 예약할 수 있다
+        roomFixture.createBlockedDate(room, checkOutDate);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<ReservationResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 최대_숙박_일수_14박이면_예약된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(14);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(14));
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<ReservationResponse>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void 최대_숙박_일수를_넘는_15박이면_400과_RESERVE_002를_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(15);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(15));
+        ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_002");
+    }
+
+
+    @Test
+    void 투숙_기간에_이미_예약된_밤이_있으면_409와_RESERVE_003을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        // 둘째 밤(체크인 다음 날)은 다른 회원이 이미 예약했다
+        String otherMember = memberFixture.createLoggedInMembers(1).get(0);
+        reservationFixture.createReservation(room, checkInDate.plusDays(1), checkInDate.plusDays(2), otherMember);
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
 
@@ -416,7 +482,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         reservationFixture.createReservation(generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice));
         ReservationRequest secondRequest = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
@@ -458,7 +524,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         BigDecimal totalPrice = room.getBasePrice().multiply(BigDecimal.valueOf(2));
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate, 1, totalPrice);
 
@@ -480,7 +546,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         List<String> authorizations = memberFixture.createLoggedInMembers(requesterCount);
         ReservationRequest request = generateReservationRequest(room, checkInDate, checkOutDate);
 
@@ -514,7 +580,7 @@ class POST_specs {
         // Arrange
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(3));
+        Room room = roomFixture.createRoom(accommodation);
         List<String> authorizations = memberFixture.createLoggedInMembers(2);
         // 둘째 날 밤이 겹친다: (1~3일), (2~4일)
         List<ReservationAttempt> attempts = List.of(
@@ -552,7 +618,7 @@ class POST_specs {
         // Arrange
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(3));
+        Room room = roomFixture.createRoom(accommodation);
         List<String> authorizations = memberFixture.createLoggedInMembers(2);
         // 하룻밤씩 겹치지 않는다: (1~2일), (3~4일)
         List<ReservationAttempt> attempts = List.of(
@@ -584,8 +650,8 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
-        Room otherRoom = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
+        Room otherRoom = roomFixture.createRoom(accommodation);
         List<String> authorizations = memberFixture.createLoggedInMembers(2);
         List<ReservationAttempt> attempts = List.of(
                 new ReservationAttempt(authorizations.get(0), generateReservationRequest(room, checkInDate, checkOutDate)),

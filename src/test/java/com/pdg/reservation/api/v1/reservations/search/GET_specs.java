@@ -97,8 +97,8 @@ class GET_specs {
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Accommodation otherAccommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
-        Room otherRoom = roomFixture.createRoomWithInventories(otherAccommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
+        Room otherRoom = roomFixture.createRoom(otherAccommodation);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         reservationFixture.createReservation(otherRoom, checkInDate, checkOutDate);
         // 1건이 한 페이지(size=1)를 채워 전체 건수 쿼리도 실행된다
@@ -125,7 +125,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        Room room = roomFixture.createRoom(accommodation);
         // 하룻밤씩 겹치지 않게 예약 3건을 만든다
         ReservationResponse first = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(1));
         ReservationResponse second = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(3));
@@ -160,7 +160,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         // 기대값은 저장한 값과 예약 생성 응답에서 직접 채운다. 이미지는 없고, 결제 전이라 취소·리뷰 작성은 불가능하다
         ReservationSearchResponse expected = ReservationSearchResponse.builder()
@@ -204,8 +204,8 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
-        Room otherRoom = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
+        Room otherRoom = roomFixture.createRoom(accommodation);
         ReservationResponse myReservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         reservationFixture.createReservation(otherRoom, checkInDate, checkOutDate, otherSession.bearer());
         // 내 예약 1건이 한 페이지(size=1)를 가득 채워야 전체 건수 쿼리도 실행된다
@@ -232,7 +232,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        Room room = roomFixture.createRoom(accommodation);
         // 하룻밤씩 겹치지 않게 순서대로 예약 3건을 만든다
         ReservationResponse first = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(1));
         ReservationResponse second = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(3));
@@ -258,8 +258,8 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
-        Room otherRoom = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
+        Room otherRoom = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         reservationFixture.createReservation(otherRoom, checkInDate, checkOutDate);
         // 객실명의 일부(접두어 "객실-"를 뺀 임의 부분)만으로 검색한다. 1건이 한 페이지(size=1)를 채워 전체 건수 쿼리도 실행된다
@@ -287,7 +287,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        Room room = roomFixture.createRoom(accommodation);
         // 이어지는 2박씩 3건: [0~2], [2~4], [4~6]일. 가운데 예약이 범위(2~4일)와 시작과 끝이 정확히 같다
         reservationFixture.createReservation(room, firstDay, firstDay.plusDays(2));
         ReservationResponse middle = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(4));
@@ -317,7 +317,6 @@ class GET_specs {
         // 숙소와 객실 모두 대표 이미지가 있다
         Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
         Room room = roomFixture.createRoomWithImages(accommodation);
-        roomFixture.createRoomInventories(room, checkInDate, checkOutDate);
         String roomMainImageUrl = room.getImages().stream()
                 .filter(AccommodationImage::isMain)
                 .findFirst()
@@ -345,7 +344,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         String accommodationMainImageUrl = accommodation.getImages().stream()
                 .filter(AccommodationImage::isMain)
                 .findFirst()
@@ -372,7 +371,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(10));
+        Room room = roomFixture.createRoom(accommodation);
         // 하룻밤씩 겹치지 않게 순서대로 예약 5건을 만든다
         List<ReservationResponse> reservations = IntStream.range(0, 5)
                 .mapToObj(i -> reservationFixture.createReservation(room, firstDay.plusDays(2L * i), firstDay.plusDays(2L * i + 1)))
@@ -409,7 +408,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(10));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = IntStream.range(0, 5)
                 .mapToObj(i -> reservationFixture.createReservation(room, firstDay.plusDays(2L * i), firstDay.plusDays(2L * i + 1)))
                 .toList();
@@ -513,7 +512,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse paid = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(2));
         reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(4));
         paymentFixture.createPayment(paid.getReservationId(), paid.getTotalPrice());
@@ -539,7 +538,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse paid = reservationFixture.createReservation(room, firstDay, firstDay.plusDays(2));
         ReservationResponse pending = reservationFixture.createReservation(room, firstDay.plusDays(2), firstDay.plusDays(4));
         paymentFixture.createPayment(paid.getReservationId(), paid.getTotalPrice());

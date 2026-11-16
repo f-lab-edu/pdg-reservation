@@ -132,7 +132,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         UUID missingReservationId = UUID.randomUUID();
         PaymentRequest request = generatePaymentRequest(missingReservationId, reservation.getTotalPrice());
@@ -157,7 +157,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 기본 사용자의 예약을 다른 회원이 결제한다
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
@@ -180,7 +180,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         PaymentRequest request = generateEasyPaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
 
@@ -376,7 +376,6 @@ class POST_specs {
         Accommodation accommodation = accommodationFixture.createAccommodation();
         // 1박 50원인 객실을 2박 예약하면 총액이 100원이다
         Room room = roomFixture.createRoom(accommodation, 50L);
-        roomFixture.createRoomInventories(room, checkInDate, checkOutDate);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
 
@@ -527,7 +526,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         return reservationFixture.createReservation(room, checkInDate, checkOutDate);
     }
 }

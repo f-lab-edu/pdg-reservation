@@ -2,7 +2,7 @@
 
 엔티티(JPA)의 테이블 구조와 관계를 Mermaid로 그린 것이다. 엔티티 구조가 바뀌면 이 문서를 함께 갱신한다([CLAUDE.md](../CLAUDE.md) 참고).
 
-- 기준: `main`이 아니라 `develop`의 엔티티. 마지막 갱신: 2026-11-16 (`ROOM_SPECIAL_PRICE` 추가, `ROOM_INVENTORY.price` 제거, ADR 0013 사이클 2). 이전: 2026-11-06 (`Reservation`, `Payment`에 `public_id` 추가, ADR 0012).
+- 기준: `main`이 아니라 `develop`의 엔티티. 마지막 갱신: 2026-11-16 (`ROOM_INVENTORY` 제거, `RESERVATION_NIGHT`·`ROOM_BLOCKED_DATE` 추가, ADR 0013 사이클 3~4). 이전: 2026-11-16 (`ROOM_SPECIAL_PRICE` 추가, ADR 0013 사이클 2). 이전: 2026-11-06 (`Reservation`, `Payment`에 `public_id` 추가, ADR 0012).
 - 공통: `BaseEntity`를 상속한 테이블은 `created_at`, `updated_at`을 갖는다(아래 그림에서는 생략).
 - `PK` 기본키, `FK` 외래키, `UK` 유니크. 따옴표 안은 설명이다.
 
@@ -15,9 +15,11 @@ erDiagram
     ACCOMMODATION ||--o{ REVIEW : "리뷰 대상"
     ACCOMMODATION ||--o{ ACCOMMODATION_IMAGE : "이미지(숙소)"
     ROOM ||--o{ ACCOMMODATION_IMAGE : "이미지(객실)"
-    ROOM ||--o{ ROOM_INVENTORY : "날짜별 재고"
+    ROOM ||--o{ ROOM_BLOCKED_DATE : "운영자가 막은 날짜"
     ROOM ||--o{ ROOM_SPECIAL_PRICE : "날짜별 특별 요금"
     ROOM ||--o{ RESERVATION : "예약 대상"
+    ROOM ||--o{ RESERVATION_NIGHT : "날짜별 점유"
+    RESERVATION ||--o{ RESERVATION_NIGHT : "점유한 밤"
     RESERVATION ||--o| PAYMENT : "결제(1:1)"
     RESERVATION ||--o| REVIEW : "리뷰(1:1)"
     PAYMENT ||--o| PAYMENT_CANCEL_HISTORY : "취소 이력(1:1)"
@@ -60,13 +62,6 @@ erDiagram
         boolean is_reservable
         varchar room_label
     }
-    ROOM_INVENTORY {
-        bigint id PK
-        bigint room_id FK "NOT NULL"
-        date inventory_date "room_id와 함께 유니크"
-        boolean is_stocked
-        bigint version "낙관적 락"
-    }
     ROOM_SPECIAL_PRICE {
         bigint id PK
         bigint room_id FK "NOT NULL"
@@ -98,6 +93,18 @@ erDiagram
         datetime confirmed_at
         datetime canceled_at
         bigint version "낙관적 락"
+    }
+    ROOM_BLOCKED_DATE {
+        bigint id PK
+        bigint room_id FK "NOT NULL"
+        date blocked_date "room_id와 함께 유니크"
+    }
+    RESERVATION_NIGHT {
+        bigint id PK
+        bigint reservation_id FK "NOT NULL, 취소·만료 시 행 삭제"
+        bigint room_id FK "NOT NULL"
+        date stay_date "room_id와 함께 유니크(점유 락)"
+        decimal price "예약 시점 가격 스냅샷(등급 할인 전)"
     }
     PAYMENT {
         bigint id PK
@@ -139,7 +146,7 @@ erDiagram
 
 ## 관계 메모
 
-- 재고(`ROOM_INVENTORY`)는 객실에 종속되고 `(room_id, inventory_date)`가 유니크다. 예약은 재고를 가리키는 FK 없이 `room_id`와 `check_in_date`~`check_out_date`로 해당 날짜의 재고를 찾는다. (ADR 0013에 따라 사이클 3~4에서 `reservation_night`와 `room_blocked_date`로 대체된다.)
+- 점유(`RESERVATION_NIGHT`)는 예약이 차지한 밤마다 한 행이고 `(room_id, stay_date)`가 유니크라서 같은 객실 같은 밤의 이중 예약을 DB가 막는다. 예약이 취소·만료되면 행을 지우고, 확정·이용 완료 예약의 행은 남긴다. 운영자가 막은 날짜는 `ROOM_BLOCKED_DATE`에 따로 둔다(ADR 0013).
 - 날짜별 가격은 `ROOM_SPECIAL_PRICE`의 특별 요금 행만 두고, 행이 없는 날은 `ROOM.base_price`다. 합계와 평균은 `Room.calculateStayPrice`가 계산한다(ADR 0013, 0014).
 - `EVENT_LOG.aggregate_id`는 FK가 없는 `Long`이다(멱등성 확인에 쓰는 이벤트 기록).
 - `PAYMENT`와 `PAYMENT_CANCEL_HISTORY`는 현재 1:1이다.

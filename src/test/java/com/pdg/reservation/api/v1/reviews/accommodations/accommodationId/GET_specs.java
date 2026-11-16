@@ -95,7 +95,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateResponse review = reviewFixture.createReviewsAndAwaitRating(
                 accommodation.getId(), List.of(NewReview.of(reservation.getReservationId(), "4.5"))).get(0);
@@ -136,7 +136,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         reviewFixture.createReviewsAndAwaitRating(
                 accommodation.getId(), List.of(NewReview.of(reservation.getReservationId(), "4.0")));
@@ -162,8 +162,8 @@ class GET_specs {
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Accommodation otherAccommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
-        Room otherRoom = roomFixture.createRoomWithInventories(otherAccommodation, firstDay, firstDay.plusDays(2));
+        Room room = roomFixture.createRoom(accommodation);
+        Room otherRoom = roomFixture.createRoom(otherAccommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 2);
         ReservationResponse otherReservation = reservationFixture.createCompletedReservation(otherRoom, firstDay, firstDay.plusDays(1));
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(
@@ -199,7 +199,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 3);
         // 평점 3.0, 5.0, 1.0 순서로 쓴다. 최소 평점 3은 3.0(경계)과 5.0을 포함한다
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(
@@ -233,7 +233,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 3);
         // 평점 3.0, 5.0, 1.0 순서로 쓴다
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(
@@ -261,7 +261,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(6));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 3);
         // 평점 3.0, 5.0, 1.0 순서로 쓴다
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(
@@ -289,7 +289,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(10));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 5);
         // 평점 5.0, 4.0, 3.0, 2.0, 1.0 순서로 쓴다
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(
@@ -327,7 +327,7 @@ class GET_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(10));
+        Room room = roomFixture.createRoom(accommodation);
         List<ReservationResponse> reservations = reservationFixture.createCompletedReservations(room, firstDay, 5);
         List<ReviewCreateResponse> reviews = reviewFixture.createReviewsAndAwaitRating(accommodation.getId(), List.of(
                 NewReview.of(reservations.get(0).getReservationId(), "5.0"),
@@ -450,7 +450,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         // 리뷰가 없는 목록을 먼저 조회해 캐시에 담는다
         ResponseEntity<ApiResponse<PageResponse<ReviewResponse>>> before = memberFixture.client().exchange(

@@ -85,7 +85,7 @@ class POST_specs {
         memberFixture.createMemberThenSetAsDefaultUser();
         LocalDate firstDay = LocalDate.now().plusDays(30);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, firstDay, firstDay.plusDays(4));
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse firstReservation = reservationFixture.createCompletedReservation(room, firstDay, firstDay.plusDays(1));
         ReservationResponse secondReservation = reservationFixture.createCompletedReservation(room, firstDay.plusDays(2), firstDay.plusDays(3));
         reviewFixture.createReview(firstReservation.getReservationId(), new BigDecimal("4.0"));
@@ -121,7 +121,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         BigDecimal rating = new BigDecimal("4.5");
         ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), rating);
@@ -159,7 +159,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 결제 대기 상태의 예약이다
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), new BigDecimal("4.0"));
@@ -182,7 +182,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         BigDecimal rating = new BigDecimal("4.0");
         reviewFixture.createReview(reservation.getReservationId(), rating);
@@ -209,7 +209,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 기본 사용자의 이용 완료 예약에 다른 회원이 리뷰를 쓴다
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), new BigDecimal("4.0"));
@@ -232,7 +232,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         UUID missingReservationId = UUID.randomUUID();
         ReviewCreateRequest request = generateReviewCreateRequest(missingReservationId, new BigDecimal("4.0"));
@@ -273,7 +273,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), rating, content);
 
@@ -296,7 +296,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         BigDecimal rating = new BigDecimal("4.5");
 
@@ -336,7 +336,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
         BigDecimal rating = new BigDecimal("4.5");
         // 리뷰를 쓰기 전의 상세(평점 0)가 캐시에 담긴다

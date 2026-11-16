@@ -7,6 +7,8 @@ import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
+import com.pdg.reservation.fixture.MemberFixture;
+import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.RoomFixture;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
@@ -45,6 +47,12 @@ class GET_specs {
     RoomFixture roomFixture;
 
     @Autowired
+    MemberFixture memberFixture;
+
+    @Autowired
+    ReservationFixture reservationFixture;
+
+    @Autowired
     ApiClient apiClient;
 
     @Autowired
@@ -66,7 +74,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 기대값은 저장한 값에서 직접 채운다. 대표 이미지는 없고, 최저가는 객실 기본 요금이다
         AccommodationSearchResponse expected = AccommodationSearchResponse.builder()
                 .id(accommodation.getId())
@@ -103,8 +111,8 @@ class GET_specs {
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation seoul = accommodationFixture.createAccommodation("서울", AccommodationType.HOTEL);
         Accommodation busan = accommodationFixture.createAccommodation("부산", AccommodationType.HOTEL);
-        Room seoulRoom = roomFixture.createRoomWithInventories(seoul, checkInDate, checkOutDate);
-        roomFixture.createRoomWithInventories(busan, checkInDate, checkOutDate);
+        Room seoulRoom = roomFixture.createRoom(seoul);
+        roomFixture.createRoom(busan);
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -132,8 +140,8 @@ class GET_specs {
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation hotel = accommodationFixture.createAccommodation("서울", AccommodationType.HOTEL);
         Accommodation motel = accommodationFixture.createAccommodation("서울", AccommodationType.MOTEL);
-        Room hotelRoom = roomFixture.createRoomWithInventories(hotel, checkInDate, checkOutDate);
-        roomFixture.createRoomWithInventories(motel, checkInDate, checkOutDate);
+        Room hotelRoom = roomFixture.createRoom(hotel);
+        roomFixture.createRoom(motel);
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -160,7 +168,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -187,7 +195,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -220,8 +228,8 @@ class GET_specs {
         List<Long> roomBPrices = List.of(130000L, 150000L);
         Room roomA = roomFixture.createRoom(accommodation, basePrice);
         Room roomB = roomFixture.createRoom(accommodation, basePrice);
-        roomFixture.createRoomInventoriesWithNightlyPrices(roomA, checkInDate, roomAPrices);
-        roomFixture.createRoomInventoriesWithNightlyPrices(roomB, checkInDate, roomBPrices);
+        roomFixture.createSpecialPrices(roomA, checkInDate, roomAPrices);
+        roomFixture.createSpecialPrices(roomB, checkInDate, roomBPrices);
         // 1박 평균: A = (200,000 + 140,000) / 2 = 170,000, B = (130,000 + 150,000) / 2 = 140,000
         long roomAAveragePrice = 170000L;
         long roomBAveragePrice = 140000L;
@@ -260,8 +268,8 @@ class GET_specs {
         List<Long> roomBPrices = Arrays.asList(null, null);
         Room roomA = roomFixture.createRoom(accommodation, roomABasePrice);
         Room roomB = roomFixture.createRoom(accommodation, roomBBasePrice);
-        roomFixture.createRoomInventoriesWithNightlyPrices(roomA, checkInDate, roomAPrices);
-        roomFixture.createRoomInventoriesWithNightlyPrices(roomB, checkInDate, roomBPrices);
+        roomFixture.createSpecialPrices(roomA, checkInDate, roomAPrices);
+        roomFixture.createSpecialPrices(roomB, checkInDate, roomBPrices);
         // 1박 평균: A = (120,000 + 가격 없는 밤은 기본 요금 160,000) / 2 = 140,000, B = (150,000 + 150,000) / 2 = 150,000
         long roomAAveragePrice = 140000L;
         long roomBAveragePrice = 150000L;
@@ -292,7 +300,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createNonOperationalAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -314,18 +322,18 @@ class GET_specs {
     }
 
     @Test
-    void 일부_밤이_소진된_객실은_최저가_계산에서_제외된다() {
+    void 일부_밤이_예약된_객실은_최저가_계산에서_제외된다() {
         // Arrange
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        // 객실 A: 첫째 밤 재고 있음(50,000) / 둘째 밤 소진 → 이 기간에는 예약할 수 없다
+        // 객실 A: 기본 요금 50,000, 둘째 밤을 다른 회원이 예약했다 → 이 기간에는 예약할 수 없다
         Room soldOutRoom = roomFixture.createRoom(accommodation, 50000L);
-        roomFixture.createRoomInventory(soldOutRoom, checkInDate, true);
-        roomFixture.createRoomInventory(soldOutRoom, checkInDate.plusDays(1), false);
-        // 객실 B: 두 밤 모두 재고 있음(100,000 / 100,000) → 예약할 수 있다
+        String otherMember = memberFixture.createLoggedInMembers(1).get(0);
+        reservationFixture.createReservation(soldOutRoom, checkInDate.plusDays(1), checkInDate.plusDays(2), otherMember);
+        // 객실 B: 두 밤 모두 100,000 → 예약할 수 있다
         Room availableRoom = roomFixture.createRoom(accommodation, 100000L);
-        roomFixture.createRoomInventoriesWithNightlyPrices(availableRoom, checkInDate, List.of(100000L, 100000L));
+        roomFixture.createSpecialPrices(availableRoom, checkInDate, List.of(100000L, 100000L));
         // 최저가는 예약할 수 있는 객실 B의 1박 평균가다
         long expectedMinPrice = 100000L;
 
@@ -349,14 +357,14 @@ class GET_specs {
     }
 
     @Test
-    void 숙박하는_밤_중_재고가_등록되지_않은_날이_있으면_검색되지_않는다() {
+    void 숙박하는_밤_중_운영자가_막은_날이_있으면_검색되지_않는다() {
         // Arrange
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoom(accommodation);
-        // 첫째 밤 재고만 저장한다. 둘째 밤(체크인 다음 날)은 재고 행이 없다
-        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
+        // 둘째 밤(체크인 다음 날)을 운영자가 막았다
+        roomFixture.createBlockedDate(room, checkInDate.plusDays(1));
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -376,15 +384,15 @@ class GET_specs {
     }
 
     @Test
-    void 숙박하는_밤_중_재고가_소진된_날이_있으면_검색되지_않는다() {
+    void 숙박하는_밤_중_이미_예약된_날이_있으면_검색되지_않는다() {
         // Arrange
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
         Room room = roomFixture.createRoom(accommodation);
-        roomFixture.createRoomInventories(room, checkInDate, checkInDate.plusDays(1));
-        // 둘째 밤(체크인 다음 날)은 재고 행은 있지만 재고가 없다
-        roomFixture.createRoomInventory(room, checkInDate.plusDays(1), false);
+        // 둘째 밤(체크인 다음 날)은 다른 회원이 이미 예약했다
+        String otherMember = memberFixture.createLoggedInMembers(1).get(0);
+        reservationFixture.createReservation(room, checkInDate.plusDays(1), checkInDate.plusDays(2), otherMember);
 
         // Act
         ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> response =
@@ -409,7 +417,7 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodationWithImages();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         // 기대값은 저장한 이미지 중 대표 이미지의 URL이다 (운영의 조회 코드를 쓰지 않는다)
         String expectedMainImage = accommodation.getImages().stream()
                 .filter(AccommodationImage::isMain)
@@ -443,8 +451,7 @@ class GET_specs {
         LocalDate checkOutDate = checkInDate.plusDays(2);
         int size = 2;
         int capacity = 1; // 객실 최대 인원(2명) 이하
-        List<Accommodation> accommodations = accommodationFixture.createAccommodationsWithInventories(
-                5, checkInDate, checkOutDate);
+        List<Accommodation> accommodations = accommodationFixture.createAccommodations(5);
         // 검색 조건은 만들어진 숙소에서 읽는다
         String city = accommodations.get(0).getAddress().getCity();
         AccommodationType type = accommodations.get(0).getType();
@@ -491,8 +498,7 @@ class GET_specs {
         int fullPageCount = 2; // 앞의 꽉 찬 페이지 수
         int totalCount = size * fullPageCount + lastPageSize; // 마지막 페이지에 lastPageSize개가 남는다
         int lastPageIndex = fullPageCount; // page는 0부터 시작하므로 꽉 찬 페이지 수가 마지막 페이지 번호다
-        List<Accommodation> accommodations = accommodationFixture.createAccommodationsWithInventories(
-                totalCount, checkInDate, checkOutDate);
+        List<Accommodation> accommodations = accommodationFixture.createAccommodations(totalCount);
         // 검색 조건은 만들어진 숙소에서 읽는다
         String city = accommodations.get(0).getAddress().getCity();
         AccommodationType type = accommodations.get(0).getType();
@@ -534,9 +540,8 @@ class GET_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         int capacity = 1; // 객실 최대 인원(2명) 이하
-        // 숙소와 재고는 있지만 검색하는 도시가 다르다
-        List<Accommodation> accommodations = accommodationFixture.createAccommodationsWithInventories(
-                1, checkInDate, checkOutDate);
+        // 숙소는 있지만 검색하는 도시가 다르다
+        List<Accommodation> accommodations = accommodationFixture.createAccommodations(1);
         Accommodation accommodation = accommodations.get(0);
         String otherCity = generateCity();
 

@@ -15,10 +15,11 @@ import com.pdg.reservation.reservation.repository.ReservationRedisRepository;
 import com.pdg.reservation.reservation.repository.ReservationRepository;
 import com.pdg.reservation.reservation.validator.ReservationValidator;
 import com.pdg.reservation.room.entity.Room;
-import com.pdg.reservation.room.entity.RoomInventory;
+import com.pdg.reservation.reservation.entity.ReservationNight;
+import com.pdg.reservation.reservation.repository.ReservationNightRepository;
+import com.pdg.reservation.room.repository.RoomBlockedDateRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
 import com.pdg.reservation.room.price.StayPrice;
-import com.pdg.reservation.room.service.RoomInventoryService;
 import com.pdg.reservation.room.service.RoomPriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -41,7 +43,8 @@ public class ReservationService {
     private final ReservationRedisRepository reservationRedisRepository;
     private final ReservationValidator reservationValidator;
     private final ApplicationEventPublisher eventPublisher;
-    private final RoomInventoryService roomInventoryService;
+    private final ReservationNightRepository reservationNightRepository;
+    private final RoomBlockedDateRepository roomBlockedDateRepository;
     private final RoomPriceService roomPriceService;
 
     @DistributedLock(key = "'room:' + #roomId")
@@ -50,23 +53,23 @@ public class ReservationService {
         Room room = roomRepository.findById(reserveRequest.getRoomId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ROOM_NOT_FOUND));
 
-        List<RoomInventory> inventories = roomInventoryService.getStayPeriodInventories(
-                roomId,
-                reserveRequest.getCheckInDate(),
-                reserveRequest.getCheckOutDate()
-        );
-        StayPrice stayPrice = roomPriceService.calculateStayPrice(
-                room, reserveRequest.getCheckInDate(), reserveRequest.getCheckOutDate());
-        reservationValidator.validate(member, reserveRequest, room, inventories, stayPrice);
-
-        roomInventoryService.reduceStock(
-                reserveRequest.getRoomId(),
-                reserveRequest.getCheckInDate(),
-                reserveRequest.getCheckOutDate()
-        );
+        LocalDate checkIn = reserveRequest.getCheckInDate();
+        LocalDate checkOut = reserveRequest.getCheckOutDate();
+        boolean blocked = roomBlockedDateRepository
+                .existsByRoomIdAndBlockedDateGreaterThanEqualAndBlockedDateLessThan(roomId, checkIn, checkOut);
+        boolean occupied = reservationNightRepository
+                .existsByRoomIdAndStayDateGreaterThanEqualAndStayDateLessThan(roomId, checkIn, checkOut);
+        StayPrice stayPrice = roomPriceService.calculateStayPrice(room, checkIn, checkOut);
+        reservationValidator.validate(member, reserveRequest, room, blocked, occupied, stayPrice);
 
         Reservation reservation = reserveRequest.toEntity(member, room);
         reservationRepository.save(reservation);
+
+        // 날짜 오름차순으로 점유한다. (room_id, stay_date) 유니크가 이중 점유를 막는다
+        List<ReservationNight> nights = stayPrice.nights().stream()
+                .map(nightPrice -> ReservationNight.of(reservation, room, nightPrice))
+                .toList();
+        reservationNightRepository.saveAll(nights);
 
         reservationRedisRepository.savePaymentTimeout(reservation.getId(), 1);
         return ReservationResponse.from(reservation);
@@ -104,8 +107,8 @@ public class ReservationService {
         // 1. 결제 만료로 인한 취소, 상태 변경
         updateExpiredStatus(reservation);
 
-        // 2. 재고 복구
-        roomInventoryService.restoreStock(reservation.getRoom().getId(), reservation.getCheckInDate(), reservation.getCheckOutDate());
+        // 2. 점유한 밤 해제
+        reservationNightRepository.deleteByReservationId(reservationId);
 
         eventPublisher.publishEvent(new ReservationRollbackEvent(reservationId));
     }

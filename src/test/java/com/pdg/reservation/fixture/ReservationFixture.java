@@ -43,7 +43,7 @@ public class ReservationFixture {
         return client;
     }
 
-    // 기본 사용자로 객실을 기본 요금으로 예약한다. 객실의 재고는 기본 요금 그대로여야 한다. 인원은 1명이다
+    // 기본 사용자로 객실을 기본 요금으로 예약한다. 객실의 요금은 기본 요금 그대로여야 한다. 인원은 1명이다
     public ReservationResponse createReservation(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
         return createReservation(createRequest(room, checkInDate, checkOutDate));
     }
@@ -62,7 +62,7 @@ public class ReservationFixture {
         return reservation;
     }
 
-    // 기본 사용자로 하룻밤씩 겹치지 않게(첫날, 첫날+2일, ...) 이용 완료 예약을 개수만큼 만든다. 객실 재고는 첫날부터 개수×2일 이상이어야 한다
+    // 기본 사용자로 하룻밤씩 겹치지 않게(첫날, 첫날+2일, ...) 이용 완료 예약을 개수만큼 만든다.
     public List<ReservationResponse> createCompletedReservations(Room room, LocalDate firstDay, int count) {
         return IntStream.range(0, count)
                 .mapToObj(i -> createCompletedReservation(room, firstDay.plusDays(2L * i), firstDay.plusDays(2L * i + 1)))
@@ -70,7 +70,7 @@ public class ReservationFixture {
     }
 
     // 기본 사용자로 예약한 뒤 숙박 기간을 지정한 값으로 바꾼다. 지난 날짜는 예약 API로 만들 수 없어서 기간만 SQL로 바꾼다
-    // 예약은 재고가 있는 미래 기간(apiCheckInDate, apiCheckOutDate)으로 하고, 이후 stayCheckInDate, stayCheckOutDate로 덮어쓴다
+    // 예약은 미래 기간(apiCheckInDate, apiCheckOutDate)으로 하고, 이후 stayCheckInDate, stayCheckOutDate로 덮어쓴다
     public ReservationResponse createReservationWithStayDates(
             Room room, LocalDate apiCheckInDate, LocalDate apiCheckOutDate,
             LocalDate stayCheckInDate, LocalDate stayCheckOutDate) {

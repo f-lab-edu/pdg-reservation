@@ -216,7 +216,7 @@ class POST_specs {
     }
 
     @Test
-    void 취소하면_재고가_복구되어_같은_기간을_다시_예약할_수_있다() {
+    void 취소하면_점유한_밤이_풀려_같은_기간을_다시_예약할_수_있다() {
         // Arrange
         memberFixture.createMemberThenSetAsDefaultUser();
         PaidReservation paid = createPaidReservation();
@@ -283,7 +283,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse pending = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         ReservationCancelRequest request = generateReservationCancelRequest(pending.getReservationId());
 
@@ -472,7 +472,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
         PaymentResponse payment = paymentFixture.createPayment(reservation.getReservationId(), reservation.getTotalPrice());
         return new PaidReservation(room, checkInDate, checkOutDate, reservation, payment);
@@ -483,7 +483,7 @@ class POST_specs {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);
         Accommodation accommodation = accommodationFixture.createAccommodation();
-        Room room = roomFixture.createRoomWithInventories(accommodation, checkInDate, checkOutDate);
+        Room room = roomFixture.createRoom(accommodation);
         ReservationResponse reservation = reservationFixture.createReservationWithStayDates(
                 room, checkInDate, checkOutDate, stayCheckInDate, stayCheckOutDate);
         PaymentResponse payment = paymentFixture.createPayment(reservation.getReservationId(), reservation.getTotalPrice());

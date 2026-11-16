@@ -9,7 +9,7 @@ import com.pdg.reservation.reservation.dto.ReservationCancelRequest;
 import com.pdg.reservation.reservation.dto.ReservationCancelResponse;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.repository.ReservationRepository;
-import com.pdg.reservation.room.service.RoomInventoryService;
+import com.pdg.reservation.reservation.repository.ReservationNightRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class ReservationCancelService {
 
     private final ReservationRepository reservationRepository;
     private final PaymentService paymentService;
-    private final RoomInventoryService roomInventoryService;
+    private final ReservationNightRepository reservationNightRepository;
     private final ReservationService reservationService;
 
     @DistributedLock(key = "'reserveCancel:reservationId:' + #reservationId")
@@ -41,11 +41,7 @@ public class ReservationCancelService {
         paymentService.cancelPayment(payment, cancelRequest.getCancelReason());
 
         reservationService.updateCancelStatus(reservation);
-        roomInventoryService.restoreStock(
-                reservation.getRoom().getId(),
-                reservation.getCheckInDate(),
-                reservation.getCheckOutDate()
-        );
+        reservationNightRepository.deleteByReservationId(reservation.getId());
         return ReservationCancelResponse.from(payment);
     }
 }
