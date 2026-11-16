@@ -1,6 +1,5 @@
 package com.pdg.reservation.reservation.service;
 
-import com.pdg.reservation.common.annotation.DistributedLock;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.member.entity.Member;
@@ -24,6 +23,8 @@ import com.pdg.reservation.room.service.RoomPriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,6 @@ public class ReservationService {
     private final RoomBlockedDateRepository roomBlockedDateRepository;
     private final RoomPriceService roomPriceService;
 
-    @DistributedLock(key = "'room:' + #roomId")
     @Transactional
     public ReservationResponse reserve(Long roomId, Member member, ReservationRequest reserveRequest) {
         Room room = roomRepository.findById(reserveRequest.getRoomId())
@@ -69,10 +69,20 @@ public class ReservationService {
         List<ReservationNight> nights = stayPrice.nights().stream()
                 .map(nightPrice -> ReservationNight.of(reservation, room, nightPrice))
                 .toList();
-        reservationNightRepository.saveAll(nights);
+        saveNights(nights, roomId);
 
         reservationRedisRepository.savePaymentTimeout(reservation.getId(), 1);
         return ReservationResponse.from(reservation);
+    }
+
+    // 사전 조회를 동시에 통과한 요청은 여기서 (room_id, stay_date) 유니크로 가려진다. 진 쪽은 409로 응답하고 예약 저장도 함께 롤백된다
+    private void saveNights(List<ReservationNight> nights, Long roomId) {
+        try {
+            reservationNightRepository.saveAll(nights);
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException e) {
+            log.warn("점유 저장 충돌 : roomId={}, cause={}", roomId, e.getClass().getSimpleName());
+            throw new CustomException(ErrorCode.RESERVE_ALREADY_BOOKED);
+        }
     }
 
     @Transactional
