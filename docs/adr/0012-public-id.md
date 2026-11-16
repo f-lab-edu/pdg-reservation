@@ -28,7 +28,7 @@
   | 비공개 (본인 것만 접근) | `Reservation`, `Payment` | 권한 검사가 한 번 빠지면 id 열거로 남의 데이터에 접근한다. 추가 방어선이 의미 있다 | **붙임** |
   | 비공개, 외부에 노출하지 않음 | `Member` | 키를 응답·경로로 내보내지 않고 JWT만 응답한다(JWT subject는 이메일). 노출 경로가 없다 | 붙이지 않음 |
   | 공개 정보 | `Accommodation`, `Room`, `Review` | 누구나 볼 수 있는 상품 정보라 id를 열거해도 새는 것이 업무 정보(건수, 증가 속도) 정도다. 크롤링은 rate limit으로 대응한다. 쇼핑몰의 상품 페이지도 숫자 id를 쓴다 | 붙이지 않음 |
-  | 외부에 나가지 않음 | `AccommodationImage`, `RoomInventory`, `PaymentCancelHistory`, `EventLog` | 노출 경로가 없다 | 붙이지 않음 |
+  | 외부에 나가지 않음 | `AccommodationImage`, `RoomSpecialPrice`, `RoomBlockedDate`, `ReservationNight`, `PaymentCancelHistory`, `EventLog` | 노출 경로가 없다 | 붙이지 않음 |
 - 예약과 결제의 API 경로, 응답, 에러 메시지, 알림 링크에는 내부 PK가 아니라 `public_id`를 쓴다. 숙소·객실·리뷰는 지금처럼 숫자 id를 쓰므로 캐시 키와 Bloom Filter는 바뀌지 않는다. 컨트롤러가 받은 `public_id`로 조회하는 방법(리포지터리 `findByPublicId…`)은 엔티티마다 사이클을 돌면서 정한다.
 - `public_id`는 소유자 검증을 대신하지 않는다. 기존 IDOR 방어(조회 조건에 `member_id`, 남의 리소스는 404)를 그대로 유지한다.
 - 스키마 변경 수단(Flyway)이 아직 없으므로 개발·운영 프로필 모두 지금은 `ddl-auto: create`로 테이블을 새로 만든다(운영 DB에 지켜야 할 데이터가 없음을 확인했다). 개발 프로필의 `data.sql` 실행은 샘플 데이터의 예약·결제 INSERT(각 2건)에 `public_id`가 없어 삽입이 실패하므로 끈다. Flyway를 도입할 때(R3-5) 운영은 `validate`로 되돌리고, 샘플 데이터는 `public_id`를 채워서 다시 켠다.

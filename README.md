@@ -24,13 +24,12 @@
 - JWT 강제 만료 불가 한계 극복 — 로그아웃 시 Access Token 잔여 TTL만큼 Redis 블랙리스트 등록, 탈취 토큰 재사용 차단
 
 ### 🔥 Issue 2: 다중 서버 환경에서의 초과 예약 방지 로직 구현
-이벤트 기간 등 사용자가 동시에 예약을 시도할 때 발생할 수 있는 데이터 정합성 문제를 3중 방어선으로 제어했습니다.
-- **1차 방어 (트래픽 제어):** `Redisson` 기반의 분산 락(Distributed Lock)을 적용하여 DB 부하를 줄이고 메모리 단에서 요청을 직렬화했습니다.
-- **2차 방어 (비즈니스 검증):** `ReservationValidator` 객체를 분리하여 순수 자바 코드로 비즈니스 규칙을 빠르게 검증합니다.
-- **3차 방어 (데이터 무결성):** `RoomInventory` 엔티티에 JPA 낙관적 락(`@Version`) 적용하여, 동시 업데이트로 인한 초과 예약을 원천 차단했습니다.
+이벤트 기간 등 사용자가 동시에 예약을 시도할 때 발생할 수 있는 데이터 정합성 문제를 2중 방어선으로 제어했습니다.
+- **1차 방어 (비즈니스 검증):** `ReservationValidator`로 예약 가능 여부, 인원, 기간, 이미 점유된 밤, 가격을 빠르게 검증합니다.
+- **2차 방어 (데이터 무결성):** 예약이 차지하는 밤마다 `reservation_night`에 한 행을 INSERT하고 `(room_id, stay_date)` 유니크로 같은 객실 같은 밤의 이중 예약을 DB가 막습니다. 유니크 위반은 409로 응답하고, 락 없이도 동시 요청 중 한 건만 성공합니다. (이전의 객실 분산 락 구현은 태그 `study/room-distributed-lock`에 보존)
 
-### 🔥 Issue 3: 미결제 예약 만료 시 안전한 롤백 및 재고 복구
-- 결제 미완료 시 재고 자동 복구 — 예약 생성 시 Redis에 `pending_reservation:{id}` 키를 결제 제한시간 TTL로 저장, 만료 시 `KeyExpirationEventMessageListener`가 수신해 예약 취소 및 재고 복구 처리
+### 🔥 Issue 3: 미결제 예약 만료 시 안전한 롤백 및 점유 해제
+- 결제 미완료 시 점유 자동 해제 — 예약 생성 시 Redis에 `pending_reservation:{id}` 키를 결제 제한시간 TTL로 저장, 만료 시 `KeyExpirationEventMessageListener`가 수신해 예약 만료 및 점유 행 삭제 처리
 
 ### 💡 Issue 4: 숙소 및 객실 도메인 조회(Read) API 설계
 - **숙소-이미지 연관 조회 N+1 방지:** QueryDSL leftJoin + DTO Projection으로 쿼리 1회에 처리
@@ -56,8 +55,8 @@
 - [x] 도메인 엔티티 및 DB 설계 (ERD 클라우드)
 - [x] Spring Security + JWT + Redis 블랙리스트 기반 인증/인가 구현
 - [x] 숙소 및 객실 도메인 조회(Read) API 기본 구현
-- [x] 객실 및 일자별 재고(Inventory) 관리 도메인 로직 구현
-- [x] Redisson + 낙관적 락을 활용한 안전한 예약 생성 API 구현
+- [x] 객실 및 날짜별 점유(`reservation_night`)·차단일 도메인 로직 구현
+- [x] DB 유니크 제약(`reservation_night`)을 활용한 안전한 예약 생성 API 구현
 - [x] 미결제 예약 롤백 및 Spring Event(`@TransactionalEventListener`)를 활용한 결합도 분리
 - [x] 가상의 PG 연동 및 트랜잭션 경계 분리를 통한 고가용성 결제 승인 API 구현
 - [x] 증분 업데이트O(1) 및 비동기 이벤트를 활용한 고성능 리뷰 시스템 구축

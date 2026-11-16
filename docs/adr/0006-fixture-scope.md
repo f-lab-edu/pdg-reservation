@@ -13,7 +13,7 @@
 - 테스트 클래스는 `TestRestTemplate`을 주입받지 않고 Fixture의 `client()`로 API를 호출한다. 그래야 Fixture가 로그인하며 심은 기본 토큰이 테스트의 호출에도 적용된다.
 - 기본 토큰은 `Authorization` 헤더가 없는 요청에만 붙는 인터셉터로 심는다(강의 방식). 요청에 직접 붙인 헤더가 우선한다.
 - Fixture는 `com.pdg.reservation.fixture` 패키지에 두고, 인프라(`support`)와 분리한다.
-- 회원처럼 API가 있는 데이터는 API로 만들고, API가 없는 데이터(숙소, 객실, 재고)는 해당 Fixture가 리포지터리로 저장한다.
+- 회원처럼 API가 있는 데이터는 API로 만들고, API가 없는 데이터(숙소, 객실, 특별 요금, 차단일)는 해당 Fixture가 리포지터리로 저장한다.
 - 임의 값 생성은 `MemberGenerator`(정적 메서드)에 두고 Fixture와 테스트가 정적 임포트로 쓴다. 가입 테스트마다 값이 겹치지 않도록 이메일, 닉네임 등을 모두 임의로 만든다.
 - 잘못된 값 목록은 `TestDataSource`에 값의 종류별로 한곳에 모은다(`invalidEmails()` 등). 여러 도메인이 같은 목록을 중복해서 만드는 것을 막기 위해서다.
 - 잘못된 요청은 `MemberGenerator.generateSignupRequestWithNickName(값)`처럼 필드 하나만 바꾸고 나머지는 임의 값으로 채운 요청을 돌려주는 정적 메서드로 만든다.
