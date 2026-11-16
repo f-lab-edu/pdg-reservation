@@ -4,15 +4,21 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.common.entity.BaseEntity;
+import com.pdg.reservation.room.price.NightPrice;
+import com.pdg.reservation.room.price.StayPrice;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "room", indexes = {
@@ -63,6 +69,20 @@ public class Room extends BaseEntity {
     @Builder.Default
     @OrderBy("sortOrder ASC")
     private List<AccommodationImage> images = new ArrayList<>();
+
+    // 투숙 기간 [체크인, 체크아웃)의 날짜별 가격과 합계(등급 할인 전). 특별 요금이 없는 밤은 이 객실의 기본 요금이다.
+    // 체크아웃 날과 기간 밖의 특별 요금은 쓰지 않는다. 특별 요금은 행이 많아질 수 있어 객실이 소유하지 않고 인자로 받는다
+    public StayPrice calculateStayPrice(LocalDate checkInDate, LocalDate checkOutDate,
+                                        Collection<RoomSpecialPrice> specialPrices) {
+        Map<LocalDate, BigDecimal> priceByDate = new HashMap<>();
+        for (RoomSpecialPrice specialPrice : specialPrices) {
+            priceByDate.put(specialPrice.getPriceDate(), specialPrice.getPrice());
+        }
+        List<NightPrice> nights = checkInDate.datesUntil(checkOutDate)
+                .map(date -> new NightPrice(date, priceByDate.getOrDefault(date, basePrice)))
+                .toList();
+        return new StayPrice(nights);
+    }
 
     /*연관 관계 생성 편의 메서드*/
     public void addImage(AccommodationImage image) {

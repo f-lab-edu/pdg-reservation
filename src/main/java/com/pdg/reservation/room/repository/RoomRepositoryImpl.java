@@ -1,10 +1,9 @@
 package com.pdg.reservation.room.repository;
 
-import com.pdg.reservation.room.dto.AvailableRoom;
 import com.pdg.reservation.room.dto.QRoomSearchResponse;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
 import com.pdg.reservation.room.dto.RoomSearchResponse;
-import com.querydsl.core.types.Projections;
+import com.pdg.reservation.room.entity.Room;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -60,12 +59,10 @@ public class RoomRepositoryImpl implements RoomRepositoryCustom {
     }
 
     @Override
-    public List<AvailableRoom> findAvailableRooms(
+    public List<Room> findAvailableRooms(
             Collection<Long> accommodationIds, LocalDate checkInDate, LocalDate checkOutDate, int capacity) {
         return jpaQueryFactory
-                .select(Projections.constructor(AvailableRoom.class,
-                        room.id, room.accommodation.id, room.basePrice))
-                .from(room)
+                .selectFrom(room)
                 .where(
                         room.accommodation.id.in(accommodationIds),
                         room.maxCapacity.goe(capacity),

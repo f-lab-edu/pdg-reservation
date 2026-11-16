@@ -1,6 +1,6 @@
 package com.pdg.reservation.room.repository;
 
-import com.pdg.reservation.room.dto.AvailableRoom;
+import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
 import com.pdg.reservation.room.dto.RoomSearchResponse;
 import org.springframework.data.domain.Page;
@@ -15,5 +15,5 @@ public interface RoomRepositoryCustom {
     Page<RoomSearchResponse> search(Long accommodationId, RoomSearchCondition condition, Pageable pageable);
 
     // 숙소들 중 기간과 인원 조건에 예약 가능한 객실
-    List<AvailableRoom> findAvailableRooms(Collection<Long> accommodationIds, LocalDate checkInDate, LocalDate checkOutDate, int capacity);
+    List<Room> findAvailableRooms(Collection<Long> accommodationIds, LocalDate checkInDate, LocalDate checkOutDate, int capacity);
 }

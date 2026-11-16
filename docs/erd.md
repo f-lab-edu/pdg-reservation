@@ -140,6 +140,6 @@ erDiagram
 ## 관계 메모
 
 - 재고(`ROOM_INVENTORY`)는 객실에 종속되고 `(room_id, inventory_date)`가 유니크다. 예약은 재고를 가리키는 FK 없이 `room_id`와 `check_in_date`~`check_out_date`로 해당 날짜의 재고를 찾는다. (ADR 0013에 따라 사이클 3~4에서 `reservation_night`와 `room_blocked_date`로 대체된다.)
-- 날짜별 가격은 `ROOM_SPECIAL_PRICE`의 특별 요금 행만 두고, 행이 없는 날은 `ROOM.base_price`다. 합계와 평균은 `StayPriceCalculator`가 계산한다(ADR 0013).
+- 날짜별 가격은 `ROOM_SPECIAL_PRICE`의 특별 요금 행만 두고, 행이 없는 날은 `ROOM.base_price`다. 합계와 평균은 `Room.calculateStayPrice`가 계산한다(ADR 0013, 0014).
 - `EVENT_LOG.aggregate_id`는 FK가 없는 `Long`이다(멱등성 확인에 쓰는 이벤트 기록).
 - `PAYMENT`와 `PAYMENT_CANCEL_HISTORY`는 현재 1:1이다.
