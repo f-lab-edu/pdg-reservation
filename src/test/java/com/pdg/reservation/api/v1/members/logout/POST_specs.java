@@ -73,6 +73,24 @@ class POST_specs {
     }
 
     @Test
+    void 로그아웃하면_삭제_쿠키는_발급할_때와_같은_Path와_HttpOnly를_가진다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+
+        // Act
+        ResponseEntity<Void> response = memberFixture.client()
+                .postForEntity("/api/v1/members/logout", null, Void.class);
+
+        // Assert
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE))
+                .anySatisfy(cookie -> assertThat(cookie)
+                        .startsWith("refreshToken=")
+                        .contains("Path=/api/v1/members/reissue")
+                        .contains("HttpOnly")
+                        .contains("SameSite=Lax"));
+    }
+
+    @Test
     void 토큰_없이_로그아웃하면_401과_AUTH_001을_반환한다() {
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(

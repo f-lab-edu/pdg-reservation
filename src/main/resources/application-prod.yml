@@ -84,6 +84,10 @@ refreshToken:
   expired:
     value: 604800                                   # 리프레시 토큰: 7일 (사용자 편의성)
 
+cookie:
+  secure: true
+  same-site: None
+
 jwt:
   # [보안] 시크릿 키도 깃허브에 올라가지 않도록 환경변수로 빼는 것이 정석
   access-secret: ${JWT_ACCESS_SECRET_KEY}

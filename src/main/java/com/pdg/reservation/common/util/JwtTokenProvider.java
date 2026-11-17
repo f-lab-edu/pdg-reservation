@@ -42,6 +42,17 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-secret}")
     String jwtRefreshSecretStringKey;
 
+    // 쿠키 속성은 프로필마다 다르다(로컬은 HTTP라 Secure를 못 쓰고, 운영은 HTTPS)
+    @Value("${cookie.secure}")
+    boolean cookieSecure;
+
+    @Value("${cookie.same-site}")
+    String cookieSameSite;
+
+    private static final String REFRESH_COOKIE_NAME = "refreshToken";
+    // 재발급 경로에만 전송되게 좁힌다. 일반 API 요청에는 리프레시 토큰이 실리지 않는다
+    private static final String REFRESH_COOKIE_PATH = "/api/v1/members/reissue";
+
     private final UserDetailsService userDetailsService;
 
     private SecretKey jwtAccessKey;
@@ -154,21 +165,22 @@ public class JwtTokenProvider {
 
     // RefreshToken Cookie 발급
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        //cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setAttribute("SameSite", "None");
-        cookie.setMaxAge(60 * refreshTokenExpiredValue);
-        response.addCookie(cookie);
+        response.addCookie(refreshCookie(refreshToken, refreshTokenExpiredValue));
     }
 
-    //RefreshToken 쿠키 삭제
+    //RefreshToken 쿠키 삭제. 브라우저는 이름과 Path가 같아야 같은 쿠키로 보고 지우므로 발급과 같은 속성을 쓴다
     public void deleteCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("refreshToken", null);
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        response.addCookie(cookie);
+        response.addCookie(refreshCookie(null, 0));
+    }
+
+    private Cookie refreshCookie(String value, int maxAgeSeconds) {
+        Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(cookieSecure);
+        cookie.setPath(REFRESH_COOKIE_PATH);
+        cookie.setAttribute("SameSite", cookieSameSite);
+        cookie.setMaxAge(maxAgeSeconds); // 초 단위
+        return cookie;
     }
 
     //Access Token의 남은 만료 시간 (TTL)을 밀리초 단위로 반환

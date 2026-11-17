@@ -119,6 +119,61 @@ class POST_specs {
     }
 
     @Test
+    void 로그인하면_리프레시_토큰_쿠키는_7일_동안_유지된다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        ResponseEntity<Void> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                Void.class
+        );
+
+        // Assert
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE))
+                .anySatisfy(cookie -> assertThat(cookie)
+                        .startsWith("refreshToken=")
+                        .contains("Max-Age=604800"));
+    }
+
+    @Test
+    void 로그인하면_리프레시_토큰_쿠키는_재발급_경로로만_전송된다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        ResponseEntity<Void> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                Void.class
+        );
+
+        // Assert
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE))
+                .anySatisfy(cookie -> assertThat(cookie)
+                        .startsWith("refreshToken=")
+                        .contains("Path=/api/v1/members/reissue"));
+    }
+
+    @Test
+    void 로그인하면_리프레시_토큰_쿠키의_Secure와_SameSite는_프로필_설정을_따른다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        ResponseEntity<Void> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                Void.class
+        );
+
+        // Assert (test 프로필: cookie.secure=false, cookie.same-site=Lax)
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE))
+                .anySatisfy(cookie -> assertThat(cookie)
+                        .startsWith("refreshToken=")
+                        .contains("SameSite=Lax")
+                        .doesNotContain("Secure"));
+    }
+
+    @Test
     void 로그인하면_응답_본문에_리프레시_토큰이_없다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
