@@ -14,6 +14,14 @@ public final class PaymentGenerator {
     private PaymentGenerator() {
     }
 
+    // 결제 요청의 중복을 거르는 멱등성 키를 담는 헤더 이름
+    public static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+
+    // 결제 시도마다 새로 만드는 멱등성 키. 클라이언트는 시도마다 새 키를 보낸다
+    public static String generateIdempotencyKey() {
+        return UUID.randomUUID().toString();
+    }
+
     // 예약 id와 금액을 지정한 올바른 카드 결제 요청을 만든다
     public static PaymentRequest generatePaymentRequest(UUID reservationId, BigDecimal amount) {
         return validRequestBuilder().reservationId(reservationId).amount(amount).build();

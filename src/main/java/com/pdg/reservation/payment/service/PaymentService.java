@@ -1,5 +1,7 @@
 package com.pdg.reservation.payment.service;
 
+import com.pdg.reservation.common.exception.CustomException;
+import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.payment.client.PgClient;
 import com.pdg.reservation.payment.dto.PaymentRequest;
 import com.pdg.reservation.payment.entity.Payment;
@@ -32,6 +34,13 @@ public class PaymentService {
 
     public void validatePayMethodPolicy(PaymentRequest request) {
         request.validatePayMethodPolicy();
+    }
+
+    // 멱등성 키는 1자 이상 64자 이하여야 한다
+    public void validateIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank() || idempotencyKey.length() > 64) {
+            throw new CustomException(ErrorCode.PAYMENT_IDEMPOTENCY_KEY_INVALID);
+        }
     }
 
     // PG 승인. 트랜잭션 밖에서 호출한다

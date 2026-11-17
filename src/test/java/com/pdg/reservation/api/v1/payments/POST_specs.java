@@ -48,6 +48,8 @@ import java.util.List;
 
 import static com.pdg.reservation.fixture.PaymentGenerator.generateCardPaymentRequestWithoutCardCompany;
 import static com.pdg.reservation.fixture.PaymentGenerator.generateEasyPaymentRequest;
+import static com.pdg.reservation.fixture.PaymentGenerator.IDEMPOTENCY_KEY_HEADER;
+import static com.pdg.reservation.fixture.PaymentGenerator.generateIdempotencyKey;
 import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequest;
 import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequestWithReservationId;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -116,7 +118,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -139,7 +141,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -164,7 +166,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").header(HttpHeaders.AUTHORIZATION, otherSession.bearer()).body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).header(HttpHeaders.AUTHORIZATION, otherSession.bearer()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -186,7 +188,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<PaymentResponse>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -218,7 +220,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<PaymentResponse>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -244,7 +246,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<PaymentResponse>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -265,7 +267,7 @@ class POST_specs {
 
         // Act
         memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<ApiResponse<PaymentResponse>>() { }
         );
 
@@ -284,7 +286,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(secondRequest),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(secondRequest),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -303,7 +305,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -322,7 +324,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -341,7 +343,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -358,7 +360,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -381,7 +383,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<PaymentResponse>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -400,7 +402,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> failed = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -411,7 +413,7 @@ class POST_specs {
         assertThat(timerAwaiter.timerExists(reservation.getReservationId())).isTrue();
         // 같은 예약을 다시 결제하면 성공한다
         ResponseEntity<ApiResponse<PaymentResponse>> retried = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
         assertThat(retried.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -430,7 +432,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -439,6 +441,98 @@ class POST_specs {
         assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.PENDING_PAYMENT);
         verify(pgClient).cancel(anyString(), eq(CancelType.COMPENSATION));
         assertThat(paymentFixture.countPayments()).isZero();
+    }
+
+    @Test
+    void PG_승인이_실패한_뒤_같은_키로_다시_결제하면_409와_PAYMENT_011을_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+        String idempotencyKey = generateIdempotencyKey();
+        fakePgClient.failNextConfirm();
+        ResponseEntity<ApiResponse<Void>> failed = payWithKey(idempotencyKey, request);
+        assertThat(failed.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = payWithKey(idempotencyKey, request);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("PAYMENT_011");
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.PENDING_PAYMENT);
+        assertThat(paymentFixture.countPayments()).isZero();
+    }
+
+    @Test
+    void 결제가_끝난_뒤_같은_키로_다시_요청하면_409와_PAYMENT_011을_반환하고_PG_승인은_한_번만_나간다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+        String idempotencyKey = generateIdempotencyKey();
+        ResponseEntity<ApiResponse<Void>> first = payWithKey(idempotencyKey, request);
+        assertThat(first.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> second = payWithKey(idempotencyKey, request);
+
+        // Assert
+        assertThat(second.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(second.getBody().getErrorCode()).isEqualTo("PAYMENT_011");
+        assertThat(paymentFixture.countPayments()).isEqualTo(1);
+    }
+
+    @Test
+    void 멱등성_키_헤더_없이_결제하면_400과_PAYMENT_012를_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/payments").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("PAYMENT_012");
+        assertThat(paymentFixture.countPayments()).isZero();
+    }
+
+    @Test
+    void 멱등성_키가_최대_길이_64자이면_결제된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+        String idempotencyKey = "k".repeat(64);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = payWithKey(idempotencyKey, request);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        timerAwaiter.awaitTimerDeleted(reservation.getReservationId());
+    }
+
+    @Test
+    void 멱등성_키가_최대_길이를_넘는_65자이면_400과_PAYMENT_012를_반환한다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        ReservationResponse reservation = createPendingReservation();
+        PaymentRequest request = generatePaymentRequest(reservation.getReservationId(), reservation.getTotalPrice());
+        String idempotencyKey = "k".repeat(65);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = payWithKey(idempotencyKey, request);
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("PAYMENT_012");
     }
 
     @Test
@@ -454,7 +548,7 @@ class POST_specs {
         List<ResponseEntity<ApiResponse<PaymentResponse>>> responses = ConcurrentRunner.runAtOnce(
                 requests,
                 paymentRequest -> memberFixture.client().exchange(
-                        post("/api/v1/payments").body(paymentRequest),
+                        post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(paymentRequest),
                         new ParameterizedTypeReference<>() { }
                 )
         );
@@ -485,7 +579,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Map<String, Object>>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -512,7 +606,7 @@ class POST_specs {
 
         // Act
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
 
@@ -522,6 +616,14 @@ class POST_specs {
     }
 
     // 이미 세팅된 기본 사용자로 결제 대기 예약 하나를 만든다 (객실 기본 요금으로 2박)
+    // 지정한 멱등성 키로 기본 사용자가 결제를 요청한다
+    private ResponseEntity<ApiResponse<Void>> payWithKey(String idempotencyKey, PaymentRequest request) {
+        return memberFixture.client().exchange(
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, idempotencyKey).body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+    }
+
     private ReservationResponse createPendingReservation() {
         LocalDate checkInDate = LocalDate.now().plusDays(30);
         LocalDate checkOutDate = checkInDate.plusDays(2);

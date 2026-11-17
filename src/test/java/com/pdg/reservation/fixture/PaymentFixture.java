@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import static com.pdg.reservation.fixture.PaymentGenerator.IDEMPOTENCY_KEY_HEADER;
+import static com.pdg.reservation.fixture.PaymentGenerator.generateIdempotencyKey;
 import static com.pdg.reservation.fixture.PaymentGenerator.generatePaymentRequest;
 import static org.springframework.http.RequestEntity.post;
 
@@ -46,7 +48,7 @@ public class PaymentFixture {
     public PaymentResponse createPayment(UUID reservationId, BigDecimal amount) {
         PaymentRequest request = generatePaymentRequest(reservationId, amount);
         ResponseEntity<ApiResponse<PaymentResponse>> response = client.exchange(
-                post("/api/v1/payments").body(request),
+                post("/api/v1/payments").header(IDEMPOTENCY_KEY_HEADER, generateIdempotencyKey()).body(request),
                 new ParameterizedTypeReference<>() { }
         );
         if (response.getStatusCode() != HttpStatus.CREATED) {

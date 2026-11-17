@@ -4,6 +4,7 @@ import com.pdg.reservation.common.annotation.DistributedLock;
 import com.pdg.kafka.event.PaymentKafkaEvent;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
+import com.pdg.reservation.common.idempotency.IdempotencyKeyService;
 import com.pdg.reservation.common.service.IdempotencyService;
 import com.pdg.reservation.payment.dto.PaymentInfo;
 import com.pdg.reservation.payment.event.PaymentConfirmedEvent;
@@ -29,6 +30,7 @@ public class PaymentFacade {
 
     private final PaymentService paymentService;
     private final PaymentEventService paymentEventService;
+    private final IdempotencyKeyService idempotencyKeyService;
     private final ReservationService reservationService;
     private final IdempotencyService idempotencyService;
     private final TransactionTemplate writeTx;
@@ -36,12 +38,14 @@ public class PaymentFacade {
 
     public PaymentFacade(PaymentService paymentService,
                          PaymentEventService paymentEventService,
+                         IdempotencyKeyService idempotencyKeyService,
                          ReservationService reservationService,
                          IdempotencyService idempotencyService,
                          TransactionTemplate writeTransactionTemplate,
                          @Qualifier("readOnlyTransactionTemplate") TransactionTemplate readOnlyTransactionTemplate) {
         this.paymentService = paymentService;
         this.paymentEventService = paymentEventService;
+        this.idempotencyKeyService = idempotencyKeyService;
         this.reservationService = reservationService;
         this.idempotencyService = idempotencyService;
         this.writeTx = writeTransactionTemplate;
@@ -51,7 +55,13 @@ public class PaymentFacade {
     // 외부 호출(PG)이 있어서 메서드에는 트랜잭션을 두지 않고, DB 구간만 TransactionTemplate으로 묶는다
     @DistributedLock(key = "'payment:reservationId:' + #reservationId")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public PaymentInfo pay(Long memberId, UUID reservationId, PaymentRequest request) {
+    public PaymentInfo pay(Long memberId, UUID reservationId, PaymentRequest request, String idempotencyKey) {
+        // 0. 가장 앞에서 멱등성 키를 선점한다. 이미 쓴 키면 PG를 부르기 전에 거절한다(실패해도 키는 남으므로 클라이언트는 새 키로 다시 시도한다)
+        paymentService.validateIdempotencyKey(idempotencyKey);
+        if (!idempotencyKeyService.claim(idempotencyKey)) {
+            throw new CustomException(ErrorCode.PAYMENT_DUPLICATE_REQUEST);
+        }
+
         // 1. 읽기 검증
         Long reservationPk = readOnlyTx.execute(status -> {
             paymentService.validatePayMethodPolicy(request);

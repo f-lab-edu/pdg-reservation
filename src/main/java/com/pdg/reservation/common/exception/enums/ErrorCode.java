@@ -57,6 +57,8 @@ public enum ErrorCode {
     PAYMENT_PG_CANCEL_COMPENSATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT_008", "시스템 오류로 인한 자동 결제 취소에 실패했습니다. 관리자 확인이 필요합니다."),
     PAYMENT_INVALID_STATUS(HttpStatus.BAD_REQUEST, "PAYMENT_009", "현재 결제 상태에서는 요청하신 작업을 수행할 수 없습니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND,"PAYMENT_010", "연관된 결제 내역을 찾을 수 없습니다."),
+    PAYMENT_DUPLICATE_REQUEST(HttpStatus.CONFLICT, "PAYMENT_011", "이미 처리했거나 처리 중인 결제 요청입니다. 새 멱등성 키로 다시 시도해 주세요."),
+    PAYMENT_IDEMPOTENCY_KEY_INVALID(HttpStatus.BAD_REQUEST, "PAYMENT_012", "Idempotency-Key 헤더는 1자 이상 64자 이하여야 합니다."),
 
     REVIEW_NOT_ELIGIBLE(HttpStatus.BAD_REQUEST, "REVIEW_001", "이용 완료 상태만 리뷰 작성이 가능합니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "REVIEW_002", "이미 작성된 리뷰가 존재합니다."),

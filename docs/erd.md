@@ -2,7 +2,7 @@
 
 엔티티(JPA)의 테이블 구조와 관계를 Mermaid로 그린 것이다. 엔티티 구조가 바뀌면 이 문서를 함께 갱신한다([CLAUDE.md](../CLAUDE.md) 참고).
 
-- 기준: `main`이 아니라 `develop`의 엔티티. 마지막 갱신: 2026-11-17 (`OUTBOX_EVENT` 추가, ADR 0017). 이전: 2026-11-16 (`ROOM_INVENTORY` 제거, `RESERVATION_NIGHT`·`ROOM_BLOCKED_DATE` 추가, ADR 0013 사이클 3~4). 이전: 2026-11-16 (`ROOM_SPECIAL_PRICE` 추가, ADR 0013 사이클 2). 이전: 2026-11-06 (`Reservation`, `Payment`에 `public_id` 추가, ADR 0012).
+- 기준: `main`이 아니라 `develop`의 엔티티. 마지막 갱신: 2026-11-17 (`IDEMPOTENCY_KEY` 추가, ADR 0018). 이전: 2026-11-17 (`OUTBOX_EVENT` 추가, ADR 0017). 이전: 2026-11-16 (`ROOM_INVENTORY` 제거, `RESERVATION_NIGHT`·`ROOM_BLOCKED_DATE` 추가, ADR 0013 사이클 3~4). 이전: 2026-11-16 (`ROOM_SPECIAL_PRICE` 추가, ADR 0013 사이클 2). 이전: 2026-11-06 (`Reservation`, `Payment`에 `public_id` 추가, ADR 0012).
 - 공통: `BaseEntity`를 상속한 테이블은 `created_at`, `updated_at`을 갖는다(아래 그림에서는 생략).
 - `PK` 기본키, `FK` 외래키, `UK` 유니크. 따옴표 안은 설명이다.
 
@@ -147,6 +147,10 @@ erDiagram
         int attempt_count "전송 시도 횟수"
         datetime sent_at
     }
+    IDEMPOTENCY_KEY {
+        bigint id PK
+        varchar key_value UK "64자, 클라이언트가 보낸 멱등성 키"
+    }
     EVENT_LOG {
         bigint id PK
         varchar event_id UK "36자"
@@ -163,3 +167,4 @@ erDiagram
 - `EVENT_LOG.aggregate_id`는 FK가 없는 `Long`이다(멱등성 확인에 쓰는 이벤트 기록).
 - `PAYMENT`와 `PAYMENT_CANCEL_HISTORY`는 현재 1:1이다.
 - `OUTBOX_EVENT`는 반드시 Kafka로 전달되어야 하는 이벤트(지금은 리뷰 등록·삭제)를 본 작업과 같은 트랜잭션에 기록하는 행이다. FK는 없다. 스케줄러가 `PENDING` 행을 Kafka로 보내고 `SENT`로 바꾼다(ADR 0017).
+- `IDEMPOTENCY_KEY`는 결제 요청의 `Idempotency-Key` 헤더 값을 "이미 썼다"고 기록하는 행이다. FK도 상태도 응답도 없다(ADR 0018).

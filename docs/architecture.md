@@ -87,7 +87,8 @@ sequenceDiagram
     participant PG as PG(가상)
     participant DB as MySQL
     participant K as Kafka
-    C->>F: POST /payments
+    C->>F: POST /payments (Idempotency-Key 헤더)
+    F->>DB: 멱등성 키 insert(이미 쓴 키면 409, PG 호출 전)
     F->>DB: 읽기 검증(결제 가능한 예약인가)
     F->>PG: 승인(트랜잭션 밖)
     Note over F,DB: 한 트랜잭션: 결제 저장 + 예약 확정
@@ -96,7 +97,8 @@ sequenceDiagram
     F-)K: 커밋 뒤 결제 확정 이벤트(@Async)
 ```
 - 승인 뒤 DB 단계가 실패하면 PG에 보상 취소를 보낸다(보상은 PG 취소 하나다).
-- 결제 요청은 예약 id 기준 분산 락으로 중복 결제를 막는다.
+- 결제 요청은 `Idempotency-Key` 헤더 값을 PG 호출 전에 insert해서 같은 키의 재전송을 거른다(이미 쓴 키면 409). 실패해도 키는 남으므로 클라이언트는 새 키로 다시 시도한다.
+- 예약 id 기준 분산 락과 예약 상태 검사가 키가 다른 중복 요청을 막는다.
 
 ### 4.3 예약 취소
 ```mermaid
@@ -148,7 +150,8 @@ sequenceDiagram
 | 문제 | 장치 |
 |---|---|
 | 같은 객실 같은 밤의 이중 예약 | `reservation_night`의 `(room_id, stay_date)` 유니크(락 없이 DB 제약이 최종 판정) |
-| 결제·취소 중복 요청 | 예약 id 기준 Redisson 분산 락 + 상태 검증 |
+| 결제 중복 요청 | `Idempotency-Key` insert(같은 키는 PG 호출 전에 거절) + 예약 id 기준 Redisson 분산 락 + 상태 검증 |
+| 취소 중복 요청 | 예약 id 기준 Redisson 분산 락 + 상태 검증 |
 | PG 승인 뒤 DB 실패 | 보상 취소(PG 취소) |
 | PG 취소 뒤 DB 실패 | `CANCELING` 상태로 남겨 흔적을 둔다(수동 확인) |
 | 이벤트 유실(리뷰 → 평점) | Outbox |
