@@ -44,12 +44,16 @@ Controller / Listener / Scheduler / Consumer   ← 진입점
 ## 3. 데이터 전달 (DTO)
 
 ```
-Request ──→ Facade ──→ Service(엔티티 반환) ──→ Facade가 Info로 변환 ──→ Controller가 Response로 변환
+명령: Request ──→ Facade ──→ Service(엔티티 반환) ──→ Facade가 Info로 변환 ──→ Controller가 Response로 변환
+조회: Repository(Info로 바로 프로젝션) ──→ Service ──→ Facade(값 보강) ──→ Controller가 Response로 변환
 ```
 
 - **Command는 만들지 않는다.** Request가 Facade와 Service까지 그대로 내려간다. 대신 Request에 서블릿·HTTP 타입(`HttpServletRequest` 등)을 넣지 않는다.
-- Service는 엔티티를 돌려준다. Facade가 필요하면 다른 Service에 엔티티를 넘긴다.
-- **Info**는 명령 결과(예약, 결제, 취소, 리뷰 등록)처럼 엔티티에서 응답을 만드는 경우에 Facade가 만들어 반환하고, **Response**는 Controller가 Info에서 만든다. 조회 전용 API(검색, 목록, 상세)와 엔티티가 아닌 결과(토큰)는 Info 없이 Facade가 조회 DTO(Response)를 그대로 반환한다. 엔티티는 Facade 위로 올라가지 않는다.
+- Service는 엔티티를 돌려준다. Facade가 필요하면 다른 Service에 엔티티를 넘긴다. 조회 전용 쿼리는 엔티티를 거치지 않고 Repository가 Info로 바로 만들어 돌려준다.
+- **모든 API는 Info를 거친다.** Facade는 Info를 반환하고, Response는 Controller가 Info에서 만든다(`Response.from(Info)`). 예외는 없다. 엔티티는 Facade 위로 올라가지 않는다.
+- 페이지 결과는 Facade가 `PageInfo<Info>`로 반환하고 Controller가 `PageResponse.from(pageInfo, Response::from)`으로 바꾼다.
+- 쿼리에서 만들 수 없는 값(검색의 가격, 최저가)은 Facade가 채운다. Info는 불변 `record`이므로 `withXxx(...)`로 새 객체를 만든다.
+- Redis 캐시에 저장되는 Info(`AccommodationDetailInfo`, `ReviewSummaryInfo`, `PageInfo`, `ImageInfo`)는 record가 아니라 기본 생성자를 가진 일반 클래스로 둔다. 캐시 직렬화가 최종 클래스(record 포함)에는 타입 정보를 넣지 않아서 역직렬화가 깨진다(`RedisConfig`의 `DefaultTyping.NON_FINAL`).
 - 엔티티 생성은 `Request.toEntity`가 아니라 엔티티의 정적 팩토리가 한다.
 - 변환 팩토리 이름은 `from`(단일 소스), `of`(여러 값)이다.
 
@@ -133,7 +137,7 @@ public PaymentInfo pay(PaymentRequest request) {
 
 - Repository는 Spring Data JPA 인터페이스를 그대로 쓴다. 도메인 쪽 인터페이스와 인프라 쪽 구현으로 쪼개지 않는다.
 - 복잡하거나 동적인 조회는 QueryDSL Custom/Impl로 쓴다. 집합 단위로 하는 판정(가용성 같은 `EXISTS`)은 쿼리에 두고, 도메인 계산(가격)은 쿼리에 넣지 않는다.
-- **새로 만드는 Repository 메서드는 Response를 돌려주지 않는다.** 엔티티나 조회 전용 프로젝션을 돌려준다. 컬렉션 인자는 Service는 `List`, Repository는 `Collection`을 받는다.
+- **Repository는 Response를 돌려주지 않는다.** 엔티티나 조회 전용 Info 프로젝션(`@QueryProjection`)을 돌려준다. 컬렉션 인자는 Service는 `List`, Repository는 `Collection`을 받는다.
 - 외부 시스템(PG, 알림 등)은 인터페이스와 구현을 나눈다. 호출하는 쪽은 인터페이스에만 의존한다. 지금의 `PgClient`(운영 `MockPgClient`, 테스트 `FakePgClient`)가 이 방식이다.
 
 ## 8. 락
@@ -174,9 +178,8 @@ com.pdg.reservation
 
 ## 12. 아직 가이드와 다른 부분 (R3-1에서 정리)
 
-2026-11-17에 Controller → Facade → Service 구조, 진입점의 Facade 호출, 엔티티 정적 팩토리, `@Async` 리스너를 코드에 반영했다. 아래는 남은 차이다.
+2026-11-17에 Controller → Facade → Service 구조, 진입점의 Facade 호출, 모든 API의 Info 변환, 엔티티 정적 팩토리, `@Async` 리스너를 코드에 반영했다. 아래는 남은 차이다.
 
-- 검색·목록 Repository가 `@QueryProjection` Response를 돌려준다(새 메서드는 돌려주지 않는다). 조회 전용 API(검색, 목록, 상세)와 엔티티가 아닌 결과(토큰)는 Info를 만들지 않고 Facade가 조회 DTO(Response)를 그대로 반환한다.
 - 같은 도메인 안에서 캐시 Service가 락을 쓰는 읽기 컴포넌트를 호출한다(`AccommodationCacheService` → `AccommodationAtomicReader`, `ReviewCacheService` → `ReviewAtomicReader`).
 - 인증 주체에서 꺼낸 `Member` 엔티티를 Controller가 Facade에 넘긴다(`reserve`, `createReview`).
 - `ReservationFacade.cancel`은 PG 취소가 성공한 뒤 DB 변경이 실패하면 되돌리지 못한다. 취소 중간 상태는 R2-4, R5-7에서 설계한다.

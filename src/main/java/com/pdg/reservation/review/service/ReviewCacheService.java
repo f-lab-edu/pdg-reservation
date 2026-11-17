@@ -1,8 +1,8 @@
 package com.pdg.reservation.review.service;
 
 import com.pdg.reservation.common.constant.RedisKeyNames;
-import com.pdg.reservation.common.dto.PageResponse;
-import com.pdg.reservation.review.dto.ReviewResponse;
+import com.pdg.reservation.common.dto.PageInfo;
+import com.pdg.reservation.review.dto.ReviewSummaryInfo;
 import com.pdg.reservation.review.dto.ReviewSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class ReviewCacheService {
             key = "'acc:' + #accommodationId + ':gen:' + #generation + ':' + #condition.toCacheKey() + ':sz:' + #pageable.pageSize",
             condition = "#pageable.pageNumber == 0"
     )
-    public PageResponse<ReviewResponse> getReviewsWithCache(
+    public PageInfo<ReviewSummaryInfo> getReviewsWithCache(
             Long accommodationId, int generation, ReviewSearchCondition condition, Pageable pageable) {
 
         if(pageable.getPageNumber() == 0){

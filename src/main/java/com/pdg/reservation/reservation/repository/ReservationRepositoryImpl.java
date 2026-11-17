@@ -2,9 +2,9 @@ package com.pdg.reservation.reservation.repository;
 
 import com.pdg.reservation.accommodation.entity.QAccommodationImage;
 import com.pdg.reservation.accommodation.enums.ImageType;
-import com.pdg.reservation.reservation.dto.QReservationSearchResponse;
+import com.pdg.reservation.reservation.dto.QReservationSearchInfo;
 import com.pdg.reservation.reservation.dto.ReservationSearchCondition;
-import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
+import com.pdg.reservation.reservation.dto.ReservationSearchInfo;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -31,13 +31,13 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Page<ReservationSearchResponse> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
+    public Page<ReservationSearchInfo> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
 
         QAccommodationImage roomImage = new QAccommodationImage("roomImage");
         QAccommodationImage accImage = new QAccommodationImage("accImage");
 
-        List<ReservationSearchResponse> content = jpaQueryFactory
-                .select(new QReservationSearchResponse(
+        List<ReservationSearchInfo> content = jpaQueryFactory
+                .select(new QReservationSearchInfo(
                         reservation.publicId,
                         accommodation.name,
                         room.name,

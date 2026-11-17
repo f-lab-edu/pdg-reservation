@@ -2,6 +2,7 @@ package com.pdg.reservation.review.controller;
 
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageInfo;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.review.dto.*;
 import com.pdg.reservation.review.facade.ReviewFacade;
@@ -39,8 +40,8 @@ public class ReviewController {
             @Valid ReviewSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<ReviewResponse> page = reviewFacade.findMyReviews(userDetails.getMember().getId(), condition, pageable);
-        return ApiResponse.ok(PageResponse.from(page));
+        PageInfo<ReviewSummaryInfo> page = reviewFacade.findMyReviews(userDetails.getMember().getId(), condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page, ReviewResponse::from));
     }
 
     @GetMapping("/accommodations/{accommodationId}")
@@ -49,7 +50,8 @@ public class ReviewController {
             @Valid ReviewSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return ApiResponse.ok(reviewFacade.getAccommodationReviews(accommodationId, condition, pageable));
+        PageInfo<ReviewSummaryInfo> page = reviewFacade.getAccommodationReviews(accommodationId, condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page, ReviewResponse::from));
     }
 
     @DeleteMapping("/{reviewId}")
@@ -57,7 +59,8 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId
     ) {
-        return ApiResponse.ok(reviewFacade.deleteReview(userDetails.getMember().getId(), reviewId));
+        ReviewDeleteInfo info = reviewFacade.deleteReview(userDetails.getMember().getId(), reviewId);
+        return ApiResponse.ok(ReviewDeleteResponse.from(info));
     }
 
 

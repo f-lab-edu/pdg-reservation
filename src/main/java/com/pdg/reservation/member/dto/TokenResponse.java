@@ -20,4 +20,12 @@ public class TokenResponse {
     @JsonIgnore
     private String refreshToken;
 
+
+    public static TokenResponse from(TokenInfo info) {
+        return TokenResponse.builder()
+                .accessToken(info.accessToken())
+                .accessTokenExpiresIn(info.accessTokenExpiresIn())
+                .refreshToken(info.refreshToken())
+                .build();
+    }
 }

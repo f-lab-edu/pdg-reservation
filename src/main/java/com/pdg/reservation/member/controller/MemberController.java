@@ -5,9 +5,11 @@ import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.common.util.JwtTokenProvider;
+import com.pdg.reservation.member.dto.LoginInfo;
 import com.pdg.reservation.member.dto.LoginRequest;
 import com.pdg.reservation.member.dto.LoginResponse;
 import com.pdg.reservation.member.dto.SignupRequest;
+import com.pdg.reservation.member.dto.TokenInfo;
 import com.pdg.reservation.member.dto.TokenResponse;
 import com.pdg.reservation.member.facade.MemberFacade;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,9 +38,9 @@ public class MemberController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest,
                                                      HttpServletResponse response) {
-        LoginResponse loginResponse = memberFacade.login(loginRequest);
-        jwtTokenProvider.setRefreshTokenCookie(response, loginResponse.getRefreshToken());
-        return ApiResponse.ok(loginResponse);
+        LoginInfo info = memberFacade.login(loginRequest);
+        jwtTokenProvider.setRefreshTokenCookie(response, info.refreshToken());
+        return ApiResponse.ok(LoginResponse.from(info));
     }
 
     @PostMapping("/reissue")
@@ -47,10 +49,10 @@ public class MemberController {
         if (refreshToken == null) {
             throw new CustomException(ErrorCode.JWT_REFRESH_TOKEN_NOT_FOUND);
         }
-        TokenResponse tokenResponse = memberFacade.reissue(refreshToken);
-        jwtTokenProvider.setRefreshTokenCookie(response, tokenResponse.getRefreshToken());
+        TokenInfo info = memberFacade.reissue(refreshToken);
+        jwtTokenProvider.setRefreshTokenCookie(response, info.refreshToken());
 
-        return ApiResponse.ok(tokenResponse);
+        return ApiResponse.ok(TokenResponse.from(info));
     }
 
     @PostMapping("/logout")

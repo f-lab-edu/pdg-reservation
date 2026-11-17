@@ -1,8 +1,8 @@
 package com.pdg.reservation.accommodation.repository;
 
 import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
-import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
-import com.pdg.reservation.accommodation.dto.QAccommodationSearchResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationSearchInfo;
+import com.pdg.reservation.accommodation.dto.QAccommodationSearchInfo;
 import com.pdg.reservation.accommodation.enums.AccommodationType;
 import com.pdg.reservation.accommodation.enums.ImageType;
 import com.pdg.reservation.room.repository.RoomExpressions;
@@ -34,12 +34,12 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
 
     //숙소 검색
     @Override
-    public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
+    public Page<AccommodationSearchInfo> search(AccommodationSearchCondition condition, Pageable pageable) {
         String city = condition.getCity();
         AccommodationType type = condition.getType();
 
-        List<AccommodationSearchResponse> content = jpaQueryFactory
-                .select(new QAccommodationSearchResponse(
+        List<AccommodationSearchInfo> content = jpaQueryFactory
+                .select(new QAccommodationSearchInfo(
                         accommodation.id,
                         accommodation.name,
                         accommodation.type,

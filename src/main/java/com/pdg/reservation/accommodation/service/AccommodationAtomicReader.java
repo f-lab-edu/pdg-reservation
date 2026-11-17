@@ -1,6 +1,6 @@
 package com.pdg.reservation.accommodation.service;
 
-import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationDetailInfo;
 import com.pdg.reservation.accommodation.repository.AccommodationRepository;
 import com.pdg.reservation.common.annotation.DistributedLock;
 import com.pdg.reservation.common.constant.RedisKeyNames;
@@ -19,17 +19,17 @@ public class AccommodationAtomicReader {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @DistributedLock(key = "'acc:' + #id + ':' + #generation", throwExceptionOnFailure = false)
-    public AccommodationDetailResponse getAccommodationDetailWithLock(Long id, int generation) {
+    public AccommodationDetailInfo getAccommodationDetailWithLock(Long id, int generation) {
 
         // [Double-Check] 락 획득 성공 후, 다시 한번 캐시 확인, 락을 획득하는 사이에 누군가 DB를 갔다와 캐시를 채웠을 수 있음
         // 키는 AccommodationCacheService의 @Cacheable 키와 같은 형식이어야 한다
         String cacheKey = RedisKeyNames.ACCOMMODATION_DETAIL + "::" + id + ":gen:" + generation;
         Object cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) return (AccommodationDetailResponse) cached;
+        if (cached != null) return (AccommodationDetailInfo) cached;
 
         // 실제 DB 조회
         return accommodationRepository.findById(id)
-                .map(AccommodationDetailResponse::from)
+                .map(AccommodationDetailInfo::from)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACC_NOT_FOUND));
     }
 }

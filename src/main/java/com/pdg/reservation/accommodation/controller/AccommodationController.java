@@ -3,6 +3,8 @@ package com.pdg.reservation.accommodation.controller;
 import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
+import com.pdg.reservation.accommodation.dto.AccommodationSearchInfo;
+import com.pdg.reservation.common.dto.PageInfo;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.accommodation.facade.AccommodationFacade;
 import com.pdg.reservation.common.dto.ApiResponse;
@@ -32,15 +34,15 @@ public class AccommodationController {
                 @Valid AccommodationSearchCondition condition,
                 @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<AccommodationSearchResponse> page = accommodationFacade.search(condition, pageable);
-        return ApiResponse.ok(PageResponse.from(page));
+        PageInfo<AccommodationSearchInfo> page = accommodationFacade.search(condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page, AccommodationSearchResponse::from));
     }
 
     @GetMapping("/{accommodationId}")
     public ResponseEntity<ApiResponse<AccommodationDetailResponse>> getAccommodationDetail(
             @PathVariable Long accommodationId
     ) {
-        return ApiResponse.ok(accommodationFacade.getAccommodationDetail(accommodationId));
+        return ApiResponse.ok(AccommodationDetailResponse.from(accommodationFacade.getAccommodationDetail(accommodationId)));
     }
 
 

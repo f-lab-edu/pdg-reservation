@@ -6,9 +6,9 @@ import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.common.util.JwtTokenProvider;
 import com.pdg.reservation.member.dto.LoginRequest;
-import com.pdg.reservation.member.dto.LoginResponse;
+import com.pdg.reservation.member.dto.LoginInfo;
 import com.pdg.reservation.member.dto.SignupRequest;
-import com.pdg.reservation.member.dto.TokenResponse;
+import com.pdg.reservation.member.dto.TokenInfo;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.member.repository.MemberRepository;
 import io.jsonwebtoken.JwtException;
@@ -51,7 +51,7 @@ public class MemberService {
                 signupRequest.getName(), signupRequest.getNickName(), signupRequest.getPhoneNumber()));
     }
 
-    public LoginResponse login(LoginRequest loginRequest) {
+    public LoginInfo login(LoginRequest loginRequest) {
 
         try{
             //authenticate 호출 시, 자동으로 내부에서 UserDetailsService를 구현한 Bean의 loadUserByUsername 실행 및 패스워드 비교, 유효성 검사 진행
@@ -68,19 +68,14 @@ public class MemberService {
             long accessTokenExpiredValue = jwtTokenProvider.getAccessTokenExpiredValue();
             jwtRedisRepository.saveRefreshToken(email, refreshToken);
 
-            return LoginResponse.builder()
-                    .accessToken(accessToken)
-                    .accessTokenExpiresIn(accessTokenExpiredValue)
-                    .refreshToken(refreshToken)
-                    .nickName(nickName)
-                    .build();
+            return new LoginInfo(accessToken, accessTokenExpiredValue, refreshToken, nickName);
 
         } catch (AuthenticationException e) {
             throw new CustomException(ErrorCode.AUTH_USER_NOT_FOUND, e);
         }
     }
 
-    public TokenResponse reissue(String refreshToken) {
+    public TokenInfo reissue(String refreshToken) {
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new CustomException(ErrorCode.JWT_INVALID_REFRESH_TOKEN);
@@ -103,11 +98,7 @@ public class MemberService {
 
         jwtRedisRepository.saveRefreshToken(email, newRefreshToken);
 
-        return TokenResponse.builder()
-                .accessToken(newAccessToken)
-                .accessTokenExpiresIn(newAccessExpireIn)
-                .refreshToken(newRefreshToken)
-                .build();
+        return new TokenInfo(newAccessToken, newAccessExpireIn, newRefreshToken);
     }
 
     public void logout(String accessToken) {

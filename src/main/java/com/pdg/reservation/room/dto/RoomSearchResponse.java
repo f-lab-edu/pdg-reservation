@@ -1,7 +1,6 @@
 package com.pdg.reservation.room.dto;
 
 import com.pdg.reservation.accommodation.enums.BedType;
-import com.querydsl.core.annotations.QueryProjection;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,7 +20,6 @@ public class RoomSearchResponse {
     private double avgPrice;
 
     @Builder
-    @QueryProjection
     public RoomSearchResponse(
             long id, String name, String description, int maxCapacity,
             String roomLabel, BedType bedType, long totalPrice, double avgPrice,
@@ -41,5 +39,19 @@ public class RoomSearchResponse {
     public void updatePrice(long totalPrice, double avgPrice) {
         this.totalPrice = totalPrice;
         this.avgPrice = avgPrice;
+    }
+
+    public static RoomSearchResponse from(RoomSearchInfo info) {
+        return RoomSearchResponse.builder()
+                .id(info.id())
+                .name(info.name())
+                .description(info.description())
+                .maxCapacity(info.maxCapacity())
+                .roomLabel(info.roomLabel())
+                .bedType(info.bedType())
+                .totalPrice(info.totalPrice())
+                .avgPrice(info.avgPrice())
+                .mainImage(info.mainImage())
+                .build();
     }
 }

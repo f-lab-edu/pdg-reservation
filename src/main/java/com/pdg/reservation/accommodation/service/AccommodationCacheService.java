@@ -1,6 +1,6 @@
 package com.pdg.reservation.accommodation.service;
 
-import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationDetailInfo;
 import com.pdg.reservation.common.constant.RedisKeyNames;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ public class AccommodationCacheService {
      * 평점이 바뀌면 세대가 오르고 새 키로 조회한다. 지우는 방식에서 생기던 "지운 뒤 옛 값이 다시 들어오는" 경쟁을 피한다. (ADR 0011)
      */
     @Cacheable(value = RedisKeyNames.ACCOMMODATION_DETAIL, key = "#accommodationId + ':gen:' + #generation", cacheManager = "cacheManager")
-    public AccommodationDetailResponse getAccommodationDetail(Long accommodationId, int generation) {
+    public AccommodationDetailInfo getAccommodationDetail(Long accommodationId, int generation) {
         log.info("[Cache Miss] DB에서 숙소 상세 조회 - 숙소 ID: {}, 세대: {}", accommodationId, generation);
         return accommodationQueryService.getAccommodationDetailWithLock(accommodationId, generation);
     }

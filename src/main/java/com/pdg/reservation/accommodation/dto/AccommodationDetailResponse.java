@@ -29,22 +29,19 @@ public class AccommodationDetailResponse {
     private Address address;
     private List<ImageResponse> images;
 
-    public static AccommodationDetailResponse from(Accommodation accommodation) {
+    public static AccommodationDetailResponse from(AccommodationDetailInfo info) {
         return AccommodationDetailResponse.builder()
-                .id(accommodation.getId())
-                .name(accommodation.getName())
-                .type(accommodation.getType())
-                .description(accommodation.getDescription())
-                .amenities(accommodation.getAmenities())
-                .checkInTime(accommodation.getCheckInTime())
-                .checkOutTime(accommodation.getCheckOutTime())
-                .ratingAverage(accommodation.getRatingAverage())
-                .operational(accommodation.isOperational())
-                .address(accommodation.getAddress())
-                .images(accommodation.getImages()
-                        .stream()
-                        .map(ImageResponse::from)
-                        .toList())
+                .id(info.getId())
+                .name(info.getName())
+                .type(info.getType())
+                .description(info.getDescription())
+                .amenities(info.getAmenities())
+                .checkInTime(info.getCheckInTime())
+                .checkOutTime(info.getCheckOutTime())
+                .ratingAverage(info.getRatingAverage())
+                .operational(info.isOperational())
+                .address(info.getAddress())
+                .images(info.getImages().stream().map(ImageResponse::from).toList())
                 .build();
     }
 }

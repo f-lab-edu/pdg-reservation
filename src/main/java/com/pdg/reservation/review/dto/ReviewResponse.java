@@ -20,17 +20,15 @@ public class ReviewResponse {
     private String roomName;          // 방정보
     private LocalDateTime createdAt;  // 작성일
 
-    public static ReviewResponse from(Review review, boolean isMasked) {
-        String nickName = review.getNickName();
-
+    public static ReviewResponse from(ReviewSummaryInfo info) {
         return ReviewResponse.builder()
-                .id(review.getId())
-                .nickname(isMasked ? CommonUtil.maskNickname(nickName) : nickName)
-                .content(review.getContent())
-                .rating(review.getRating())
-                .accommodationName(review.getAccommodation().getName())
-                .roomName(review.getReservation().getRoom().getName())
-                .createdAt(review.getCreatedAt())
+                .id(info.getId())
+                .nickname(info.getNickname())
+                .content(info.getContent())
+                .rating(info.getRating())
+                .accommodationName(info.getAccommodationName())
+                .roomName(info.getRoomName())
+                .createdAt(info.getCreatedAt())
                 .build();
     }
 }

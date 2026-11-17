@@ -1,8 +1,8 @@
 package com.pdg.reservation.room.repository;
 
-import com.pdg.reservation.room.dto.QRoomSearchResponse;
+import com.pdg.reservation.room.dto.QRoomSearchInfo;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
-import com.pdg.reservation.room.dto.RoomSearchResponse;
+import com.pdg.reservation.room.dto.RoomSearchInfo;
 import com.pdg.reservation.room.entity.Room;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -25,9 +25,9 @@ public class RoomRepositoryImpl implements RoomRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Page<RoomSearchResponse> search(Long accommodationId, RoomSearchCondition condition, Pageable pageable) {
-        List<RoomSearchResponse> content = jpaQueryFactory
-                .select(new QRoomSearchResponse(
+    public Page<RoomSearchInfo> search(Long accommodationId, RoomSearchCondition condition, Pageable pageable) {
+        List<RoomSearchInfo> content = jpaQueryFactory
+                .select(new QRoomSearchInfo(
                         room.id,
                         room.name,
                         room.description,

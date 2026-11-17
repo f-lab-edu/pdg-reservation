@@ -1,7 +1,7 @@
 package com.pdg.reservation.accommodation.service;
 
 import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
-import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationSearchInfo;
 import com.pdg.reservation.accommodation.repository.AccommodationRepository;
 import com.pdg.reservation.common.cache.bloom.AccommodationBloomFilter;
 import com.pdg.reservation.common.exception.CustomException;
@@ -22,7 +22,7 @@ public class AccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AccommodationBloomFilter bloomFilter;
 
-    public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
+    public Page<AccommodationSearchInfo> search(AccommodationSearchCondition condition, Pageable pageable) {
         return accommodationRepository.search(condition, pageable);
     }
 

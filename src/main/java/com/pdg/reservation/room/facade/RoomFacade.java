@@ -1,9 +1,10 @@
 package com.pdg.reservation.room.facade;
 
 import com.pdg.reservation.accommodation.service.AccommodationService;
-import com.pdg.reservation.room.dto.RoomDetailResponse;
+import com.pdg.reservation.common.dto.PageInfo;
+import com.pdg.reservation.room.dto.RoomDetailInfo;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
-import com.pdg.reservation.room.dto.RoomSearchResponse;
+import com.pdg.reservation.room.dto.RoomSearchInfo;
 import com.pdg.reservation.room.price.StayPrice;
 import com.pdg.reservation.room.service.RoomPriceService;
 import com.pdg.reservation.room.service.RoomService;
@@ -25,25 +26,24 @@ public class RoomFacade {
     private final RoomPriceService roomPriceService;
     private final AccommodationService accommodationService;
 
-    public Page<RoomSearchResponse> getRooms(Long accommodationId, RoomSearchCondition condition, Pageable pageable) {
+    public PageInfo<RoomSearchInfo> getRooms(Long accommodationId, RoomSearchCondition condition, Pageable pageable) {
         accommodationService.validateExists(accommodationId);
-        Page<RoomSearchResponse> page = roomService.search(accommodationId, condition, pageable);
-        fillPrices(page, condition);
-        return page;
+        Page<RoomSearchInfo> page = roomService.search(accommodationId, condition, pageable);
+        return PageInfo.from(fillPrices(page, condition));
     }
 
     // 객실마다 투숙 기간의 총액과 1박 평균가를 채운다. 계산은 RoomPriceService 한 곳에서 한다
-    private void fillPrices(Page<RoomSearchResponse> page, RoomSearchCondition condition) {
-        List<Long> roomIds = page.getContent().stream().map(RoomSearchResponse::getId).toList();
+    private Page<RoomSearchInfo> fillPrices(Page<RoomSearchInfo> page, RoomSearchCondition condition) {
+        List<Long> roomIds = page.getContent().stream().map(RoomSearchInfo::id).toList();
         Map<Long, StayPrice> stayPrices = roomPriceService.calculateStayPrices(
                 roomIds, condition.getCheckInDate(), condition.getCheckOutDate());
-        page.getContent().forEach(room -> {
-            StayPrice stayPrice = stayPrices.get(room.getId());
-            room.updatePrice(stayPrice.totalWon(), stayPrice.averagePerNight().doubleValue());
+        return page.map(room -> {
+            StayPrice stayPrice = stayPrices.get(room.id());
+            return room.withPrice(stayPrice.totalWon(), stayPrice.averagePerNight().doubleValue());
         });
     }
 
-    public RoomDetailResponse getRoom(Long roomId) {
-        return RoomDetailResponse.from(roomService.getRoom(roomId));
+    public RoomDetailInfo getRoom(Long roomId) {
+        return RoomDetailInfo.from(roomService.getRoom(roomId));
     }
 }

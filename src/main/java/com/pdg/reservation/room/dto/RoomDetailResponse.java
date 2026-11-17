@@ -26,19 +26,16 @@ public class RoomDetailResponse {
     private final BigDecimal price;
     private final List<ImageResponse> images;
 
-    public static RoomDetailResponse from(Room room) {
+    public static RoomDetailResponse from(RoomDetailInfo info) {
         return RoomDetailResponse.builder()
-                .id(room.getId())
-                .name(room.getName())
-                .description(room.getDescription())
-                .maxCapacity(room.getMaxCapacity())
-                .roomLabel(room.getRoomLabel())
-                .bedType(room.getBedType())
-                .price(room.getBasePrice())
-                .images(room.getImages()
-                        .stream()
-                        .map(ImageResponse::from)
-                        .toList())
+                .id(info.id())
+                .name(info.name())
+                .description(info.description())
+                .maxCapacity(info.maxCapacity())
+                .roomLabel(info.roomLabel())
+                .bedType(info.bedType())
+                .price(info.price())
+                .images(info.images().stream().map(ImageResponse::from).toList())
                 .build();
     }
 

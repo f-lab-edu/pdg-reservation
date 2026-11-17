@@ -5,7 +5,7 @@ import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationSearchCondition;
-import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
+import com.pdg.reservation.reservation.dto.ReservationSearchInfo;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.entity.ReservationNight;
 import com.pdg.reservation.reservation.event.ReservationRollbackEvent;
@@ -138,7 +138,7 @@ public class ReservationService {
         reservationRedisRepository.deletePaymentTimeout(reservationId);
     }
 
-    public Page<ReservationSearchResponse> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
+    public Page<ReservationSearchInfo> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
         return reservationRepository.search(memberId, condition, pageable);
     }
 }

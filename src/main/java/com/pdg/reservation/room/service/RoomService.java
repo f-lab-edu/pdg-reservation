@@ -3,7 +3,7 @@ package com.pdg.reservation.room.service;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
-import com.pdg.reservation.room.dto.RoomSearchResponse;
+import com.pdg.reservation.room.dto.RoomSearchInfo;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.room.repository.RoomBlockedDateRepository;
 import com.pdg.reservation.room.repository.RoomRepository;
@@ -23,7 +23,7 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final RoomBlockedDateRepository roomBlockedDateRepository;
 
-    public Page<RoomSearchResponse> search(Long accommodationId, RoomSearchCondition condition, Pageable pageable) {
+    public Page<RoomSearchInfo> search(Long accommodationId, RoomSearchCondition condition, Pageable pageable) {
         return roomRepository.search(accommodationId, condition, pageable);
     }
 

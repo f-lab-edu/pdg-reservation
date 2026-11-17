@@ -1,7 +1,6 @@
 package com.pdg.reservation.accommodation.dto;
 
 import com.pdg.reservation.accommodation.enums.AccommodationType;
-import com.querydsl.core.annotations.QueryProjection;
 import lombok.Builder;
 import lombok.Getter;
 @Getter
@@ -17,7 +16,6 @@ public class AccommodationSearchResponse {
     private Long minPrice;
 
     @Builder
-    @QueryProjection
     public AccommodationSearchResponse(long id, String name, AccommodationType type, String city, String mainImage) {
         this.id = id;
         this.name = name;
@@ -28,6 +26,18 @@ public class AccommodationSearchResponse {
 
     public void updateMinPrice(Long minPrice) {
         this.minPrice = minPrice;
+    }
+
+    public static AccommodationSearchResponse from(AccommodationSearchInfo info) {
+        AccommodationSearchResponse response = AccommodationSearchResponse.builder()
+                .id(info.id())
+                .name(info.name())
+                .type(info.type())
+                .city(info.city())
+                .mainImage(info.mainImage())
+                .build();
+        response.updateMinPrice(info.minPrice());
+        return response;
     }
 
 

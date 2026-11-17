@@ -9,7 +9,8 @@ import com.pdg.reservation.reservation.dto.ReservationCancelRequest;
 import com.pdg.reservation.reservation.dto.ReservationInfo;
 import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationSearchCondition;
-import com.pdg.reservation.reservation.dto.ReservationSearchResponse;
+import com.pdg.reservation.common.dto.PageInfo;
+import com.pdg.reservation.reservation.dto.ReservationSearchInfo;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.service.ReservationDomainService;
 import com.pdg.reservation.reservation.service.ReservationService;
@@ -99,7 +100,7 @@ public class ReservationFacade {
         reservationService.rollbackReservation(reservationId);
     }
 
-    public Page<ReservationSearchResponse> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
-        return reservationService.search(memberId, condition, pageable);
+    public PageInfo<ReservationSearchInfo> search(Long memberId, ReservationSearchCondition condition, Pageable pageable) {
+        return PageInfo.from(reservationService.search(memberId, condition, pageable));
     }
 }

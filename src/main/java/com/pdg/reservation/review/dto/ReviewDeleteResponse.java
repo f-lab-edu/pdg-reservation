@@ -16,10 +16,10 @@ public class ReviewDeleteResponse {
     private final Long deleteReviewId;
     private final LocalDateTime deletedAt;
 
-    public static ReviewDeleteResponse from(Long reviewId, LocalDateTime deletedAt) {
+    public static ReviewDeleteResponse from(ReviewDeleteInfo info) {
         return ReviewDeleteResponse.builder()
-                .deleteReviewId(reviewId)
-                .deletedAt(deletedAt)
+                .deleteReviewId(info.reviewId())
+                .deletedAt(info.deletedAt())
                 .build();
     }
 }

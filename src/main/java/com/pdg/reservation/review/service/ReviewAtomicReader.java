@@ -2,8 +2,8 @@ package com.pdg.reservation.review.service;
 
 import com.pdg.reservation.common.annotation.DistributedLock;
 import com.pdg.reservation.common.constant.RedisKeyNames;
-import com.pdg.reservation.common.dto.PageResponse;
-import com.pdg.reservation.review.dto.ReviewResponse;
+import com.pdg.reservation.common.dto.PageInfo;
+import com.pdg.reservation.review.dto.ReviewSummaryInfo;
 import com.pdg.reservation.review.dto.ReviewSearchCondition;
 import com.pdg.reservation.review.entity.Review;
 import com.pdg.reservation.review.repository.ReviewRepository;
@@ -22,24 +22,24 @@ public class ReviewAtomicReader {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @DistributedLock(key = "'review:' + #accommodationId + ':' + #generation", throwExceptionOnFailure = false)
-    public PageResponse<ReviewResponse> getReviewsWithLock(
+    public PageInfo<ReviewSummaryInfo> getReviewsWithLock(
             Long accommodationId, int generation, ReviewSearchCondition condition, Pageable pageable) {
 
         // [Double-Check] 락 획득 후 캐시 재확인
         String cacheKey = generateCacheKey(accommodationId, generation, condition, pageable);
         Object cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) return (PageResponse<ReviewResponse>) cached;
+        if (cached != null) return (PageInfo<ReviewSummaryInfo>) cached;
 
         return getReviews(accommodationId, generation, condition, pageable);
     }
-    public PageResponse<ReviewResponse> getReviewsWithNoLock(
+    public PageInfo<ReviewSummaryInfo> getReviewsWithNoLock(
             Long accommodationId, int generation, ReviewSearchCondition condition, Pageable pageable) {
         return getReviews(accommodationId, generation, condition, pageable);
     }
 
-    public PageResponse<ReviewResponse> getReviews(Long accommodationId, int generation, ReviewSearchCondition condition, Pageable pageable){
+    public PageInfo<ReviewSummaryInfo> getReviews(Long accommodationId, int generation, ReviewSearchCondition condition, Pageable pageable){
         Page<Review> accReviews = reviewRepository.findAccommodationReviews(accommodationId, condition, pageable);
-        return PageResponse.from(accReviews.map(review -> ReviewResponse.from(review, true)));
+        return PageInfo.from(accReviews.map(review -> ReviewSummaryInfo.from(review, true)));
     }
 
     /**

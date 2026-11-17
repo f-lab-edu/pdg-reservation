@@ -1,9 +1,10 @@
 package com.pdg.reservation.accommodation.facade;
 
 import com.pdg.kafka.event.ReviewKafkaEvent;
-import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationDetailInfo;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
-import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
+import com.pdg.reservation.accommodation.dto.AccommodationSearchInfo;
+import com.pdg.reservation.common.dto.PageInfo;
 import com.pdg.reservation.accommodation.service.AccommodationCacheGenerationService;
 import com.pdg.reservation.accommodation.service.AccommodationCacheService;
 import com.pdg.reservation.accommodation.service.AccommodationRatingService;
@@ -35,21 +36,20 @@ public class AccommodationFacade {
     private final RoomPriceService roomPriceService;
     private final IdempotencyService idempotencyService;
 
-    public Page<AccommodationSearchResponse> search(AccommodationSearchCondition condition, Pageable pageable) {
-        Page<AccommodationSearchResponse> page = accommodationService.search(condition, pageable);
-        fillMinPrices(page, condition);
-        return page;
+    public PageInfo<AccommodationSearchInfo> search(AccommodationSearchCondition condition, Pageable pageable) {
+        Page<AccommodationSearchInfo> page = accommodationService.search(condition, pageable);
+        return PageInfo.from(fillMinPrices(page, condition));
     }
 
     // 숙소마다 예약 가능한 객실의 1박 평균가 중 최저가를 채운다. 계산은 RoomPriceService 한 곳에서 한다
-    private void fillMinPrices(Page<AccommodationSearchResponse> page, AccommodationSearchCondition condition) {
-        List<Long> accommodationIds = page.getContent().stream().map(AccommodationSearchResponse::getId).toList();
+    private Page<AccommodationSearchInfo> fillMinPrices(Page<AccommodationSearchInfo> page, AccommodationSearchCondition condition) {
+        List<Long> accommodationIds = page.getContent().stream().map(AccommodationSearchInfo::id).toList();
         Map<Long, Long> minPrices = roomPriceService.minAveragePriceByAccommodation(
                 accommodationIds, condition.getCheckInDate(), condition.getCheckOutDate(), condition.getCapacity());
-        page.getContent().forEach(accommodation -> accommodation.updateMinPrice(minPrices.get(accommodation.getId())));
+        return page.map(accommodation -> accommodation.withMinPrice(minPrices.get(accommodation.id())));
     }
 
-    public AccommodationDetailResponse getAccommodationDetail(Long accommodationId) {
+    public AccommodationDetailInfo getAccommodationDetail(Long accommodationId) {
         accommodationService.validateExists(accommodationId);
 
         // 평점이 바뀌면 소비자가 이 세대를 올린다. 세대가 키에 들어가므로 옛 상세가 새 세대의 키에 남지 않는다

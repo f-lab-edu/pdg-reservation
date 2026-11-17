@@ -2,14 +2,14 @@ package com.pdg.reservation.review.facade;
 
 import com.pdg.reservation.accommodation.service.AccommodationCacheGenerationService;
 import com.pdg.reservation.accommodation.service.AccommodationService;
-import com.pdg.reservation.common.dto.PageResponse;
+import com.pdg.reservation.common.dto.PageInfo;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.service.ReservationService;
 import com.pdg.reservation.review.dto.ReviewCreateRequest;
-import com.pdg.reservation.review.dto.ReviewDeleteResponse;
+import com.pdg.reservation.review.dto.ReviewDeleteInfo;
 import com.pdg.reservation.review.dto.ReviewInfo;
-import com.pdg.reservation.review.dto.ReviewResponse;
+import com.pdg.reservation.review.dto.ReviewSummaryInfo;
 import com.pdg.reservation.review.dto.ReviewSearchCondition;
 import com.pdg.reservation.review.entity.Review;
 import com.pdg.reservation.review.event.ReviewCreatedEvent;
@@ -43,12 +43,12 @@ public class ReviewFacade {
         return ReviewInfo.from(review);
     }
 
-    public Page<ReviewResponse> findMyReviews(Long memberId, ReviewSearchCondition condition, Pageable pageable) {
-        return reviewService.findMyReviews(memberId, condition, pageable)
-                .map(review -> ReviewResponse.from(review, false));
+    public PageInfo<ReviewSummaryInfo> findMyReviews(Long memberId, ReviewSearchCondition condition, Pageable pageable) {
+        return PageInfo.from(reviewService.findMyReviews(memberId, condition, pageable)
+                .map(review -> ReviewSummaryInfo.from(review, false)));
     }
 
-    public PageResponse<ReviewResponse> getAccommodationReviews(
+    public PageInfo<ReviewSummaryInfo> getAccommodationReviews(
             Long accommodationId, ReviewSearchCondition condition, Pageable pageable) {
         accommodationService.validateExists(accommodationId);
 
@@ -57,9 +57,9 @@ public class ReviewFacade {
     }
 
     @Transactional
-    public ReviewDeleteResponse deleteReview(Long memberId, Long reviewId) {
+    public ReviewDeleteInfo deleteReview(Long memberId, Long reviewId) {
         Review review = reviewService.deleteReview(memberId, reviewId);
-        return ReviewDeleteResponse.from(reviewId, review.getDeletedAt());
+        return new ReviewDeleteInfo(reviewId, review.getDeletedAt());
     }
 
     // 리뷰 등록 이벤트를 Kafka로 보낸다. 외부 호출만 있어서 트랜잭션을 두지 않는다

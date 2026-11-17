@@ -2,6 +2,7 @@ package com.pdg.reservation.reservation.controller;
 
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.dto.PageInfo;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.dto.*;
@@ -53,7 +54,7 @@ public class ReservationController {
             @Valid ReservationSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<ReservationSearchResponse> page = reservationFacade.search(userDetails.getMember().getId(), condition, pageable);
-        return ApiResponse.ok(PageResponse.from(page));
+        PageInfo<ReservationSearchInfo> page = reservationFacade.search(userDetails.getMember().getId(), condition, pageable);
+        return ApiResponse.ok(PageResponse.from(page, ReservationSearchResponse::from));
     }
 }

@@ -1,7 +1,6 @@
 package com.pdg.reservation.reservation.dto;
 
 import com.pdg.reservation.reservation.enums.ReservationStatus;
-import com.querydsl.core.annotations.QueryProjection;
 import lombok.Builder;
 import lombok.Getter;
 import java.math.BigDecimal;
@@ -26,7 +25,6 @@ public class ReservationSearchResponse {
     private final boolean cancellable;       // 취소(환불) 가능 여부
 
     @Builder
-    @QueryProjection
     public ReservationSearchResponse(UUID id, String accommodationName, String roomName,
                                      String mainImage, LocalDate checkInDate, LocalDate checkOutDate,
                                      String guestName, String guestPhoneNumber,
@@ -46,5 +44,23 @@ public class ReservationSearchResponse {
         this.createdAt = createdAt;
         this.reviewable = reviewable;
         this.cancellable = cancellable;
+    }
+
+    public static ReservationSearchResponse from(ReservationSearchInfo info) {
+        return ReservationSearchResponse.builder()
+                .id(info.id())
+                .accommodationName(info.accommodationName())
+                .roomName(info.roomName())
+                .mainImage(info.mainImage())
+                .checkInDate(info.checkInDate())
+                .checkOutDate(info.checkOutDate())
+                .guestName(info.guestName())
+                .guestPhoneNumber(info.guestPhoneNumber())
+                .status(info.status())
+                .totalPrice(info.totalPrice())
+                .createdAt(info.createdAt())
+                .reviewable(info.reviewable())
+                .cancellable(info.cancellable())
+                .build();
     }
 }

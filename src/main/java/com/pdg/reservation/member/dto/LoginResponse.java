@@ -23,4 +23,13 @@ public class LoginResponse {
     private String nickName;                // "박대광" (화면 표시용)
 
 
+
+    public static LoginResponse from(LoginInfo info) {
+        return LoginResponse.builder()
+                .accessToken(info.accessToken())
+                .accessTokenExpiresIn(info.accessTokenExpiresIn())
+                .refreshToken(info.refreshToken())
+                .nickName(info.nickName())
+                .build();
+    }
 }

@@ -14,12 +14,12 @@ public class ImageResponse {
     private boolean mainImage;
     private int sortOrder;
 
-    public static ImageResponse from(AccommodationImage image) {
+    public static ImageResponse from(ImageInfo info) {
         return ImageResponse.builder()
-                .id(image.getId())
-                .url(image.getUrl())
-                .mainImage(image.isMain())
-                .sortOrder(image.getSortOrder())
+                .id(info.getId())
+                .url(info.getUrl())
+                .mainImage(info.isMainImage())
+                .sortOrder(info.getSortOrder())
                 .build();
     }
 
