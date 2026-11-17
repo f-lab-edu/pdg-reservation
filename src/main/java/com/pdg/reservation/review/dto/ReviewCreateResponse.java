@@ -20,13 +20,13 @@ public class ReviewCreateResponse {
     private final String content;
     private final LocalDateTime createdAt;
 
-    public static ReviewCreateResponse from(Review review) {
+    public static ReviewCreateResponse from(ReviewInfo info) {
         return ReviewCreateResponse.builder()
-                .id(review.getId())
-                .nickName(review.getNickName())
-                .rating(review.getRating())
-                .content(review.getContent())
-                .createdAt(review.getCreatedAt())
+                .id(info.id())
+                .nickName(info.nickName())
+                .rating(info.rating())
+                .content(info.content())
+                .createdAt(info.createdAt())
                 .build();
     }
 }

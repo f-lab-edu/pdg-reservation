@@ -4,7 +4,7 @@ import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
 import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
-import com.pdg.reservation.accommodation.service.AccommodationService;
+import com.pdg.reservation.accommodation.facade.AccommodationFacade;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import jakarta.validation.Valid;
@@ -25,14 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/accommodations")
 public class AccommodationController {
 
-    private final AccommodationService accommodationService;
+    private final AccommodationFacade accommodationFacade;
 
     @GetMapping("")
     public ResponseEntity<ApiResponse<PageResponse<AccommodationSearchResponse>>> searchAccommodations(
                 @Valid AccommodationSearchCondition condition,
                 @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<AccommodationSearchResponse> page = accommodationService.search(condition, pageable);
+        Page<AccommodationSearchResponse> page = accommodationFacade.search(condition, pageable);
         return ApiResponse.ok(PageResponse.from(page));
     }
 
@@ -40,7 +40,7 @@ public class AccommodationController {
     public ResponseEntity<ApiResponse<AccommodationDetailResponse>> getAccommodationDetail(
             @PathVariable Long accommodationId
     ) {
-        return ApiResponse.ok(accommodationService.getAccommodationDetail(accommodationId));
+        return ApiResponse.ok(accommodationFacade.getAccommodationDetail(accommodationId));
     }
 
 

@@ -1,14 +1,11 @@
 package com.pdg.reservation.review.service;
 
-import com.pdg.reservation.accommodation.service.AccommodationCacheGenerationService;
-import com.pdg.reservation.accommodation.service.AccommodationService;
-import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.entity.Reservation;
-import com.pdg.reservation.reservation.repository.ReservationRepository;
-import com.pdg.reservation.review.dto.*;
+import com.pdg.reservation.review.dto.ReviewCreateRequest;
+import com.pdg.reservation.review.dto.ReviewSearchCondition;
 import com.pdg.reservation.review.entity.Review;
 import com.pdg.reservation.review.event.ReviewCreatedEvent;
 import com.pdg.reservation.review.event.ReviewDeletedEvent;
@@ -31,24 +28,17 @@ import java.util.UUID;
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final ReservationRepository reservationRepository;
-    private final ReviewCacheService reviewCacheService;
-    private final AccommodationCacheGenerationService accommodationCacheGenerationService;
     private final ApplicationEventPublisher eventPublisher;
-    private final AccommodationService accommodationService;
 
     @Transactional
-    public ReviewCreateResponse createReview(Member member, ReviewCreateRequest reviewCreateRequest) {
-        Reservation reservation = reservationRepository.findByPublicIdAndMemberId(reviewCreateRequest.getReservationId(), member.getId())
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVE_NOT_FOUND));
-
+    public Review createReview(Member member, Reservation reservation, ReviewCreateRequest request) {
         reservation.validateReviewEligibility();
 
         if (reviewRepository.existsByReservationId(reservation.getId())) {
             throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
-        Review review = reviewCreateRequest.toEntity(member, reservation);
+        Review review = request.toEntity(member, reservation);
         reviewRepository.save(review);
 
         eventPublisher.publishEvent(
@@ -59,30 +49,15 @@ public class ReviewService {
                         UUID.randomUUID().toString(),
                         LocalDateTime.now()
                 ));
-
-        return ReviewCreateResponse.from(review);
+        return review;
     }
 
-    public Page<ReviewResponse> findMyReviews(Long memberId, ReviewSearchCondition condition, Pageable pageable
-    ) {
-        Page<Review> myReviews = reviewRepository.findMyReviews(memberId, condition, pageable);
-        return myReviews.map(review -> ReviewResponse.from(review, false));
-    }
-
-    public PageResponse<ReviewResponse> getAccommodationReviews(
-            Long accommodationId, ReviewSearchCondition condition, Pageable pageable) {
-
-        accommodationService.validateExists(accommodationId);
-
-        // 1. 세대 조회
-        int generation = accommodationCacheGenerationService.getGeneration(accommodationId);
-        // 2. 캐시 서비스 호출
-        return reviewCacheService.getReviewsWithCache(accommodationId, generation, condition, pageable);
+    public Page<Review> findMyReviews(Long memberId, ReviewSearchCondition condition, Pageable pageable) {
+        return reviewRepository.findMyReviews(memberId, condition, pageable);
     }
 
     @Transactional
-    public ReviewDeleteResponse deleteReview(Long memberId, Long reviewId) {
-
+    public Review deleteReview(Long memberId, Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
@@ -103,9 +78,6 @@ public class ReviewService {
                 UUID.randomUUID().toString(),
                 LocalDateTime.now()
         ));
-        return ReviewDeleteResponse.from(reviewId, review.getDeletedAt());
+        return review;
     }
-
-
-
 }

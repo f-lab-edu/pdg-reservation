@@ -4,7 +4,7 @@ import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.review.dto.*;
-import com.pdg.reservation.review.service.ReviewService;
+import com.pdg.reservation.review.facade.ReviewFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +22,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/reviews")
 public class ReviewController {
 
-    private final ReviewService reviewService;
+    private final ReviewFacade reviewFacade;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ReviewCreateResponse>> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ReviewCreateRequest reviewCreateRequest
     ) {
-        return ApiResponse.created(reviewService.createReview(userDetails.getMember(), reviewCreateRequest));
+        ReviewInfo info = reviewFacade.createReview(userDetails.getMember(), reviewCreateRequest);
+        return ApiResponse.created(ReviewCreateResponse.from(info));
     }
 
     @GetMapping("/my")
@@ -38,7 +39,7 @@ public class ReviewController {
             @Valid ReviewSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<ReviewResponse> page = reviewService.findMyReviews(userDetails.getMember().getId(), condition, pageable);
+        Page<ReviewResponse> page = reviewFacade.findMyReviews(userDetails.getMember().getId(), condition, pageable);
         return ApiResponse.ok(PageResponse.from(page));
     }
 
@@ -48,7 +49,7 @@ public class ReviewController {
             @Valid ReviewSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return ApiResponse.ok(reviewService.getAccommodationReviews(accommodationId, condition, pageable));
+        return ApiResponse.ok(reviewFacade.getAccommodationReviews(accommodationId, condition, pageable));
     }
 
     @DeleteMapping("/{reviewId}")
@@ -56,7 +57,7 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId
     ) {
-        return ApiResponse.ok(reviewService.deleteReview(userDetails.getMember().getId(), reviewId));
+        return ApiResponse.ok(reviewFacade.deleteReview(userDetails.getMember().getId(), reviewId));
     }
 
 

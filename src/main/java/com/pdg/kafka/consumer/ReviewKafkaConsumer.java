@@ -1,7 +1,7 @@
 package com.pdg.kafka.consumer;
 
 import com.pdg.kafka.event.ReviewKafkaEvent;
-import com.pdg.reservation.accommodation.service.AccommodationRatingService;
+import com.pdg.reservation.accommodation.facade.AccommodationFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.DltHandler;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ReviewKafkaConsumer {
 
-    private final AccommodationRatingService accommodationRatingService;
+    private final AccommodationFacade accommodationFacade;
 
     @RetryableTopic(
             attempts = "5",
@@ -30,7 +30,7 @@ public class ReviewKafkaConsumer {
             concurrency = "3"
     )
     public void consume(ReviewKafkaEvent event) {
-        accommodationRatingService.updateAccommodationRating(event);
+        accommodationFacade.updateRating(event);
     }
 
     @DltHandler

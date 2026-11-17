@@ -7,7 +7,7 @@ import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.kafka.event.ReviewKafkaEvent;
 import com.pdg.reservation.accommodation.service.AccommodationAtomicReader;
 import com.pdg.reservation.accommodation.service.AccommodationCacheGenerationService;
-import com.pdg.reservation.accommodation.service.AccommodationRatingService;
+import com.pdg.reservation.accommodation.facade.AccommodationFacade;
 import com.pdg.reservation.common.enums.EventType;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
@@ -58,7 +58,7 @@ class GET_specs {
     RedisCleanUp redisCleanUp;
 
     @Autowired
-    AccommodationRatingService accommodationRatingService;
+    AccommodationFacade accommodationFacade;
 
     @MockitoSpyBean
     AccommodationAtomicReader accommodationAtomicReader;
@@ -212,7 +212,7 @@ class GET_specs {
                         new ParameterizedTypeReference<>() { }
                 ));
         dbRead.await(5, TimeUnit.SECONDS);
-        accommodationRatingService.updateAccommodationRating(reviewCreated);
+        accommodationFacade.updateRating(reviewCreated);
         ratingUpdated.countDown();
         interruptedRead.get(5, TimeUnit.SECONDS);
         ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
@@ -244,7 +244,7 @@ class GET_specs {
         }).when(accommodationCacheGenerationService).increaseGeneration(eq(accommodation.getId()));
 
         // Act
-        accommodationRatingService.updateAccommodationRating(reviewCreated);
+        accommodationFacade.updateRating(reviewCreated);
         ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = accommodationFixture.client().exchange(
                 get("/api/v1/accommodations/{id}", accommodation.getId()).build(),
                 new ParameterizedTypeReference<>() { }

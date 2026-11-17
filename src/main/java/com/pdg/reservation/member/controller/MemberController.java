@@ -9,7 +9,7 @@ import com.pdg.reservation.member.dto.LoginRequest;
 import com.pdg.reservation.member.dto.LoginResponse;
 import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.member.dto.TokenResponse;
-import com.pdg.reservation.member.service.MemberService;
+import com.pdg.reservation.member.facade.MemberFacade;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -24,19 +24,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/members")
 public class MemberController {
 
-    private final MemberService memberService;
+    private final MemberFacade memberFacade;
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest) {
-        memberService.signup(signupRequest);
+        memberFacade.signup(signupRequest);
         return ApiResponse.created();
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest,
                                                      HttpServletResponse response) {
-        LoginResponse loginResponse = memberService.login(loginRequest);
+        LoginResponse loginResponse = memberFacade.login(loginRequest);
         jwtTokenProvider.setRefreshTokenCookie(response, loginResponse.getRefreshToken());
         return ApiResponse.ok(loginResponse);
     }
@@ -47,7 +47,7 @@ public class MemberController {
         if (refreshToken == null) {
             throw new CustomException(ErrorCode.JWT_REFRESH_TOKEN_NOT_FOUND);
         }
-        TokenResponse tokenResponse = memberService.reissue(refreshToken);
+        TokenResponse tokenResponse = memberFacade.reissue(refreshToken);
         jwtTokenProvider.setRefreshTokenCookie(response, tokenResponse.getRefreshToken());
 
         return ApiResponse.ok(tokenResponse);
@@ -56,7 +56,7 @@ public class MemberController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
         String accessToken = jwtTokenProvider.extractToken(request);
-        memberService.logout(accessToken);
+        memberFacade.logout(accessToken);
         jwtTokenProvider.deleteCookie(response);
         return  ApiResponse.message("logout success");
     }
