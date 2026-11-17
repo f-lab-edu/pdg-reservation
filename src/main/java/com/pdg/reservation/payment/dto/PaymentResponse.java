@@ -21,15 +21,15 @@ public class PaymentResponse {
     private PaymentStatus status;       // 결제 상태
     private LocalDateTime paidAt;       // 결제 완료 시간
 
-    public static PaymentResponse from(Payment payment) {
+    public static PaymentResponse from(PaymentInfo info) {
         return PaymentResponse.builder()
-                .paymentId(payment.getPublicId())
-                .reservationId(payment.getReservation().getPublicId())
-                .amount(payment.getAmount())
-                .method(payment.getMethod())
-                .pgTransactionNumber(payment.getPgTransactionNumber())
-                .status(payment.getStatus())
-                .paidAt(payment.getPaidAt())
+                .paymentId(info.paymentId())
+                .reservationId(info.reservationId())
+                .amount(info.amount())
+                .method(info.method())
+                .pgTransactionNumber(info.pgTransactionNumber())
+                .status(info.status())
+                .paidAt(info.paidAt())
                 .build();
     }
 }

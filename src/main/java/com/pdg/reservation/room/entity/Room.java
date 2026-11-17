@@ -4,6 +4,8 @@ import com.pdg.reservation.accommodation.entity.Accommodation;
 import com.pdg.reservation.accommodation.entity.AccommodationImage;
 import com.pdg.reservation.accommodation.enums.BedType;
 import com.pdg.reservation.common.entity.BaseEntity;
+import com.pdg.reservation.common.exception.CustomException;
+import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.room.price.NightPrice;
 import com.pdg.reservation.room.price.StayPrice;
 import jakarta.persistence.*;
@@ -82,6 +84,20 @@ public class Room extends BaseEntity {
                 .map(date -> new NightPrice(date, priceByDate.getOrDefault(date, basePrice)))
                 .toList();
         return new StayPrice(nights);
+    }
+
+    // 예약할 수 있는 객실이고 숙소가 운영 중이어야 한다
+    public void validateReservable() {
+        if (!isReservable || !accommodation.isOperational()) {
+            throw new CustomException(ErrorCode.RESERVE_UNAVAILABLE_ROOM);
+        }
+    }
+
+    // 투숙 인원은 객실의 최대 수용 인원을 넘을 수 없다
+    public void validateCapacity(int guestCount) {
+        if (guestCount > maxCapacity) {
+            throw new CustomException(ErrorCode.RESERVE_EXCEED_MAX_CAPACITY);
+        }
     }
 
     /*연관 관계 생성 편의 메서드*/

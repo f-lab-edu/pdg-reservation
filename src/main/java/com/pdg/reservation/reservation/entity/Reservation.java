@@ -110,6 +110,11 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.CANCELED;
     }
 
+    // 결제를 기다리는 상태인가(만료 처리 대상)
+    public boolean isPaymentPending() {
+        return this.status == ReservationStatus.PENDING_PAYMENT;
+    }
+
     public void validatePayable(BigDecimal amount) {
         //1. 결제 가능 상태 검증
         if (this.status != ReservationStatus.PENDING_PAYMENT) {

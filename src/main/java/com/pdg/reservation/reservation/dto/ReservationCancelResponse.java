@@ -22,15 +22,15 @@ public class ReservationCancelResponse {
     private PaymentStatus status;       // 결제 상태
     private LocalDateTime canceledAt;   // 결제 완료 시간
 
-    public static ReservationCancelResponse from(Payment payment) {
+    public static ReservationCancelResponse from(ReservationCancelInfo info) {
         return ReservationCancelResponse.builder()
-                .paymentId(payment.getPublicId())
-                .reservationId(payment.getReservation().getPublicId())
-                .amount(payment.getAmount())
-                .method(payment.getMethod())
-                .pgTransactionNumber(payment.getPgTransactionNumber())
-                .status(payment.getStatus())
-                .canceledAt(LocalDateTime.now())
+                .paymentId(info.paymentId())
+                .reservationId(info.reservationId())
+                .amount(info.amount())
+                .method(info.method())
+                .pgTransactionNumber(info.pgTransactionNumber())
+                .status(info.status())
+                .canceledAt(info.canceledAt())
                 .build();
     }
 }

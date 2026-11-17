@@ -1,11 +1,7 @@
 package com.pdg.reservation.payment.service;
 
-import com.pdg.reservation.common.annotation.DistributedLock;
-import com.pdg.reservation.common.exception.CustomException;
-import com.pdg.reservation.common.exception.enums.ErrorCode;
 import com.pdg.reservation.payment.client.PgClient;
 import com.pdg.reservation.payment.dto.PaymentRequest;
-import com.pdg.reservation.payment.dto.PaymentResponse;
 import com.pdg.reservation.payment.entity.Payment;
 import com.pdg.reservation.payment.entity.PaymentCancelHistory;
 import com.pdg.reservation.payment.enums.CancelType;
@@ -13,66 +9,58 @@ import com.pdg.reservation.payment.event.PaymentConfirmedEvent;
 import com.pdg.reservation.payment.repository.PaymentCancelHistoryRepository;
 import com.pdg.reservation.payment.repository.PaymentRepository;
 import com.pdg.reservation.reservation.entity.Reservation;
-import com.pdg.reservation.reservation.repository.ReservationRedisRepository;
-import com.pdg.reservation.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+// 결제 도메인의 흐름. PG 호출 메서드(approve, requestCancel, compensate)에는 트랜잭션을 두지 않는다.
+// 호출 순서와 트랜잭션 경계는 PaymentFacade, ReservationFacade가 정한다.
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
 
     private final PgClient pgClient;
-    private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
-    private final PaymentCommandService paymentCommandService;
     private final PaymentCancelHistoryRepository paymentCancelHistoryRepository;
-
     private final ApplicationEventPublisher eventPublisher;
 
-    @DistributedLock(key = "'payment:reservationId:' + #reservationId")
-    public PaymentResponse processPayment(Long memberId, UUID reservationId, PaymentRequest paymentRequest) {
-
-        paymentRequest.validatePayMethodPolicy();
-
-        Reservation reservation = reservationRepository.findByPublicIdAndMemberId(reservationId, memberId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_INVALID_REQUEST));
-
-        reservation.validatePayable(paymentRequest.getAmount());
-
-        String pgTransactionNumber = pgClient.confirm(paymentRequest);
-        PaymentResponse response = null;
-
-        try {
-            response = paymentCommandService.pay(memberId, reservation.getId(), pgTransactionNumber, paymentRequest);
-        } catch (Exception e) {
-            log.error("DB 영속화 실패로 인한 보상 트랜잭션 실행. 예약ID: {}", reservationId, e);
-            executeCompensation(pgTransactionNumber);
-            throw e;
-        }
-        eventPublisher.publishEvent(
-                new PaymentConfirmedEvent(
-                    memberId,
-                    reservation.getId(),
-                    UUID.randomUUID().toString(),
-                    LocalDateTime.now())
-                );
-        return response;
+    public void validatePayMethodPolicy(PaymentRequest request) {
+        request.validatePayMethodPolicy();
     }
 
+    // PG 승인. 트랜잭션 밖에서 호출한다
+    public String approve(PaymentRequest request) {
+        return pgClient.confirm(request);
+    }
+
+    // 결제를 저장하고 결제 확정 이벤트를 발행한다. Facade의 쓰기 트랜잭션 안에서 호출한다
     @Transactional
-    public void cancelPayment(Payment payment, String cancelReason) {
+    public Payment pay(Long memberId, Reservation reservation, String pgTransactionNumber, PaymentRequest request) {
+        Payment payment = request.toEntity(reservation, pgTransactionNumber);
+        paymentRepository.save(payment);
 
+        eventPublisher.publishEvent(new PaymentConfirmedEvent(
+                memberId,
+                reservation.getId(),
+                UUID.randomUUID().toString(),
+                LocalDateTime.now()));
+        return payment;
+    }
+
+    // PG에 결제 취소를 요청한다. 트랜잭션 밖에서 호출한다
+    public void requestCancel(Payment payment) {
         pgClient.cancel(payment.getPgTransactionNumber(), CancelType.USER_REQUEST);
+    }
 
+    // 결제를 취소 상태로 바꾸고 취소 이력을 남긴다
+    @Transactional
+    public void markCanceled(Payment payment, String cancelReason) {
         payment.updateStatusCanceled();
         paymentRepository.save(payment);
 
@@ -84,9 +72,8 @@ public class PaymentService {
         );
     }
 
-
-    //PG사 성공 후, DB 예외 시 실행
-    private void executeCompensation(String pgTransactionNumber) {
+    // PG사 성공 후, DB 예외 시 실행
+    public void compensate(String pgTransactionNumber) {
         try {
             pgClient.cancel(pgTransactionNumber, CancelType.COMPENSATION);
         } catch (Exception cancelEx) {

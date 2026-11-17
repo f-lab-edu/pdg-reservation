@@ -2,9 +2,10 @@ package com.pdg.reservation.payment.controller;
 
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.payment.dto.PaymentInfo;
 import com.pdg.reservation.payment.dto.PaymentRequest;
 import com.pdg.reservation.payment.dto.PaymentResponse;
-import com.pdg.reservation.payment.service.PaymentService;
+import com.pdg.reservation.payment.facade.PaymentFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/payments")
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final PaymentFacade paymentFacade;
 
     @PostMapping
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody PaymentRequest paymentRequest) {
-        return ApiResponse.created(paymentService.processPayment(userDetails.getMember().getId(), paymentRequest.getReservationId(), paymentRequest));
+        PaymentInfo info = paymentFacade.pay(
+                userDetails.getMember().getId(), paymentRequest.getReservationId(), paymentRequest);
+        return ApiResponse.created(PaymentResponse.from(info));
     }
-
-
-
-
 }

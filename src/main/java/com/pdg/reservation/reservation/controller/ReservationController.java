@@ -1,14 +1,11 @@
 package com.pdg.reservation.reservation.controller;
 
-import com.pdg.reservation.accommodation.dto.AccommodationSearchCondition;
-import com.pdg.reservation.accommodation.dto.AccommodationSearchResponse;
 import com.pdg.reservation.common.auth.security.CustomUserDetails;
 import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.member.entity.Member;
 import com.pdg.reservation.reservation.dto.*;
-import com.pdg.reservation.reservation.service.ReservationCancelService;
-import com.pdg.reservation.reservation.service.ReservationService;
+import com.pdg.reservation.reservation.facade.ReservationFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class ReservationController {
 
-    private final ReservationService reservationService;
-    private final ReservationCancelService reservationCancelService;
+    private final ReservationFacade reservationFacade;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ReservationResponse>> createReservation(
@@ -38,14 +34,17 @@ public class ReservationController {
             @Valid @RequestBody ReservationRequest reserveRequest
     ) {
         Member member = userDetails.getMember();
-        return ApiResponse.created(reservationService.reserve(reserveRequest.getRoomId(), member, reserveRequest));
+        ReservationInfo info = reservationFacade.reserve(member, reserveRequest);
+        return ApiResponse.created(ReservationResponse.from(info));
     }
 
     @PostMapping("/cancel")
     public ResponseEntity<ApiResponse<ReservationCancelResponse>> cancelPayment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ReservationCancelRequest cancelRequest) {
-        return ApiResponse.ok(reservationCancelService.processCancel(userDetails.getMember().getId(), cancelRequest.getReservationId(), cancelRequest));
+        ReservationCancelInfo info = reservationFacade.cancel(
+                userDetails.getMember().getId(), cancelRequest.getReservationId(), cancelRequest);
+        return ApiResponse.ok(ReservationCancelResponse.from(info));
     }
 
     @GetMapping("/search")
@@ -54,9 +53,7 @@ public class ReservationController {
             @Valid ReservationSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<ReservationSearchResponse> page = reservationService.search(userDetails.getMember().getId(), condition, pageable);
+        Page<ReservationSearchResponse> page = reservationFacade.search(userDetails.getMember().getId(), condition, pageable);
         return ApiResponse.ok(PageResponse.from(page));
     }
-
-
 }

@@ -5,7 +5,7 @@ import com.pdg.reservation.common.dto.PageResponse;
 import com.pdg.reservation.room.dto.RoomDetailResponse;
 import com.pdg.reservation.room.dto.RoomSearchCondition;
 import com.pdg.reservation.room.dto.RoomSearchResponse;
-import com.pdg.reservation.room.service.RoomService;
+import com.pdg.reservation.room.facade.RoomFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class RoomController {
 
-    private final RoomService roomService;
+    private final RoomFacade roomFacade;
 
     @GetMapping("/accommodations/{accommodationId}/rooms")
     public ResponseEntity<ApiResponse<PageResponse<RoomSearchResponse>>> getRooms(
@@ -32,13 +32,13 @@ public class RoomController {
             @Valid RoomSearchCondition condition,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        Page<RoomSearchResponse> page = roomService.getRooms(accommodationId, condition, pageable);
+        Page<RoomSearchResponse> page = roomFacade.getRooms(accommodationId, condition, pageable);
         return ApiResponse.ok(PageResponse.from(page));
     }
 
     @GetMapping("/rooms/{roomId}")
     public ResponseEntity<ApiResponse<RoomDetailResponse>> getRoom(@PathVariable Long roomId) {
-        return ApiResponse.ok(roomService.getRoom(roomId));
+        return ApiResponse.ok(roomFacade.getRoom(roomId));
     }
 
 }

@@ -39,19 +39,19 @@ public class ReservationResponse {
     // 시간 정보
     private final LocalDateTime createdAt; // 예약 요청 시간
 
-    public static ReservationResponse from(Reservation reservation) {
+    public static ReservationResponse from(ReservationInfo info) {
         return ReservationResponse.builder()
-                .reservationId(reservation.getPublicId())
-                .accommodationName(reservation.getAccommodation().getName())
-                .roomName(reservation.getRoom().getName())
-                .checkInDate(reservation.getCheckInDate())
-                .checkOutDate(reservation.getCheckOutDate())
-                .guestCount(reservation.getGuestCount())
-                .totalPrice(reservation.getTotalPrice())
-                .status(reservation.getStatus())
-                .guestName(reservation.getGuestName())
-                .guestPhoneNumber(reservation.getGuestPhoneNumber())
-                .createdAt(reservation.getCreatedAt())
+                .reservationId(info.reservationId())
+                .accommodationName(info.accommodationName())
+                .roomName(info.roomName())
+                .checkInDate(info.checkInDate())
+                .checkOutDate(info.checkOutDate())
+                .guestCount(info.guestCount())
+                .totalPrice(info.totalPrice())
+                .status(info.status())
+                .guestName(info.guestName())
+                .guestPhoneNumber(info.guestPhoneNumber())
+                .createdAt(info.createdAt())
                 .build();
     }
 }

@@ -1,6 +1,6 @@
 package com.pdg.reservation.reservation.listener;
 
-import com.pdg.reservation.reservation.service.ReservationService;
+import com.pdg.reservation.reservation.facade.ReservationFacade;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;
@@ -11,13 +11,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReservationTimeoutListener extends KeyExpirationEventMessageListener {
 
-    private final ReservationService reservationService;
+    private final ReservationFacade reservationFacade;
 
     public ReservationTimeoutListener(
-            RedisMessageListenerContainer listenerContainer, ReservationService reservationService
+            RedisMessageListenerContainer listenerContainer, ReservationFacade reservationFacade
     ) {
         super(listenerContainer);
-        this.reservationService = reservationService;
+        this.reservationFacade = reservationFacade;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class ReservationTimeoutListener extends KeyExpirationEventMessageListene
             if (expiredKey.startsWith("pending_reservation:")) {
                 Long reservationId = Long.parseLong(expiredKey.split(":")[1]);
                 log.info("결제 시간 만료, 롤백 프로세스 시작: ReservationId={}", reservationId);
-                reservationService.rollbackReservation(reservationId);
+                reservationFacade.expire(reservationId);
             }
         } catch (Exception e) {
             log.error("결제 만료 롤백 실패. 수동 확인 필요. Key: {}", message, e);
