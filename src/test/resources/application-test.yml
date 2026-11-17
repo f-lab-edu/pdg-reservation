@@ -50,6 +50,12 @@ refreshToken:
   expired:
     value: 604800
 
+# 테스트에서는 Outbox 스케줄러를 사실상 끈다(1시간). 컨텍스트가 여러 개 떠 있으면 각 스케줄러가 같은 DB의
+# 행을 서로 가로채서 스파이로 실패를 일으키는 테스트가 불안정해진다. 테스트가 relay()를 직접 호출한다
+outbox:
+  relay:
+    fixed-delay-ms: 3600000
+
 cookie:
   secure: false
   same-site: Lax

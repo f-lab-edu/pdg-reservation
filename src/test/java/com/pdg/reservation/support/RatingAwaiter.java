@@ -2,6 +2,7 @@ package com.pdg.reservation.support;
 
 import com.pdg.reservation.accommodation.dto.AccommodationDetailResponse;
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.common.outbox.OutboxRelayScheduler;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +23,17 @@ public class RatingAwaiter {
 
     private final TestRestTemplate client;
 
-    public RatingAwaiter(ApiClient apiClient) {
+    private final OutboxRelayScheduler outboxRelayScheduler;
+
+    public RatingAwaiter(ApiClient apiClient, OutboxRelayScheduler outboxRelayScheduler) {
         this.client = apiClient.rest();
+        this.outboxRelayScheduler = outboxRelayScheduler;
     }
 
     public void awaitRatingAverage(Long accommodationId, BigDecimal expected) {
         await().atMost(MAX_WAIT).untilAsserted(() -> {
+            // 테스트 프로필에서는 스케줄러가 돌지 않으므로 확인할 때마다 PENDING을 직접 보낸다
+            outboxRelayScheduler.relay();
             ResponseEntity<ApiResponse<AccommodationDetailResponse>> response = client.exchange(
                     get("/api/v1/accommodations/{id}", accommodationId).build(),
                     new ParameterizedTypeReference<>() { }
