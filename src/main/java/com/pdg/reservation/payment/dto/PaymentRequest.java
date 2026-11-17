@@ -45,15 +45,4 @@ public class PaymentRequest {
         }
     }
 
-    public Payment toEntity(Reservation reservation, String pgTransactionNumber){
-        return  Payment.builder()
-                .amount(this.amount)
-                .cardCompany(this.cardCompany)
-                .method(this.method)
-                .paidAt(LocalDateTime.now())
-                .reservation(reservation)
-                .pgTransactionNumber(pgTransactionNumber)
-                .build();
-    }
-
 }

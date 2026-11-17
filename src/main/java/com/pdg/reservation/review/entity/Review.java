@@ -68,4 +68,15 @@ public class Review {
 
 
 
+
+    public static Review create(Member member, Reservation reservation, BigDecimal rating, String content) {
+        return Review.builder()
+                .member(member)
+                .content(content)
+                .rating(rating)
+                .nickName(member.getNickName())
+                .reservation(reservation)
+                .accommodation(reservation.getAccommodation())
+                .build();
+    }
 }

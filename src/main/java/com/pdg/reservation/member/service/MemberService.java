@@ -47,7 +47,8 @@ public class MemberService {
         }
 
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
-        memberRepository.save(signupRequest.toEntity(encodedPassword));
+        memberRepository.save(Member.create(signupRequest.getEmail(), encodedPassword,
+                signupRequest.getName(), signupRequest.getNickName(), signupRequest.getPhoneNumber()));
     }
 
     public LoginResponse login(LoginRequest loginRequest) {

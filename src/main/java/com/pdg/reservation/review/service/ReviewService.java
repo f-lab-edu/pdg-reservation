@@ -38,7 +38,7 @@ public class ReviewService {
             throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
-        Review review = request.toEntity(member, reservation);
+        Review review = Review.create(member, reservation, request.getRating(), request.getContent());
         reviewRepository.save(review);
 
         eventPublisher.publishEvent(

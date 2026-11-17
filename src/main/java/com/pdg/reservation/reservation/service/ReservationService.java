@@ -49,7 +49,8 @@ public class ReservationService {
 
     @Transactional
     public Reservation reserve(Member member, Room room, ReservationRequest request, StayPrice stayPrice) {
-        Reservation reservation = request.toEntity(member, room);
+        Reservation reservation = Reservation.create(member, room, request.getCheckInDate(), request.getCheckOutDate(),
+                request.getGuestCount(), request.getTotalPrice(), request.getGuestName(), request.getGuestPhoneNumber());
         reservationRepository.save(reservation);
 
         // 날짜 오름차순으로 점유한다. (room_id, stay_date) 유니크가 이중 점유를 막는다

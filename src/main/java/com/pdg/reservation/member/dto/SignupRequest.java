@@ -39,15 +39,4 @@ public class SignupRequest {
     @Pattern(regexp = "^010-\\d{3,4}-\\d{4}$", message = "전화번호는 010-1234-5678 또는 010-123-4567 형식이어야 합니다.")
     private String phoneNumber;
 
-    public Member toEntity(String encodedPassword) {
-        return Member.builder()
-                .email(this.email)
-                .password(encodedPassword)
-                .name(this.name)
-                .nickName(this.nickName)
-                .phoneNumber(this.phoneNumber)
-                .isActive(true)
-                .build();
-    }
-
 }

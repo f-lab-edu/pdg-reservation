@@ -49,7 +49,7 @@ Request ──→ Facade ──→ Service(엔티티 반환) ──→ Facade가
 
 - **Command는 만들지 않는다.** Request가 Facade와 Service까지 그대로 내려간다. 대신 Request에 서블릿·HTTP 타입(`HttpServletRequest` 등)을 넣지 않는다.
 - Service는 엔티티를 돌려준다. Facade가 필요하면 다른 Service에 엔티티를 넘긴다.
-- **Info**는 Facade가 만들어 반환한다. **Response**는 Controller가 Info에서 만든다. 엔티티는 Facade 위로 올라가지 않는다.
+- **Info**는 명령 결과(예약, 결제, 취소, 리뷰 등록)처럼 엔티티에서 응답을 만드는 경우에 Facade가 만들어 반환하고, **Response**는 Controller가 Info에서 만든다. 조회 전용 API(검색, 목록, 상세)와 엔티티가 아닌 결과(토큰)는 Info 없이 Facade가 조회 DTO(Response)를 그대로 반환한다. 엔티티는 Facade 위로 올라가지 않는다.
 - 엔티티 생성은 `Request.toEntity`가 아니라 엔티티의 정적 팩토리가 한다.
 - 변환 팩토리 이름은 `from`(단일 소스), `of`(여러 값)이다.
 
@@ -172,12 +172,13 @@ com.pdg.reservation
 
 - 도메인 규칙은 엔티티 단위 테스트로(예: `RoomTest`), 사용자 관점의 동작은 API 통합 테스트로 확인한다. 상세는 [test-guide.md](test-guide.md)를 따른다.
 
-## 12. 현재 코드와 다른 부분 (R2-2, R3-1에서 정리)
+## 12. 아직 가이드와 다른 부분 (R3-1에서 정리)
 
-- Controller가 Service를 직접 호출한다(`facade/`가 아직 없다).
-- Service끼리 호출한다(예: 취소 Service가 결제 Service와 예약 Service를 호출).
-- 이벤트 리스너와 만료 리스너가 Service를 직접 호출한다.
-- Service가 응답 DTO를 만들거나 엔티티를 그대로 돌려준다. `Request.toEntity`와 `ReservationValidator`가 있다.
-- `ReservationService.rollbackReservation`의 상태 비교(`!= PENDING_PAYMENT`)처럼 규칙이 Service에 있는 곳이 있다.
-- `@Async`를 쓰는 리스너가 없고 `reviewAsyncExecutor`는 쓰이지 않는다.
-- 일부 Repository가 Response를 돌려준다.
+2026-11-17에 Controller → Facade → Service 구조, 진입점의 Facade 호출, 엔티티 정적 팩토리, `@Async` 리스너를 코드에 반영했다. 아래는 남은 차이다.
+
+- 검색·목록 Repository가 `@QueryProjection` Response를 돌려준다(새 메서드는 돌려주지 않는다). 조회 전용 API(검색, 목록, 상세)와 엔티티가 아닌 결과(토큰)는 Info를 만들지 않고 Facade가 조회 DTO(Response)를 그대로 반환한다.
+- 같은 도메인 안에서 캐시 Service가 락을 쓰는 읽기 컴포넌트를 호출한다(`AccommodationCacheService` → `AccommodationAtomicReader`, `ReviewCacheService` → `ReviewAtomicReader`).
+- 인증 주체에서 꺼낸 `Member` 엔티티를 Controller가 Facade에 넘긴다(`reserve`, `createReview`).
+- `ReservationFacade.cancel`은 PG 취소가 성공한 뒤 DB 변경이 실패하면 되돌리지 못한다. 취소 중간 상태는 R2-4, R5-7에서 설계한다.
+- `ReservationEventListener`는 로그만 남기고 Facade를 호출하지 않는다.
+- 이벤트 카탈로그 문서가 아직 없다.

@@ -42,7 +42,8 @@ public class PaymentService {
     // 결제를 저장하고 결제 확정 이벤트를 발행한다. Facade의 쓰기 트랜잭션 안에서 호출한다
     @Transactional
     public Payment pay(Long memberId, Reservation reservation, String pgTransactionNumber, PaymentRequest request) {
-        Payment payment = request.toEntity(reservation, pgTransactionNumber);
+        Payment payment = Payment.create(reservation, pgTransactionNumber, request.getAmount(),
+                request.getMethod(), request.getCardCompany());
         paymentRepository.save(payment);
 
         eventPublisher.publishEvent(new PaymentConfirmedEvent(

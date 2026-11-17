@@ -57,4 +57,15 @@ public class Member extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+
+    public static Member create(String email, String encodedPassword, String name, String nickName, String phoneNumber) {
+        return Member.builder()
+                .email(email)
+                .password(encodedPassword)
+                .name(name)
+                .nickName(nickName)
+                .phoneNumber(phoneNumber)
+                .isActive(true)
+                .build();
+    }
 }

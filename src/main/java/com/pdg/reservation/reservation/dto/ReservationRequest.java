@@ -58,20 +58,5 @@ public class ReservationRequest {
         return checkOutDate.isAfter(checkInDate);
     }
 
-    public Reservation toEntity(Member member, Room room) {
-        return Reservation.builder()
-                .checkInDate(this.checkInDate)
-                .checkOutDate(this.checkOutDate)
-                .guestCount(this.guestCount)
-                .totalPrice(this.totalPrice)
-                .guestName(this.guestName)
-                .guestPhoneNumber(this.guestPhoneNumber)
-                .status(ReservationStatus.PENDING_PAYMENT)
-                .member(member)
-                .accommodation(room.getAccommodation())
-                .room(room)
-                .build();
-    }
-
 
 }

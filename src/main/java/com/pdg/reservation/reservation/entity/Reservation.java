@@ -150,4 +150,21 @@ public class Reservation extends BaseEntity {
         }
     }
 
+
+    // 결제 대기 상태의 예약을 만든다
+    public static Reservation create(Member member, Room room, LocalDate checkInDate, LocalDate checkOutDate,
+                                     int guestCount, BigDecimal totalPrice, String guestName, String guestPhoneNumber) {
+        return Reservation.builder()
+                .checkInDate(checkInDate)
+                .checkOutDate(checkOutDate)
+                .guestCount(guestCount)
+                .totalPrice(totalPrice)
+                .guestName(guestName)
+                .guestPhoneNumber(guestPhoneNumber)
+                .status(ReservationStatus.PENDING_PAYMENT)
+                .member(member)
+                .accommodation(room.getAccommodation())
+                .room(room)
+                .build();
+    }
 }

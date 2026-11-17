@@ -81,4 +81,17 @@ public class Payment {
 
 
 
+
+    // PG 승인을 받은 결제를 만든다
+    public static Payment create(Reservation reservation, String pgTransactionNumber, BigDecimal amount,
+                                 PaymentMethod method, CardCompany cardCompany) {
+        return Payment.builder()
+                .amount(amount)
+                .cardCompany(cardCompany)
+                .method(method)
+                .paidAt(LocalDateTime.now())
+                .reservation(reservation)
+                .pgTransactionNumber(pgTransactionNumber)
+                .build();
+    }
 }
