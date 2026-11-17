@@ -56,12 +56,14 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
-        if (review.isDeleted()) {
-            throw new CustomException(ErrorCode.REVIEW_ALREADY_DELETED);
+        // 남의 리뷰는 존재하지 않는 것처럼 404로 답한다. 403이면 그 id의 리뷰가 있다는 사실이 새고,
+        // 삭제 여부 검사보다 먼저 해야 남이 삭제 상태까지 알아내지 못한다
+        if (!review.getMember().getId().equals(memberId)) {
+            throw new CustomException(ErrorCode.REVIEW_NOT_FOUND);
         }
 
-        if (!review.getMember().getId().equals(memberId)) {
-            throw new CustomException(ErrorCode.REVIEW_OWNER_MISMATCH);
+        if (review.isDeleted()) {
+            throw new CustomException(ErrorCode.REVIEW_ALREADY_DELETED);
         }
         review.delete();
         reviewRepository.save(review);

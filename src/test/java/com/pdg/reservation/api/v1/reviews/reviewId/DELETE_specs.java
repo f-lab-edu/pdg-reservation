@@ -163,7 +163,7 @@ class DELETE_specs {
     }
 
     @Test
-    void 남의_리뷰를_삭제하면_403과_REVIEW_006을_반환한다() {
+    void 남의_리뷰를_삭제하면_리뷰_존재를_숨기려고_404와_REVIEW_004를_반환한다() {
         // Arrange
         memberFixture.createMemberThenSetAsDefaultUser();
         SignupRequest otherMember = memberFixture.createMember();
@@ -185,8 +185,8 @@ class DELETE_specs {
         );
 
         // Assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(response.getBody().getErrorCode()).isEqualTo("REVIEW_006");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("REVIEW_004");
     }
 
     @Test
