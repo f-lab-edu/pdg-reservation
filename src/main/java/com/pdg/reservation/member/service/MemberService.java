@@ -77,11 +77,11 @@ public class MemberService {
 
     public TokenInfo reissue(String refreshToken) {
 
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
             throw new CustomException(ErrorCode.JWT_INVALID_REFRESH_TOKEN);
         }
 
-        String email = jwtTokenProvider.getUserEmailFromToken(refreshToken);
+        String email = jwtTokenProvider.getEmailFromRefreshToken(refreshToken);
 
         String oldRefreshToken = jwtRedisRepository.findRefreshTokenByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.JWT_REFRESH_TOKEN_NOT_FOUND));
@@ -102,8 +102,8 @@ public class MemberService {
     }
 
     public void logout(String accessToken) {
-        String email = jwtTokenProvider.getUserEmailFromToken(accessToken);
-        Long expiration = jwtTokenProvider.getTokenTTL(accessToken);
+        String email = jwtTokenProvider.getEmailFromAccessToken(accessToken);
+        Long expiration = jwtTokenProvider.getAccessTokenTTL(accessToken);
         jwtRedisRepository.deleteRefreshTokenByEmail(email);
         jwtRedisRepository.setAccessTokenBlacklist(accessToken, expiration);
     }

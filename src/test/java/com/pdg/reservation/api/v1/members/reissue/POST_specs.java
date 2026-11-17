@@ -134,6 +134,27 @@ class POST_specs {
     }
 
     @Test
+    void 액세스_토큰으로_재발급하면_401과_JWT_004를_반환하고_진짜_리프레시_토큰은_계속_쓸_수_있다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+        LoginSession session = memberFixture.login(member);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/reissue")
+                        .header(HttpHeaders.COOKIE, "refreshToken=" + session.accessToken())
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("JWT-004");
+        // 액세스 토큰만 가진 쪽이 정상 사용자의 리프레시 토큰 기록을 지우지 못해야 한다
+        assertThat(memberFixture.reissueRefreshToken(session.refreshToken())).isNotBlank();
+    }
+
+    @Test
     void 로그아웃한_뒤에는_리프레시_토큰으로_재발급할_수_없어_401과_JWT_003을_반환한다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();

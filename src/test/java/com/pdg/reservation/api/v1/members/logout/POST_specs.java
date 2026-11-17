@@ -1,7 +1,9 @@
 package com.pdg.reservation.api.v1.members.logout;
 
 import com.pdg.reservation.common.dto.ApiResponse;
+import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
+import com.pdg.reservation.member.dto.SignupRequest;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.DatabaseCleanUp;
 import com.pdg.reservation.support.IntegrationTest;
@@ -92,6 +94,45 @@ class POST_specs {
         ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
                 post("/api/v1/members/logout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + brokenAccessToken)
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-001");
+    }
+
+    @Test
+    void 리프레시_토큰을_액세스_토큰_자리에_보내면_401과_AUTH_001을_반환한다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+        LoginSession session = memberFixture.login(member);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/logout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + session.refreshToken())
+                        .build(),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("AUTH-001");
+    }
+
+    @Test
+    void 로그아웃한_뒤에도_리프레시_토큰을_액세스_토큰_자리에_보내면_401과_AUTH_001을_반환한다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+        LoginSession session = memberFixture.login(member);
+        memberFixture.logout(session.accessToken());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/members/logout")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + session.refreshToken())
                         .build(),
                 new ParameterizedTypeReference<>() { }
         );

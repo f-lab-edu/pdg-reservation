@@ -93,4 +93,5 @@ refreshToken:
     value: 604800                                   # 리프레시 토큰 만료 시간: 7일 (초 단위)
 
 jwt:
-  secret: a239e7dcb3048bb748293c2c6480491d7dea129c4a985c1e01b67404c876adfc
+  access-secret: a239e7dcb3048bb748293c2c6480491d7dea129c4a985c1e01b67404c876adfc
+  refresh-secret: it1rI7g5+fIjBWF8c0DhHNK8T09AdL1ZVyjDu6W5woI7KdFy638ohhvAF5BEd7Td

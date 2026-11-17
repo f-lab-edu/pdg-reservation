@@ -86,4 +86,5 @@ refreshToken:
 
 jwt:
   # [보안] 시크릿 키도 깃허브에 올라가지 않도록 환경변수로 빼는 것이 정석
-  secret: ${JWT_SECRET_KEY}
+  access-secret: ${JWT_ACCESS_SECRET_KEY}
+  refresh-secret: ${JWT_REFRESH_SECRET_KEY}

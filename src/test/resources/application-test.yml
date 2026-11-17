@@ -51,4 +51,5 @@ refreshToken:
     value: 604800
 
 jwt:
-  secret: +NZIGgXSjqmvaStXqBYWNfEfTysYkXxKyEm3MpZ/qlj/bg1xWT5xbJ/GarlKixZh   # 테스트 전용 Base64 값
+  access-secret: +NZIGgXSjqmvaStXqBYWNfEfTysYkXxKyEm3MpZ/qlj/bg1xWT5xbJ/GarlKixZh
+  refresh-secret: 6+vTi7Gvt5JGA5V/hRfnUYhYcNHMk17F7zOIY+giNCH5Uq2bQ5kQpLlZ41yP6Aqu   # 테스트 전용 Base64 값

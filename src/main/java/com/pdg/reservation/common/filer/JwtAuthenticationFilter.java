@@ -35,13 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = jwtTokenProvider.extractToken(request);
         try {
-            if (token != null && jwtTokenProvider.validateToken(token)) {
+            if (token != null && jwtTokenProvider.validateAccessToken(token)) {
                 if (jwtRedisRepository.isAccessTokenBlacklisted(token)) {
                     throw new JwtException("블랙 리스트에 등록된 토큰입니다.");
                 }
                 Authentication auth = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                MDC.put("email", jwtTokenProvider.getUserEmailFromToken(token));
+                MDC.put("email", jwtTokenProvider.getEmailFromAccessToken(token));
             }
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {

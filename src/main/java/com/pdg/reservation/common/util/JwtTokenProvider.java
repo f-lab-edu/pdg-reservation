@@ -1,6 +1,5 @@
 package com.pdg.reservation.common.util;
 
-
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -24,6 +23,8 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+// 액세스 토큰과 리프레시 토큰은 서로 다른 키로 서명한다(ADR 0019).
+// 리프레시 토큰이 액세스 토큰 자리에서 통과해 로그아웃과 Rotation을 우회하지 못하게 서명 검증 단계에서 구분한다.
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -35,19 +36,22 @@ public class JwtTokenProvider {
     @Value("${refreshToken.expired.value}")
     int refreshTokenExpiredValue;
 
-    @Value("${jwt.secret}")
-    String jwtSecretStringKey;
+    @Value("${jwt.access-secret}")
+    String jwtAccessSecretStringKey;
+
+    @Value("${jwt.refresh-secret}")
+    String jwtRefreshSecretStringKey;
 
     private final UserDetailsService userDetailsService;
 
-    private SecretKey jwtSecretKey;
+    private SecretKey jwtAccessKey;
+    private SecretKey jwtRefreshKey;
 
     @PostConstruct
     public void init() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecretStringKey);
-        this.jwtSecretKey = Keys.hmacShaKeyFor(keyBytes);
+        this.jwtAccessKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtAccessSecretStringKey));
+        this.jwtRefreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtRefreshSecretStringKey));
     }
-
 
     // Access Token 생성
     public String generateAccessToken(String email) {
@@ -59,7 +63,7 @@ public class JwtTokenProvider {
                     .expiration(new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(accessTokenTokenExpiredValue)))
                     .issuedAt(new Date(System.currentTimeMillis())) // 현재 시간
                     .and()
-                    .signWith(jwtSecretKey)
+                    .signWith(jwtAccessKey)
                     .compact();
         } catch (JwtException e) {
             throw new JwtException("JWT 토큰 생성 중 오류가 발생했습니다.", e);
@@ -87,7 +91,7 @@ public class JwtTokenProvider {
                     .expiration(new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(refreshTokenExpiredValue)))
                     .issuedAt(new Date(System.currentTimeMillis())) // 현재 시간
                     .and()
-                    .signWith(jwtSecretKey)
+                    .signWith(jwtRefreshKey)
                     .compact();
         } catch (JwtException e) {
             throw new JwtException("JWT 토큰 생성 중 오류가 발생했습니다.", e);
@@ -96,6 +100,7 @@ public class JwtTokenProvider {
         }
         return refreshToken;
     }
+
     // Authorization 헤더에서 JWT 토큰 추출
     public String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -105,21 +110,39 @@ public class JwtTokenProvider {
         return null; // 헤더가 없거나 Bearer로 시작하지 않으면 null 반환
     }
 
-    // subject(고객 ID) 추출
-    public String getUserEmailFromToken(String token) {
+    // 액세스 토큰의 subject(이메일) 추출. access 키로 검증한다
+    public String getEmailFromAccessToken(String token) {
+        return parseSubject(token, jwtAccessKey);
+    }
+
+    // 리프레시 토큰의 subject(이메일) 추출. refresh 키로 검증한다
+    public String getEmailFromRefreshToken(String token) {
+        return parseSubject(token, jwtRefreshKey);
+    }
+
+    // 액세스 토큰인지 검증한다. 리프레시 토큰은 다른 키로 서명되어 여기서 거절된다
+    public boolean validateAccessToken(String token) {
+        return validate(token, jwtAccessKey);
+    }
+
+    // 리프레시 토큰인지 검증한다. 액세스 토큰은 다른 키로 서명되어 여기서 거절된다
+    public boolean validateRefreshToken(String token) {
+        return validate(token, jwtRefreshKey);
+    }
+
+    private String parseSubject(String token, SecretKey key) {
         return Jwts.parser()
-                .verifyWith(jwtSecretKey)
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
     }
 
-    // Validate Token 생성
-    public boolean validateToken(String token) {
+    private boolean validate(String token, SecretKey key) {
         try {
             Jwts.parser()
-                    .verifyWith(jwtSecretKey)
+                    .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
@@ -128,6 +151,7 @@ public class JwtTokenProvider {
         }
         return true;
     }
+
     // RefreshToken Cookie 발급
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
@@ -148,10 +172,10 @@ public class JwtTokenProvider {
     }
 
     //Access Token의 남은 만료 시간 (TTL)을 밀리초 단위로 반환
-    public Long getTokenTTL(String token) {
+    public Long getAccessTokenTTL(String token) {
         try {
             Date expiration = Jwts.parser()
-                    .verifyWith(jwtSecretKey)
+                    .verifyWith(jwtAccessKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload()
@@ -167,9 +191,10 @@ public class JwtTokenProvider {
         }
     }
 
-    public Authentication getAuthentication(String token) {
+    // 액세스 토큰으로 인증 객체를 만든다
+    public Authentication getAuthentication(String accessToken) {
         // 1. 토큰에서 사용자 ID을 가져옴 (sub)
-        String email = getUserEmailFromToken(token);
+        String email = getEmailFromAccessToken(accessToken);
 
         // 2. UserDetailsService를 통해 사용자 정보(권한 포함)를 로드
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
