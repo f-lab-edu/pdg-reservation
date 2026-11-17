@@ -14,8 +14,10 @@ import com.pdg.reservation.payment.enums.PaymentMethod;
 import com.pdg.reservation.payment.enums.PaymentStatus;
 import com.pdg.reservation.reservation.dto.ReservationCancelRequest;
 import com.pdg.reservation.reservation.dto.ReservationCancelResponse;
+import com.pdg.reservation.reservation.dto.ReservationRequest;
 import com.pdg.reservation.reservation.dto.ReservationResponse;
 import com.pdg.reservation.reservation.enums.ReservationStatus;
+import com.pdg.reservation.reservation.service.ReservationService;
 import com.pdg.reservation.room.entity.Room;
 import com.pdg.reservation.support.ApiClient;
 import com.pdg.reservation.support.ConcurrentRunner;
@@ -34,6 +36,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -44,8 +47,11 @@ import java.util.List;
 
 import static com.pdg.reservation.fixture.ReservationGenerator.generateCancelReasonOfLength;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequest;
+import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationRequest;
 import static com.pdg.reservation.fixture.ReservationGenerator.generateReservationCancelRequestWithCancelReason;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.http.RequestEntity.post;
 
 @DisplayName("POST /api/v1/reservations/cancel")
@@ -69,6 +75,9 @@ class POST_specs {
 
     @Autowired
     FakePgClient fakePgClient;
+
+    @MockitoSpyBean
+    ReservationService reservationService;
 
     @Autowired
     ApiClient apiClient;
@@ -438,6 +447,86 @@ class POST_specs {
         assertThat(fakePgClient.cancelledTransactionNumbers())
                 .containsExactly(paid.payment().getPgTransactionNumber());
         assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.CANCELED);
+    }
+
+    @Test
+    void 취소_확정_단계가_실패하면_500을_반환하고_예약은_CANCELING으로_남고_PG_취소는_한_번_나간다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        PaidReservation paid = createPaidReservation();
+        ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
+        // PG 취소가 끝난 뒤의 DB 확정 단계만 실패시킨다
+        doThrow(new IllegalStateException("취소 확정 실패"))
+                .when(reservationService).cancel(any());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations/cancel").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(reservationFixture.searchReservationStatuses()).containsExactly(ReservationStatus.CANCELING);
+        assertThat(fakePgClient.cancelledTransactionNumbers())
+                .containsExactly(paid.payment().getPgTransactionNumber());
+    }
+
+    @Test
+    void 취소가_진행_중인_예약을_다시_취소하면_400과_PAYMENT_006을_반환하고_PG_취소는_다시_나가지_않는다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        PaidReservation paid = createPaidReservation();
+        ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
+        // 첫 취소는 확정 단계에서 실패해 CANCELING으로 남는다. 이후 호출은 진짜 메서드를 실행한다
+        doThrow(new IllegalStateException("취소 확정 실패"))
+                .doCallRealMethod()
+                .when(reservationService).cancel(any());
+        ResponseEntity<ApiResponse<Void>> first = memberFixture.client().exchange(
+                post("/api/v1/reservations/cancel").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+        assertThat(first.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> second = memberFixture.client().exchange(
+                post("/api/v1/reservations/cancel").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(second.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(second.getBody().getErrorCode()).isEqualTo("PAYMENT_006");
+        assertThat(fakePgClient.cancelledTransactionNumbers()).hasSize(1);
+    }
+
+    @Test
+    void 취소가_진행_중인_동안은_같은_기간을_다른_회원이_예약할_수_없다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        PaidReservation paid = createPaidReservation();
+        ReservationCancelRequest request = generateReservationCancelRequest(paid.reservation().getReservationId());
+        doThrow(new IllegalStateException("취소 확정 실패"))
+                .when(reservationService).cancel(any());
+        memberFixture.client().exchange(
+                post("/api/v1/reservations/cancel").body(request),
+                new ParameterizedTypeReference<ApiResponse<Void>>() { }
+        );
+        String otherMember = memberFixture.createLoggedInMembers(1).get(0);
+        ReservationRequest otherRequest = generateReservationRequest(
+                paid.room(), paid.checkInDate(), paid.checkOutDate(), 1, paid.reservation().getTotalPrice());
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reservations")
+                        .header(HttpHeaders.AUTHORIZATION, otherMember)
+                        .body(otherRequest),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody().getErrorCode()).isEqualTo("RESERVE_003");
     }
 
     @Test

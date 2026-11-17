@@ -59,7 +59,21 @@ public class PaymentService {
         pgClient.cancel(payment.getPgTransactionNumber(), CancelType.USER_REQUEST);
     }
 
-    // 결제를 취소 상태로 바꾸고 취소 이력을 남긴다
+    // PG 취소를 요청하기 전에 취소 진행 중으로 바꾼다
+    @Transactional
+    public void startCancel(Payment payment) {
+        payment.updateStatusCanceling();
+        paymentRepository.save(payment);
+    }
+
+    // PG가 취소를 거절하면 결제 완료로 되돌린다
+    @Transactional
+    public void revertCancel(Payment payment) {
+        payment.revertCanceling();
+        paymentRepository.save(payment);
+    }
+
+    // 결제를 취소로 확정하고 취소 이력을 남긴다
     @Transactional
     public void markCanceled(Payment payment, String cancelReason) {
         payment.updateStatusCanceled();

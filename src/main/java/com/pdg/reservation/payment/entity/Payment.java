@@ -71,12 +71,29 @@ public class Payment {
     @JoinColumn(name = "reservation_id", nullable = false, unique = true )
     private Reservation reservation;
 
-    public void updateStatusCanceled() {
+    // PG 취소를 요청하기 전에 취소 진행 중으로 바꾼다
+    public void updateStatusCanceling() {
         if (this.status != PaymentStatus.PAID) {
+            throw new CustomException(ErrorCode.PAYMENT_INVALID_STATUS);
+        }
+        this.status = PaymentStatus.CANCELING;
+    }
+
+    // PG 취소가 끝난 뒤 취소로 확정한다
+    public void updateStatusCanceled() {
+        if (this.status != PaymentStatus.CANCELING) {
             throw new CustomException(ErrorCode.PAYMENT_INVALID_STATUS);
         }
         this.canceledAt = LocalDateTime.now();
         this.status = PaymentStatus.CANCELED;
+    }
+
+    // PG가 취소를 거절하면 결제 완료로 되돌린다
+    public void revertCanceling() {
+        if (this.status != PaymentStatus.CANCELING) {
+            throw new CustomException(ErrorCode.PAYMENT_INVALID_STATUS);
+        }
+        this.status = PaymentStatus.PAID;
     }
 
 

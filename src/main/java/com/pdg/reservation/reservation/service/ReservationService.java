@@ -105,7 +105,21 @@ public class ReservationService {
         reservationRepository.save(reservation);
     }
 
-    // 취소 상태로 바꾸고 점유한 밤을 푼다
+    // PG 취소를 요청하기 전에 취소 진행 중으로 바꾼다. 이 상태에서도 점유한 밤은 풀지 않는다
+    @Transactional
+    public void startCancel(Reservation reservation) {
+        reservation.updateStatusCanceling();
+        reservationRepository.save(reservation);
+    }
+
+    // PG가 취소를 거절하면 확정으로 되돌린다
+    @Transactional
+    public void revertCancel(Reservation reservation) {
+        reservation.revertCanceling();
+        reservationRepository.save(reservation);
+    }
+
+    // 취소로 확정하고 점유한 밤을 푼다
     @Transactional
     public void cancel(Reservation reservation) {
         reservation.updateStatusCanceled();

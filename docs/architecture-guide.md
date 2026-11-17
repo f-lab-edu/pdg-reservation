@@ -182,6 +182,6 @@ com.pdg.reservation
 
 - 같은 도메인 안에서 캐시 Service가 락을 쓰는 읽기 컴포넌트를 호출한다(`AccommodationCacheService` → `AccommodationAtomicReader`, `ReviewCacheService` → `ReviewAtomicReader`).
 - 인증 주체에서 꺼낸 `Member` 엔티티를 Controller가 Facade에 넘긴다(`reserve`, `createReview`).
-- `ReservationFacade.cancel`은 PG 취소가 성공한 뒤 DB 변경이 실패하면 되돌리지 못한다. 취소 중간 상태는 R2-4, R5-7에서 설계한다.
+- `ReservationFacade.cancel`은 취소 확정 단계가 실패하면 `CANCELING`(취소 진행 중)으로 남고 자동 복구가 없다(ADR 0016). PG 예외를 모두 거절로 보고 되돌리며, 타임아웃 구분과 선조회 복구는 R5-7에서 한다.
 - `ReservationEventListener`는 로그만 남기고 Facade를 호출하지 않는다.
 - 이벤트 카탈로그 문서가 아직 없다.

@@ -12,6 +12,8 @@ public enum ReservationStatus {
     // 2. 예약 확정 (결제 완료) - 정상적인 예약 상태
     CONFIRMED("예약 확정"),
 
+    // 취소 진행 중 - PG 취소를 요청하기 전에 이 상태로 바꾼다. 확정까지 끝나면 CANCELED, PG가 거절하면 CONFIRMED로 돌아간다
+    CANCELING("취소 진행 중"),
     // 3. 예약 취소 (사용자/관리자 취소) - 환불 처리 필요
     CANCELED("예약 취소"),
 
