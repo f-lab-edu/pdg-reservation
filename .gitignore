@@ -45,3 +45,6 @@ src/main/generated/
 ### Roadmap ###
 docs/roadmap.md
 docs/test-scenarios.md
+
+### Test spy log ###
+spy.log
