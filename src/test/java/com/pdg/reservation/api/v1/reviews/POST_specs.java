@@ -6,6 +6,7 @@ import com.pdg.reservation.common.dto.ApiResponse;
 import com.pdg.reservation.fixture.AccommodationFixture;
 import com.pdg.reservation.fixture.LoginSession;
 import com.pdg.reservation.fixture.MemberFixture;
+import com.pdg.reservation.fixture.OutboxFixture;
 import com.pdg.reservation.fixture.ReservationFixture;
 import com.pdg.reservation.fixture.ReviewFixture;
 import com.pdg.reservation.fixture.RoomFixture;
@@ -29,8 +30,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
@@ -38,6 +42,11 @@ import java.util.UUID;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequest;
 import static com.pdg.reservation.fixture.ReviewGenerator.generateReviewCreateRequestWithReservationId;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.http.RequestEntity.get;
 import static org.springframework.http.RequestEntity.post;
 
@@ -62,6 +71,14 @@ class POST_specs {
 
     @Autowired
     RatingAwaiter ratingAwaiter;
+
+    @Autowired
+    OutboxFixture outboxFixture;
+
+    // 자동 구성 빈의 타입이 KafkaTemplate<?, ?>라서 원시 타입으로 받는다
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @MockitoSpyBean
+    KafkaTemplate kafkaTemplate;
 
     @Autowired
     ApiClient apiClient;
@@ -305,6 +322,78 @@ class POST_specs {
 
         // Assert
         ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+    }
+
+    @Test
+    void 리뷰를_쓰면_이벤트가_아웃박스에_기록되어_전송되고_SENT가_된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        BigDecimal rating = new BigDecimal("4.5");
+
+        // Act
+        reviewFixture.createReview(reservation.getReservationId(), rating);
+
+        // Assert
+        ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            assertThat(outboxFixture.countByStatus("SENT")).isEqualTo(1);
+            assertThat(outboxFixture.countByStatus("PENDING")).isZero();
+        });
+    }
+
+    @Test
+    void Kafka_전송이_한_번_실패해도_리뷰_이벤트는_사라지지_않고_재전송되어_평점이_반영된다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        ReservationResponse reservation = reservationFixture.createCompletedReservation(room, checkInDate, checkOutDate);
+        BigDecimal rating = new BigDecimal("4.0");
+        // 리뷰 토픽으로 보내는 첫 전송만 실패시킨다. 이후 전송은 진짜 메서드를 실행한다
+        doThrow(new IllegalStateException("kafka down"))
+                .doCallRealMethod()
+                .when(kafkaTemplate).send(eq("review-topic"), anyString(), any());
+
+        // Act
+        reviewFixture.createReview(reservation.getReservationId(), rating);
+
+        // Assert
+        ratingAwaiter.awaitRatingAverage(accommodation.getId(), rating);
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            assertThat(outboxFixture.countByStatus("SENT")).isEqualTo(1);
+            // 실패한 시도와 성공한 시도를 합쳐 두 번 보냈다
+            assertThat(outboxFixture.maxAttemptCount()).isEqualTo(2);
+        });
+    }
+
+    @Test
+    void 리뷰_등록이_거절되면_아웃박스에_이벤트가_기록되지_않는다() {
+        // Arrange
+        memberFixture.createMemberThenSetAsDefaultUser();
+        LocalDate checkInDate = LocalDate.now().plusDays(30);
+        LocalDate checkOutDate = checkInDate.plusDays(2);
+        Accommodation accommodation = accommodationFixture.createAccommodation();
+        Room room = roomFixture.createRoom(accommodation);
+        // 결제 대기 상태의 예약이라 리뷰를 쓸 수 없다
+        ReservationResponse reservation = reservationFixture.createReservation(room, checkInDate, checkOutDate);
+        ReviewCreateRequest request = generateReviewCreateRequest(reservation.getReservationId(), new BigDecimal("4.0"));
+
+        // Act
+        ResponseEntity<ApiResponse<Void>> response = memberFixture.client().exchange(
+                post("/api/v1/reviews").body(request),
+                new ParameterizedTypeReference<>() { }
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(outboxFixture.countAll()).isZero();
     }
 
     @Test

@@ -130,7 +130,8 @@ public PaymentInfo pay(PaymentRequest request) {
   - 스레드 풀은 용도별로 나눠 `AsyncConfig`에 이름으로 정의한다(Kafka 발행용, 알림용 등). 거부 정책은 풀마다 정한다.
   - 응답 직후 조회에 반영돼야 하는 처리(캐시 무효화 등)는 동기로 두고, 이유를 주석으로 적는다.
 - **리스너는 진입점**이라 Facade를 호출한다. 쓰기가 있으면 Facade 메서드에 `@Transactional`을 붙이고, 동기 `AFTER_COMMIT` 리스너라면 `REQUIRES_NEW`를 명시한다(커밋이 끝난 트랜잭션에 합류하면 쓰기가 커밋되지 않을 수 있다).
-- **실패 처리**: `@Async`는 호출한 쪽이 예외를 받지 못한다. 리스너 안에서 예외를 잡아 이벤트 id와 함께 로그를 남기고, 전역 `AsyncUncaughtExceptionHandler`를 등록한다. 이벤트 유실은 `@Async`만으로 막을 수 없다. 중요한 이벤트는 Outbox(로드맵 R5-6)로 보강한다.
+- **실패 처리**: `@Async`는 호출한 쪽이 예외를 받지 못한다. 리스너 안에서 예외를 잡아 이벤트 id와 함께 로그를 남기고, 전역 `AsyncUncaughtExceptionHandler`를 등록한다. 이 방식은 유실을 막지 못하므로 반드시 전달되어야 하는 이벤트는 아래 Outbox를 쓴다.
+- **Outbox**: 유실되면 다른 데이터가 영영 어긋나는 이벤트(지금은 리뷰 등록·삭제 → 숙소 평점)에만 쓴다. Service가 본 작업과 같은 트랜잭션에서 `OutboxService.record`로 기록하고, 스케줄러가 한 건씩 `OutboxFacade.relay`를 호출해 Kafka로 보낸다(ADR 0017). 알림, 통계처럼 유실돼도 데이터가 어긋나지 않는 부가 처리는 Outbox를 쓰지 않는다. 기록이 본 작업과 같은 트랜잭션이라서 부가 처리의 기록 실패가 핵심 작업을 실패시키면 안 되기 때문이다. 이벤트는 적어도 한 번 전달되므로 받는 쪽은 `event_log`로 중복을 막는다.
 - 이벤트의 발행자와 구독자는 문서(이벤트 카탈로그)에 적는다.
 
 ## 7. Repository와 외부 시스템
@@ -185,3 +186,4 @@ com.pdg.reservation
 - `ReservationFacade.cancel`은 취소 확정 단계가 실패하면 `CANCELING`(취소 진행 중)으로 남고 자동 복구가 없다(ADR 0016). PG 예외를 모두 거절로 보고 되돌리며, 타임아웃 구분과 선조회 복구는 R5-7에서 한다.
 - `ReservationEventListener`는 로그만 남기고 Facade를 호출하지 않는다.
 - 이벤트 카탈로그 문서가 아직 없다.
+- Outbox에 `PENDING`이 쌓이는지 볼 지표와 전송 완료 행을 지우는 배치가 없다(ADR 0017).

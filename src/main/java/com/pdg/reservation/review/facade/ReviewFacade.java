@@ -12,16 +12,12 @@ import com.pdg.reservation.review.dto.ReviewInfo;
 import com.pdg.reservation.review.dto.ReviewSummaryInfo;
 import com.pdg.reservation.review.dto.ReviewSearchCondition;
 import com.pdg.reservation.review.entity.Review;
-import com.pdg.reservation.review.event.ReviewCreatedEvent;
-import com.pdg.reservation.review.event.ReviewDeletedEvent;
 import com.pdg.reservation.review.service.ReviewCacheService;
-import com.pdg.reservation.review.service.ReviewEventService;
 import com.pdg.reservation.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -34,7 +30,6 @@ public class ReviewFacade {
     private final ReservationService reservationService;
     private final AccommodationService accommodationService;
     private final AccommodationCacheGenerationService accommodationCacheGenerationService;
-    private final ReviewEventService reviewEventService;
 
     @Transactional
     public ReviewInfo createReview(Member member, ReviewCreateRequest request) {
@@ -62,15 +57,4 @@ public class ReviewFacade {
         return new ReviewDeleteInfo(reviewId, review.getDeletedAt());
     }
 
-    // 리뷰 등록 이벤트를 Kafka로 보낸다. 외부 호출만 있어서 트랜잭션을 두지 않는다
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void publishCreated(ReviewCreatedEvent event) {
-        reviewEventService.sendCreated(event);
-    }
-
-    // 리뷰 삭제 이벤트를 Kafka로 보낸다. 외부 호출만 있어서 트랜잭션을 두지 않는다
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void publishDeleted(ReviewDeletedEvent event) {
-        reviewEventService.sendDeleted(event);
-    }
 }
