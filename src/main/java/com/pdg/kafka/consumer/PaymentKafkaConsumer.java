@@ -1,11 +1,7 @@
 package com.pdg.kafka.consumer;
 
 import com.pdg.kafka.event.PaymentKafkaEvent;
-import com.pdg.reservation.accommodation.repository.AccommodationRepository;
-import com.pdg.reservation.common.repository.EventLogRepository;
-import com.pdg.reservation.common.service.IdempotencyService;
-import com.pdg.reservation.reservation.repository.ReservationRedisRepository;
-import com.pdg.reservation.review.service.ReviewCacheService;
+import com.pdg.reservation.payment.facade.PaymentFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.DltHandler;
@@ -22,8 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaymentKafkaConsumer {
 
-    private final ReservationRedisRepository reservationRedisRepository;
-    private final IdempotencyService idempotencyService;
+    private final PaymentFacade paymentFacade;
 
     @RetryableTopic(
             attempts = "5",
@@ -36,16 +31,7 @@ public class PaymentKafkaConsumer {
             concurrency = "3"
     )
     public void consume(PaymentKafkaEvent event) {
-        // 멱등성 체크
-        if (idempotencyService.isAlreadyProcessed(event.getEventId(), event.getActionType(), event.getReservationId())) {
-            return;
-        }
-
-        log.info("[Kafka Consumer] 예약 완료 알림 시작 - 예약 번호 ID: {}", event.getReservationId());
-
-        //외부 API
-        //kakaoTalkService.send(...);
-        reservationRedisRepository.deletePaymentTimeout(event.getReservationId());
+        paymentFacade.handleConfirmed(event);
     }
 
     @DltHandler

@@ -1,12 +1,10 @@
 package com.pdg.reservation.payment.listener;
 
-
-import com.pdg.kafka.event.PaymentKafkaEvent;
 import com.pdg.reservation.payment.event.PaymentConfirmedEvent;
+import com.pdg.reservation.payment.facade.PaymentFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -16,49 +14,17 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class PaymentEventListener {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final PaymentFacade paymentFacade;
 
+    // 외부 시스템(Kafka) 호출이라 커밋 뒤 별도 스레드에서 보낸다. 응답은 이 처리를 기다리지 않는다
+    @Async("kafkaEventExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentConfirmEvent(PaymentConfirmedEvent event) {
-
-        PaymentKafkaEvent message = new PaymentKafkaEvent(
-                        event.getMemberId(),
-                        event.getReservationId(),
-                        event.getEventId(),
-                        event.getEventType().name(),
-                        event.getCreatedAt()
-        );
         try {
-            kafkaTemplate.send("payment-topic", message)
-                    .whenComplete((result, ex) -> {
-                        if (ex != null) {
-                            handleFailure(event.getEventId(), event.getReservationId(), ex);
-                            return;
-                        }
-                        handleSuccess(event.getEventId(), result);
-                    });
+            paymentFacade.publishConfirmed(event);
         } catch (Exception e) {
-            log.error("[Kafka Producer] 큐 진입 실패 - eventId: {}, error: {}", event.getEventId(), e.getMessage(), e);
-            // errorAlertService.sendMessengerAlert(...);
+            // @Async는 호출한 쪽이 예외를 받지 못하므로 여기서 남긴다
+            log.error("[Kafka Producer] 결제 확정 이벤트 처리 실패 - eventId: {}", event.getEventId(), e);
         }
-
     }
-
-    private void handleSuccess(String eventId, SendResult<String, Object> result) {
-        log.info("[Kafka] 발행 성공 - eventId: {}, offset: {}, partition: {}",
-                eventId,
-                result.getRecordMetadata().offset(),
-                result.getRecordMetadata().partition()
-        );
-    }
-
-    private void handleFailure(String eventId, Long key, Throwable ex) {
-        log.error("[Kafka] 발행 실패 - eventId: {}, key: {}, error: {}",
-                eventId, key, ex.getMessage(), ex);
-        //errorAlertService.sendMessengerAlert(...);
-        // 추후 카프카 발행 실패 시 Outbox 패턴 or DLQ 이관 예정
-    }
-
-
-
 }

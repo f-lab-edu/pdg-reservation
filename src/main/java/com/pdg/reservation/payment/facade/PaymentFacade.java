@@ -1,11 +1,15 @@
 package com.pdg.reservation.payment.facade;
 
 import com.pdg.reservation.common.annotation.DistributedLock;
+import com.pdg.kafka.event.PaymentKafkaEvent;
 import com.pdg.reservation.common.exception.CustomException;
 import com.pdg.reservation.common.exception.enums.ErrorCode;
+import com.pdg.reservation.common.service.IdempotencyService;
 import com.pdg.reservation.payment.dto.PaymentInfo;
+import com.pdg.reservation.payment.event.PaymentConfirmedEvent;
 import com.pdg.reservation.payment.dto.PaymentRequest;
 import com.pdg.reservation.payment.entity.Payment;
+import com.pdg.reservation.payment.service.PaymentEventService;
 import com.pdg.reservation.payment.service.PaymentService;
 import com.pdg.reservation.reservation.entity.Reservation;
 import com.pdg.reservation.reservation.service.ReservationService;
@@ -24,16 +28,22 @@ import java.util.UUID;
 public class PaymentFacade {
 
     private final PaymentService paymentService;
+    private final PaymentEventService paymentEventService;
     private final ReservationService reservationService;
+    private final IdempotencyService idempotencyService;
     private final TransactionTemplate writeTx;
     private final TransactionTemplate readOnlyTx;
 
     public PaymentFacade(PaymentService paymentService,
+                         PaymentEventService paymentEventService,
                          ReservationService reservationService,
+                         IdempotencyService idempotencyService,
                          TransactionTemplate writeTransactionTemplate,
                          @Qualifier("readOnlyTransactionTemplate") TransactionTemplate readOnlyTransactionTemplate) {
         this.paymentService = paymentService;
+        this.paymentEventService = paymentEventService;
         this.reservationService = reservationService;
+        this.idempotencyService = idempotencyService;
         this.writeTx = writeTransactionTemplate;
         this.readOnlyTx = readOnlyTransactionTemplate;
     }
@@ -67,5 +77,24 @@ public class PaymentFacade {
             paymentService.compensate(pgTransactionNumber);
             throw e;
         }
+    }
+
+    // 결제 확정 이벤트를 Kafka로 보낸다. 외부 호출만 있어서 트랜잭션을 두지 않는다
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void publishConfirmed(PaymentConfirmedEvent event) {
+        paymentEventService.sendConfirmed(event);
+    }
+
+    // 결제 확정 메시지를 받아 처리한다(Kafka 컨슈머가 호출). 이미 처리한 이벤트는 건너뛴다
+    @Transactional
+    public void handleConfirmed(PaymentKafkaEvent event) {
+        if (idempotencyService.isAlreadyProcessed(event.getEventId(), event.getActionType(), event.getReservationId())) {
+            return;
+        }
+        log.info("[Kafka Consumer] 예약 완료 알림 시작 - 예약 번호 ID: {}", event.getReservationId());
+
+        //외부 API
+        //kakaoTalkService.send(...);
+        reservationService.clearPaymentTimeout(event.getReservationId());
     }
 }
