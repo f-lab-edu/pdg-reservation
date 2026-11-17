@@ -21,8 +21,6 @@ public class CommonInterceptor implements HandlerInterceptor {
         String ip = CommonUtil.getClientIP(request);
         String uri = request.getRequestURI();
         log.info("Request IP : {} / URI : {}", ip, uri);
-        request.getSession().setAttribute("ip", ip);
-        request.getSession().setAttribute("referer", request.getHeader("Referer"));
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }
 

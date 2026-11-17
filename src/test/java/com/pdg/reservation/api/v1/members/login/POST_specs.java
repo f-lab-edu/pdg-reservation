@@ -174,6 +174,22 @@ class POST_specs {
     }
 
     @Test
+    void 로그인하면_세션_쿠키는_내려오지_않는다() {
+        // Arrange
+        SignupRequest member = memberFixture.createMember();
+
+        // Act
+        ResponseEntity<Void> response = memberFixture.client().exchange(
+                post("/api/v1/members/login").body(generateLoginRequest(member)),
+                Void.class
+        );
+
+        // Assert
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE))
+                .noneSatisfy(cookie -> assertThat(cookie).startsWith("JSESSIONID"));
+    }
+
+    @Test
     void 로그인하면_응답_본문에_리프레시_토큰이_없다() {
         // Arrange
         SignupRequest member = memberFixture.createMember();
